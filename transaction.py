@@ -15,4 +15,7 @@ class Transaction:
         self.signature = None
 
     def display(self):
+        from copy import deepcopy
+        tmp = deepcopy(self)
+        tmp.signature = tmp.signature[:10]
         print(helpers.jsonify(self))
