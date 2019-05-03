@@ -1,3 +1,6 @@
+# TODO shower
+# add current balance to Client
+
 import helpers
 import Crypto.Random
 from binascii import hexlify

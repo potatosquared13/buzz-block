@@ -1,3 +1,5 @@
+# TODO transaction should contain sender/recipient balances
+
 import helpers
 from binascii import hexlify
 from datetime import datetime
