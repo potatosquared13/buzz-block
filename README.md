@@ -4,30 +4,38 @@ Central Philippine University BSCS Thesis - Villanueva Group
 
 An NFC-based transaction system using blockchain.
 
-The backend is mainly written in Python3, and the use of some web technologies are planned.
+Mainly written in python, with tinyDB for the database.
 
-Currently nothing is saved when python exits.
+Flask might eventually be used.
 
 ### Requirements
+
 ###### a. [`python3`](https://www.python.org/downloads/)
-###### b. `python3-pycryptodomex` - Assuming python is installed:
+
+###### b. PyCrypto - for various cryptographic functions
 
 ```
-python -m pip install pycryptodome
+python -m pip install --user pycryptodome
+```
+
+###### c. tinydb (not used yet) - for the client database
+
+```
+python -m pip install --user tinydb
 ```
 
 ### Examples
 
-##### client
+##### Client:
 
-###### Create a client object with the ability to sign transactions:
+###### Create a client object:
 
 ```
 from client import *
 client1 = Client()
 ```
 
-##### transaction
+##### Transaction:
 
 ###### Create a transaction between two clients:
 
@@ -36,11 +44,12 @@ from transaction import *
 transaction1 = Transaction(client1.identity, client2.identity, 100)
 ```
 
+where _client1_ sends _client2_ an amount of _100_
 
-##### block
+
+##### Blockchain
 
 ###### Create and initialise an empty blockchain.
-An empty block with proof 0 and last_hash 0 are made and added as the genesis block.
 
 ```
 from block import *
