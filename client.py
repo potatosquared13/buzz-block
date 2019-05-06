@@ -1,5 +1,5 @@
-# TODO shower
-# add current balance to Client
+# NOTE this object is only used to create the client object
+#      the balance, actual name, etc., will be handled in the database
 
 import helpers
 import Crypto.Random
