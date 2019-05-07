@@ -13,8 +13,9 @@ from Crypto.Signature import PKCS1_v1_5
 
 
 class Client:
-    def __init__(self):
+    def __init__(self, name):
         rand = Crypto.Random.new().read
+        self.name = name
         self._private_key = RSA.generate(1024, rand)
         self._public_key = self._private_key.publickey()
         self._signer = PKCS1_v1_5.new(self._private_key)
