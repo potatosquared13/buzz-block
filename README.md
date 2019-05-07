@@ -18,11 +18,7 @@ Flask might eventually be used.
 python -m pip install --user pycryptodome
 ```
 
-###### c. tinydb (not used yet) - for the client database
-
-```
-python -m pip install --user tinydb
-```
+###### c. sqlite3 (not used yet) - for the client database
 
 ### Examples
 

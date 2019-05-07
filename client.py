@@ -1,5 +1,8 @@
-# NOTE this object is only used to create the client object
-#      the balance, actual name, etc., will be handled in the database
+# NOTE - This script will be run from the server, after a user signs up
+#      - The user's public key will be saved to the database, along with other
+#        identifying information like name, etc.
+#      - This object is only used to create the client object
+#        the balance, actual name, etc., will be handled in the database
 
 import helpers
 import Crypto.Random
@@ -17,11 +20,10 @@ class Client:
         self._signer = PKCS1_v1_5.new(self._private_key)
 
     def sign(self, transaction):
-        signer = PKCS1_v1_5.new(self._private_key)
         tmp_transaction = transaction
         del tmp_transaction.signature
         hash = SHA.new(helpers.jsonify(tmp_transaction).encode('utf8'))
-        transaction.signature =  hexlify(signer.sign(hash)).decode('ascii')
+        transaction.signature =  hexlify(self._signer.sign(hash)).decode('ascii')
 
     @property
     def identity(self):
