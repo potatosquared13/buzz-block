@@ -1,5 +1,5 @@
 import helpers
-from binascii import hexlify
+from copy import deepcopy
 from datetime import datetime
 from Crypto.Signature import PKCS1_v1_5
 
@@ -14,4 +14,10 @@ class Transaction:
 
     def display(self):
         print(helpers.jsonify(self))
+
+    @property
+    def hash(self):
+        tmp_transaction = deepcopy(self)
+        del tmp_transaction.signature
+        return helpers.sha256(helpers.jsonify(tmp_transaction))
 

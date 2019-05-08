@@ -1,6 +1,9 @@
 import helpers
+from copy import deepcopy
 from datetime import datetime
+from binascii import unhexlify as unhex
 from transaction import *
+from Crypto.PublicKey import RSA
 
 class Block:
     def __init__(self, index, previous_hash, transactions):
@@ -15,7 +18,6 @@ class Block:
 
     @property
     def hash(self):
-        from copy import deepcopy
         tmp_block = deepcopy(self)
         del tmp_block.proof
         return helpers.sha256(helpers.jsonify(tmp_block)).hexdigest()
@@ -44,7 +46,15 @@ class Blockchain:
         verified_transactions = []
         for transaction in self.pending_transactions:
             if transaction.signature:
-                verified_transactions.append(transaction)
+                # get public key
+                public_key = RSA.import_key(unhex(transaction.sender))
+                # get transaction signature
+                signature = unhex(transaction.signature)
+                # get transaction hash
+                hash = transaction.hash
+                # if signature is verified, add to list
+                if PKCS1_v1_5.new(public_key).verify(hash, signature):
+                    verified_transactions.append(transaction)
         previous_proof = self.last_block.proof
         previous_hash = self.last_block.hash
         block = Block(
