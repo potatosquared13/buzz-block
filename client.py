@@ -7,7 +7,6 @@
 import helpers
 import Crypto.Random
 from binascii import hexlify
-from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 
@@ -23,7 +22,7 @@ class Client:
     def sign(self, transaction):
         tmp_transaction = transaction
         del tmp_transaction.signature
-        hash = SHA.new(helpers.jsonify(tmp_transaction).encode('utf8'))
+        hash = helpers.sha256(helpers.jsonify(tmp_transaction))
         transaction.signature =  hexlify(self._signer.sign(hash)).decode('ascii')
 
     @property

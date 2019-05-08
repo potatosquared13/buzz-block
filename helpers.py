@@ -1,9 +1,10 @@
 import json
-import hashlib
+from Crypto.Hash import SHA256
 
-# returns hexadecimal representation of sha256 hash of message
+
+# returns sha256 hash of message
 def sha256(message):
-    return hashlib.sha256(message.encode()).hexdigest()
+    return SHA256.new(message.encode('utf8'))
 
 # returns obj as a json object
 def jsonify(obj):

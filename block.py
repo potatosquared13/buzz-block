@@ -15,10 +15,10 @@ class Block:
 
     @property
     def hash(self):
-        import copy
-        tmp_block = copy.deepcopy(self)
+        from copy import deepcopy
+        tmp_block = deepcopy(self)
         del tmp_block.proof
-        return helpers.sha256(helpers.jsonify(tmp_block))
+        return helpers.sha256(helpers.jsonify(tmp_block)).hexdigest()
 
 
 class Blockchain:
@@ -70,7 +70,7 @@ class Blockchain:
         proof = previous_proof
         hash = block.hash
         while True:
-            digest = helpers.sha256(str(proof) + str(hash))
+            digest = helpers.sha256(str(proof) + str(hash)).hexdigest()
             if (digest.startswith('0000')):
                 return proof
             proof += 1

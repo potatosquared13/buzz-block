@@ -14,3 +14,4 @@ class Transaction:
 
     def display(self):
         print(helpers.jsonify(self))
+
