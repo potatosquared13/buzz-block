@@ -10,8 +10,8 @@ class Block:
         self.index = index
         self.proof = 0
         self.previous_hash = previous_hash
-        self.transactions = transactions
         self.timestamp = datetime.now().isoformat()
+        self.transactions = transactions
 
     def display(self):
         print(helpers.jsonify(self))
