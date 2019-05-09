@@ -48,7 +48,7 @@ class Entry:
 # search the database for clients either by partial name or identity
 def search(string):
     with conn:
-        c.execute("select * from clients where name like ? or identity like ?", ('%{}%'.format(string),'{}'.format(string),))
+        c.execute("select * from clients where name like ? or identity=?", ('%{}%'.format(string),'{}'.format(string),))
         list = c.fetchall()
         output = []
         for entry in list:
