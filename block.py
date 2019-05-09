@@ -46,7 +46,7 @@ class Blockchain:
         block = Block(
             index=len(self.blocks),
             previous_hash=previous_hash,
-            transactions=self.pending_transactions
+            transactions=deepcopy(self.pending_transactions)
         )
         self.pending_transactions = []
         block.nonce = self.mine(previous_nonce, block)
