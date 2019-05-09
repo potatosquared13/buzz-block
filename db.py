@@ -19,7 +19,6 @@ def update_balance(identity):
     # change balance to pending_balance
     with conn:
         c.execute("update clients set current_balance=(select pending_balance from clients where identity=?) where identity=?", (identity, identity,))
-    pass
 
 def update_pending(sender, recipient, amount):
     # get current pending_balance
