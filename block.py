@@ -8,7 +8,7 @@ from Crypto.PublicKey import RSA
 class Block:
     def __init__(self, index, previous_hash, transactions):
         self.index = index
-        self.proof = 0
+        self.nonce = 0
         self.previous_hash = previous_hash
         self.timestamp = datetime.now().isoformat()
         self.transactions = transactions
@@ -19,7 +19,7 @@ class Block:
     @property
     def hash(self):
         tmp_block = deepcopy(self)
-        del tmp_block.proof
+        del tmp_block.nonce
         return helpers.sha256(helpers.jsonify(tmp_block)).hexdigest()
 
 
@@ -55,7 +55,7 @@ class Blockchain:
                 # if signature is verified, add to list
                 if PKCS1_v1_5.new(public_key).verify(hash, signature):
                     verified_transactions.append(transaction)
-        previous_proof = self.last_block.proof
+        previous_nonce = self.last_block.nonce
         previous_hash = self.last_block.hash
         block = Block(
             index=len(self.blocks),
@@ -63,7 +63,7 @@ class Blockchain:
             transactions=verified_transactions
         )
         self.pending_transactions = []
-        block.proof = self.mine(previous_proof, block)
+        block.nonce = self.mine(previous_nonce, block)
         self.blocks.append(block)
 
     def add_transaction(self, transaction):
@@ -76,14 +76,14 @@ class Blockchain:
         print(helpers.jsonify(self))
 
     @staticmethod
-    def mine(previous_proof, block):
-        proof = previous_proof
+    def mine(previous_nonce, block):
+        nonce = previous_nonce
         hash = block.hash
         while True:
-            digest = helpers.sha256(str(proof) + str(hash)).hexdigest()
+            digest = helpers.sha256(str(nonce) + str(hash)).hexdigest()
             if (digest.startswith('0000')):
-                return proof
-            proof += 1
+                return nonce
+            nonce += 1
 
     @property
     def last_block(self):

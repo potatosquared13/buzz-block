@@ -48,7 +48,3 @@ def search_by_name(string):
             output.append(e)
         return output
 
-# same thing but instead of a list, return JSON output
-def search_by_name_json(string):
-    return helpers.jsonify(search_by_name(string))
-
