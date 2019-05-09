@@ -1,7 +1,6 @@
 import helpers
 from copy import deepcopy
 from datetime import datetime
-from Crypto.Signature import PKCS1_v1_5
 
 
 class Transaction:
@@ -12,8 +11,9 @@ class Transaction:
         self.timestamp = datetime.now().isoformat()
         self.signature = None
 
-    def display(self):
-        print(helpers.jsonify(self))
+    @property
+    def json(self):
+        return helpers.jsonify(self)
 
     @property
     def hash(self):

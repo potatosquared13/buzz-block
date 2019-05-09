@@ -1,9 +1,7 @@
 import helpers
 from copy import deepcopy
 from datetime import datetime
-from binascii import unhexlify as unhex
 from transaction import *
-from Crypto.PublicKey import RSA
 
 class Block:
     def __init__(self, index, previous_hash, transactions):
@@ -13,8 +11,8 @@ class Block:
         self.timestamp = datetime.now().isoformat()
         self.transactions = transactions
 
-    def display(self):
-        print(helpers.jsonify(self))
+    def json(self):
+        return helpers.jsonify(self)
 
     @property
     def hash(self):
@@ -42,25 +40,13 @@ class Blockchain:
     # and creates a new one
     # NOTE: transactions that have not been verified are
     # REMOVED COMPLETELY, and don't stay in pending_transactions
-    def new_block(self):
-        verified_transactions = []
-        for transaction in self.pending_transactions:
-            if transaction.signature:
-                # get public key
-                public_key = RSA.import_key(unhex(transaction.sender))
-                # get transaction signature
-                signature = unhex(transaction.signature)
-                # get transaction hash
-                hash = transaction.hash
-                # if signature is verified, add to list
-                if PKCS1_v1_5.new(public_key).verify(hash, signature):
-                    verified_transactions.append(transaction)
+    def write_block(self):
         previous_nonce = self.last_block.nonce
         previous_hash = self.last_block.hash
         block = Block(
             index=len(self.blocks),
             previous_hash=previous_hash,
-            transactions=verified_transactions
+            transactions=self.pending_transactions
         )
         self.pending_transactions = []
         block.nonce = self.mine(previous_nonce, block)
@@ -69,11 +55,17 @@ class Blockchain:
     def add_transaction(self, transaction):
         self.pending_transactions.append(transaction)
 
-    def display_pending(self):
-        print(helpers.jsonify(self.pending_transactions))
+    @property
+    def transactions(self):
+        return helpers.jsonify(self.pending_transactions)
 
-    def display(self):
-        print(helpers.jsonify(self))
+    @property
+    def json(self):
+        return helpers.jsonify(self)
+
+    @property
+    def last_block(self):
+        return self.blocks[-1]
 
     @staticmethod
     def mine(previous_nonce, block):
@@ -85,6 +77,3 @@ class Blockchain:
                 return nonce
             nonce += 1
 
-    @property
-    def last_block(self):
-        return self.blocks[-1]

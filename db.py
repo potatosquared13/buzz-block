@@ -3,44 +3,53 @@ import sqlite3
 import helpers
 
 # open connection to database
-conn = sqlite3.connect('clients.db')
+conn = sqlite3.connect('database.db')
 c = conn.cursor()
 
 # create database if it doesn't exist
 with conn:
     c.execute('''create table if not exists clients
-                 (name text, identity text, balance real, balance_pending real, unique(name))''')
+                 (name text, identity text, current_balance real, pending_balance real, unique(name))''')
 
-# insert initial client information to database. to be called in client.Client.__init__()
 def insert(client, amount):
     with conn:
-        c.execute("insert into clients values(?, ?, ?, 0)", (client.name, client.identity, amount,))
+        c.execute("insert into clients values(?, ?, ?, ?)", (client.name, client.identity, amount, amount,))
 
-# change a client's balance. to be called in block.Blockchain.new_block()
-def update(identity, amount):
+def update_balance(identity):
     # change balance to pending_balance
-    # set pending_balance to 0
+    with conn:
+        c.execute("update clients set current_balance=(select pending_balance from clients where identity=?) where identity=?", (identity, identity,))
     pass
 
-# change a client's pending balance. to be called in block.Blockchain.add_transaction()
-def update_pending(identity, amount):
-    # get current balance and add amount to it
-    # amount can be either positive, indicating being the recipient
-    # or negative, indicating being the sender
-    pass
+def update_pending(sender, recipient, amount):
+    # get current pending_balance
+    sender_balance=0
+    recipient_balance=0
+    with conn:
+        c.execute("select pending_balance from clients where identity=?", (sender,))
+        sender_balance=c.fetchone()[0]
+        c.execute("select pending_balance from clients where identity=?", (recipient,))
+        recipient_balance=c.fetchone()[0]
+    # adjust according to amount
+    sender_balance -= amount
+    recipient_balance += amount
+    # update entries in database
+    with conn:
+        c.execute("update clients set pending_balance=? where identity=?", (sender_balance, sender))
+        c.execute("update clients set pending_balance=? where identity=?", (recipient_balance, recipient))
 
 # client object to be used for printing search results
 class Entry:
-    def __init__(self, name, identity, balance, pending_balance):
+    def __init__(self, name, identity, current_balance, pending_balance):
         self.name = name
         self.identity = identity
-        self.balance = balance
+        self.current_balance = current_balance
         self.pending_balance = pending_balance
 
-# search the database for clients whose name partially matches the input string
-def search_by_name(string):
+# search the database for clients either by partial name or identity
+def search(string):
     with conn:
-        c.execute("select * from clients where name like ?", ('%{}%'.format(string),))
+        c.execute("select * from clients where name like ? or identity like ?", ('%{}%'.format(string),'{}'.format(string),))
         list = c.fetchall()
         output = []
         for entry in list:
