@@ -28,14 +28,14 @@ python -m pip install --user pycryptodome
 
 ##### Client:
 
-###### Create a client object with name "Client 1":
+###### Create a client object with name "Client 1" and a balance of 500:
 
 ```
 from client import *
-client1 = Client("Client 1")
+client1 = Client("Client 1", 500)
 ```
 
-The name "_Client 1_" will be included in the client database and used in printing receipts. Their public key/"identity" will be used in the blockchain, checking for balances, and everywhere else.
+"Client 1," a hexadecimal representation of their public key, and their initial balance will be included in their entry in the client database.
 
 ##### Transaction:
 
