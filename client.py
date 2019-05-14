@@ -4,6 +4,8 @@
 #      - This object is only used to create the client object
 #        the balance, actual name, etc., will be handled in the database
 
+# I was here
+
 import Crypto.Random
 from binascii import hexlify
 from Crypto.PublicKey import RSA
