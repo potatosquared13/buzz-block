@@ -29,18 +29,18 @@ python -m pip install --user pycryptodome
 - Requirements for testing locally:
 
 ```
->python
->>>import db
->>>import server
->>>from client import Client
->>>from transaction import Transaction
+> python
+>>> import db
+>>> import server
+>>> from client import Client
+>>> from transaction import Transaction
 ```
 
 - Create a client:
 
 ```
->>>c1 = Client("Villanueva, Daniel", 500)
->>>c2 = Client("Ibelgaufts, Justin", 500)
+>>> c1 = Client("Villanueva, Daniel", 500)
+>>> c2 = Client("Ibelgaufts, Justin", 500)
 ```
 
 This creates two clients and adds their public keys, names, and an initial amount of 500 to the client table in database.db.
@@ -49,7 +49,7 @@ _Note:_ the private keys are stored in memory in the Client object created, whic
 - Create a transaction:
 
 ```
->>>t1 = Transaction(c1.identity, c2.identity, 100)
+>>> t1 = Transaction(c1.identity, c2.identity, 100)
 ```
 
 We pass the client identities (_c1.identity, c2.identity_), which are hexadecimal representations of their public keys, and an amount (_100_). This creates a transaction object which still has to be signed by the sender of the transaction (c1).
@@ -57,7 +57,7 @@ We pass the client identities (_c1.identity, c2.identity_), which are hexadecima
 - Sign a transaction:
 
 ```
->>>c1.sign(t1)
+>>> c1.sign(t1)
 ```
 
 This takes the transaction object, strips the _signature_ field from it, gets its hash, and then signs it using c1's private key. The signature becomes part of the transaction, and it can be easily verified with the sender's identity([example shown in server.py under the function new_transaction](server.py)).
@@ -67,7 +67,7 @@ We can see the transaction by `print()`ing the transaction's `json` property.
 - Add to blockchain:
 
 ```
->>>server.new_transaction(t1.json)
+>>> server.new_transaction(t1.json)
 ```
 
 We pass the JSON of the transaction instead of the actual transaction because the server will receive the transaction over a local network, and sending a stream of text is easier than python objects. The transaction is verified before it is added to the blockchain's list of pending transactions. This also updates the client database so that their pending balance reflects the newly added transactions.
@@ -75,7 +75,7 @@ We pass the JSON of the transaction instead of the actual transaction because th
 - Create a new block (and add pending transactions to it):
 
 ```
->>>server.new_block()
+>>> server.new_block()
 ```
 
 This updates the client database so that the affected accounts have their balances updated.
@@ -83,8 +83,8 @@ This updates the client database so that the affected accounts have their balanc
 - Check client database
 
 ```
->>>import helpers
->>>print(helpers.jsonify(db.search("Villanueva")))
+>>> import helpers
+>>> print(helpers.jsonify(db.search("Villanueva")))
 ```
 
 The search function accepts both a partial string of the client's name or their identity. The above will print their entry in the database in JSON.
