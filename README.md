@@ -52,15 +52,15 @@ _Note:_ the private keys are stored in memory in the Client object created, whic
 >>> t1 = Transaction(c1.identity, c2.identity, 100)
 ```
 
-We pass the client identities (_c1.identity, c2.identity_), which are hexadecimal representations of their public keys, and an amount (_100_). This creates a transaction object which still has to be signed by the sender of the transaction (c1).
+We pass the client identities (_c1.identity, c2.identity_), which are hexadecimal representations of their public keys, and an amount (_100_). This creates a transaction object which still has to be signed by the person who will create the transaction. In this case it will be the recipient, as in the actual system they will be the vendors from whom the customers will purchase from.
 
 - Sign a transaction:
 
 ```
->>> c1.sign(t1)
+>>> c2.sign(t1)
 ```
 
-This takes the transaction object, strips the _signature_ field from it, gets its hash, and then signs it using c1's private key. The signature becomes part of the transaction, and it can be easily verified with the sender's identity([example shown in server.py under the function new_transaction](server.py)).
+This takes the transaction object, strips the _signature_ field from it, gets its hash, and then signs it using c2's private key. The signature becomes part of the transaction, and it can be easily verified with the sender's identity([example shown in server.py under the function new_transaction](server.py)).
 
 We can see the transaction by `print()`ing the transaction's `json` property.
 

@@ -14,7 +14,7 @@ def new_transaction(transaction_json):
     transaction = Transaction(tmp['sender'], tmp['recipient'], tmp['amount'])
     transaction.timestamp = tmp['timestamp']
     transaction.signature = tmp['signature']
-    key = RSA.import_key(unhex(transaction.sender))
+    key = RSA.import_key(unhex(transaction.recipient))
     signature = unhex(transaction.signature)
     hash = transaction.hash
     if PKCS1_v1_5.new(key).verify(hash, signature):
