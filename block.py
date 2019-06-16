@@ -11,6 +11,7 @@ class Block:
         self.timestamp = datetime.now().isoformat()
         self.transactions = transactions
 
+    @property
     def json(self):
         return helpers.jsonify(self)
 
@@ -25,7 +26,6 @@ class Blockchain:
     def __init__(self):
         self.blocks = []
         self.pending_transactions = []
-        self.genesis()
 
     # create an empty block for the first block
     def genesis(self):
@@ -73,7 +73,7 @@ class Blockchain:
         hash = block.hash
         while True:
             digest = helpers.sha256(str(nonce) + str(hash)).hexdigest()
-            if (digest.startswith('0000')):
+            if (digest.startswith('000')):
                 return nonce
             nonce += 1
 
