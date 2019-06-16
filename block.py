@@ -31,9 +31,10 @@ class Blockchain:
     def genesis(self):
         block = Block(
             index=0,
-            previous_hash=0,
+            previous_hash="0000000000000000000000000000000000000000000000000000000000000000",
             transactions=[]
         )
+        block.nonce = self.mine(0, block)
         self.blocks.append(block)
 
     # adds all verified pending transactions to block
