@@ -12,7 +12,7 @@ import { PersonFormComponent } from './person-form/person-form.component';
   ],
   imports: [
     BrowserModule,
-	FormsModule
+	  FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

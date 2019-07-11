@@ -26,49 +26,65 @@ python -m pip install --user pycryptodome
 
 ### Examples
 
-##### Client:
-
-###### Create a client object with name "Client 1" and a balance of 500:
+- Requirements for testing locally:
 
 ```
-from client import *
-client1 = Client("Client 1", 500)
+> python
+>>> import db
+>>> import server
+>>> from client import Client
+>>> from transaction import Transaction
 ```
 
-"Client 1," a hexadecimal representation of their public key, and their initial balance will be included in their entry in the client database.
-
-##### Transaction:
-
-###### Create a transaction between two clients:
+- Create a client:
 
 ```
-from transaction import *
-transaction1 = Transaction(client1.identity, client2.identity, 100)
+>>> c1 = Client("Villanueva, Daniel", 500)
+>>> c2 = Client("Ibelgaufts, Justin", 500)
 ```
 
-where _client1_ sends _client2_ an amount of _100._ Transaction verification currently isn't implemented yet.
+This creates two clients and adds their public keys, names, and an initial amount of 500 to the client table in database.db.
+_Note:_ the private keys are stored in memory in the Client object created, which will be lost when exiting the python interpreter and so another client object will have to be made to sign transactions afterwards. This will be fixed eventually, but in the meantime the database can be deleted when wanting to start over.
 
-##### Blockchain
-
-###### Create and initialise a blockchain.
-
-```
-from block import *
-blockchain = Blockchain()
-```
-
-An empty block is added as the genesis block.
-
-###### Add a transaction to the list of pending transactions:
+- Create a transaction:
 
 ```
-blockchain.add_transaction(transaction1)
+>>> t1 = Transaction(c1.identity, c2.identity, 100)
 ```
 
-###### Create a new block:
+We pass the client identities (_c1.identity, c2.identity_), which are hexadecimal representations of their public keys, and an amount (_100_). This creates a transaction object which still has to be signed by the person who will create the transaction. In this case it will be the recipient, as in the actual system they will be the vendors from whom the customers will purchase from.
+
+- Sign a transaction:
 
 ```
-blockchain.new_block()
+>>> c2.sign(t1)
 ```
 
-This adds all pending transactions to the new block and drops all transactions that can't be verified. This behaviour should be changed in the future.
+This takes the transaction object, strips the _signature_ field from it, gets its hash, and then signs it using c2's private key. The signature becomes part of the transaction, and it can be easily verified with the sender's identity([example shown in server.py under the function new_transaction](server.py)).
+
+We can see the transaction by `print()`ing the transaction's `json` property.
+
+- Add to blockchain:
+
+```
+>>> server.new_transaction(t1.json)
+```
+
+We pass the JSON of the transaction instead of the actual transaction because the server will receive the transaction over a local network, and sending a stream of text is easier than python objects. The transaction is verified before it is added to the blockchain's list of pending transactions. This also updates the client database so that their pending balance reflects the newly added transactions.
+
+- Create a new block (and add pending transactions to it):
+
+```
+>>> server.new_block()
+```
+
+This updates the client database so that the affected accounts have their balances updated.
+
+- Check client database
+
+```
+>>> import helpers
+>>> print(helpers.jsonify(db.search("Villanueva")))
+```
+
+The search function accepts both a partial string of the client's name or their identity. The above will print their entry in the database in JSON.
