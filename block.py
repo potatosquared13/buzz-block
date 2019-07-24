@@ -77,4 +77,3 @@ class Blockchain:
             if (digest.startswith('000')):
                 return nonce
             nonce += 1
-
