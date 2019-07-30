@@ -3,13 +3,13 @@ import sqlite3
 import helpers
 
 # open connection to database
-conn = sqlite3.connect('database.db')
+conn = sqlite3.connect('database.db', check_same_thread=False)
 c = conn.cursor()
 
 # create database if it doesn't exist
 with conn:
     c.execute('''create table if not exists clients
-                 (name text, identity text, current_balance real, pending_balance real, unique(name))''')
+                 (name text, identity text, current_balance real, pending_balance real, unique(name, identity))''')
 
 def insert(client, amount):
     with conn:
