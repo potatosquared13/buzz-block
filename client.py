@@ -21,8 +21,7 @@ import helpers
 
 class Client:
     def __init__(self, name = None, filename = None, password = None):
-        if name and not token:
-            # rand = Crypto.Random.new().read
+        if (name and not password):
             self.name = name
             self._private_key = rsa.generate_private_key(
                 public_exponent=65537,
@@ -30,10 +29,6 @@ class Client:
                 backend=default_backend()
             )
             self._public_key = self._private_key.public_key()
-            # self._private_key = RSA.generate(1024, rand)
-            # self._public_key = self._private_key.publickey()
-            # self._signer = PKCS1_v1_5.new(self._private_key)
-            # db.insert(self, amount)
         else:
             client_json =  json.load(open(filename, 'r'))
             self.name = client_json["name"]
@@ -44,7 +39,6 @@ class Client:
                 backend=default_backend()
             )
             self._public_key = self._private_key.public_key()
-
 
     def sign(self, transaction):
         msg = unhexlify(transaction.hash)
@@ -57,17 +51,12 @@ class Client:
             hashes.SHA256()
         )
         transaction.signature = hexlify(signature).decode()
-        # return hexlify(signature).decode()
-        # tmp_transaction = transaction
-        # del tmp_transaction.signature
-        # hash = helpers.sha256(helpers.jsonify(tmp_transaction))
-        # transaction.signature =  hexlify(self._signer.sign(hash)).decode('ascii')
 
     def write_to_file(self, password, filename="client.json"):
         key = self._private_key.private_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(helpers.sha256(password))
+            encryption_algorithm=serialization.BestAvailableEncryption(helpers.sha256(password).encode())
         )
         o = {'name': self.name, 'key': hexlify(key).decode()}
         with open(filename, 'w') as f:
@@ -80,5 +69,3 @@ class Client:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
         return hexlify(identity).decode()
-        # identity = hexlify(self._public_key.exportKey(format='DER'))
-        # return identity.decode('ascii')
