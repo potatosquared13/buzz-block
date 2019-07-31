@@ -9,6 +9,7 @@
 
 import json
 import socket
+import logging
 import os.path
 import threading
 
@@ -18,8 +19,6 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import padding
-# from Crypto.PublicKey import RSA
-# from Crypto.Signature import PKCS1_v1_5
 
 from helpers import *
 from block import Blockchain, Block
@@ -30,18 +29,17 @@ from transaction import Transaction
 class Node(threading.Thread):
     def __init__(self):
         self.listening = False
-        self.host = socket.gethostbyname(socket.gethostname())
-        self.port = 50000
+        self.address = None
         self.usock = None
         self.tsock = None
         self.peers = []
         self.chain = Blockchain()
+        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.DEBUG)
 
     def write_block_to_file(self):
-        log("Writing block to file...")
+        logging.info("Writing block to file...")
         with open('blockchain.json', 'w') as f:
             f.write(jsonify(self.chain))
-        # json.dump(self.chain, open('blockchain.json', 'w'), default=lambda o: o.__dict__, indent=4)
 
     def read_block_from_file(self):
         i = 0
@@ -54,42 +52,32 @@ class Node(threading.Thread):
                 temp_transaction.signature = tr['signature']
                 transactions.append(temp_transaction)
             temp_block = Block(bl['index'], bl['previous_hash'], transactions)
-            # temp_block.nonce = bl['nonce']
             temp_block.timestamp = bl['timestamp']
-            # verify integrity
-            # if (helpers.sha256(str(temp_block.nonce)+str(temp_block.hash)).startswith('000')):
             if (chain_json['blocks'][bl['index']]):
                 self.chain.blocks.append(temp_block)
-            # else:
-                # import sys
-                # sys.exit("blockchain.json has been tampered with, not continuing.")
-        # for pt in chain_json['pending_transactions']:
-        #     tmp = Transaction(pt['sender'], pt['recipient'], pt['amount'])
-        #     tmp.timestamp = pt['timestamp']
-        #     tmp.signature = pt['signature']
-        #     self.chain.pending_transactions.append(tmp)
 
     def handle_connection(self):
         pass
 
-    def send(self, host, message_type, message):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(host)
-            # log(f"sending message length to {host}:{port}")
-            msg = ''.join((str(len(message)).zfill(8), message_type, message))
-            # sock.sendall(str(len(message)).zfill(8).encode())
-            # sock.send(message_type.encode())
-            log(f"sending {len(message)} bytes to {host}:50000")
-            sock.sendall(msg.encode())
-            data = sock.recv(8)
-            if (not int(data.decode())):
-                log("Response: OK")
-            else:
-                pass
-            sock.close()
+    def send(self, sock, message_type, message):
+        addr = sock.getpeername()
+        msg = ''.join((message_type, str(len(message)).zfill(8), message))
+        logging.info(f"Sending {len(message)} bytes to {addr[0]}:{addr[1]}...")
+        sock.sendall(msg.encode())
 
-    def receive(self):
-        log(f"Listening for connections on {self.host}:{self.port}")
+    def receive(self, sock):
+        addr = sock.getpeername()
+        message_type = int(sock.recv(1))
+        message_len = int(sock.recv(8))
+        logging.info(f"Receiving {message_len} bytes from {addr[0]}:{addr[1]}...")
+        message = sock.recv(message_len).decode()
+        while (message_len > len(message)):
+            tmp = sock.recv(message_len - len(message)).decode()
+            message = ''.join((message, tmp))
+        return (message_type, message)
+
+    def listen(self):
+        logging.info(f"Listening for connections on {self.address[0]}:{self.address[1]}")
         while self.listening:
             try:
                 self.tsock.listen(8)
@@ -99,6 +87,6 @@ class Node(threading.Thread):
             except socket.error:
                 pass
 
-    def cleanup(self):
+    def stop(self):
         self.usock.close()
         self.tsock.close()
