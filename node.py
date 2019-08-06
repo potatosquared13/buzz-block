@@ -34,50 +34,65 @@ class Node(threading.Thread):
         self.tsock = None
         self.peers = []
         self.chain = Blockchain()
-        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.DEBUG)
+        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
+        if(os.path.isfile('./blockchain.json')):
+            self.read_block_from_file()
+
 
     def write_block_to_file(self):
-        logging.info("Writing block to file...")
+        logging.info("Writing block to file")
         with open('blockchain.json', 'w') as f:
             f.write(jsonify(self.chain))
 
     def read_block_from_file(self):
-        i = 0
-        chain_json = json.load(open('blockchain.json', 'r'))
-        for bl in chain_json['blocks']:
+        logging.info("Reading block from file")
+        self.chain = self.rebuild_chain(open('blockchain.json', 'r').read())
+
+    def rebuild_chain(self, chain_json):
+        # TODO verify chain has not been tampered with
+        tmp = json.loads(chain_json)
+        chain = Blockchain()
+        for bl in tmp['blocks']:
             transactions = []
             for tr in bl['transactions']:
-                temp_transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
-                temp_transaction.timestamp = tr['timestamp']
-                temp_transaction.signature = tr['signature']
-                transactions.append(temp_transaction)
-            temp_block = Block(bl['index'], bl['previous_hash'], transactions)
-            temp_block.timestamp = bl['timestamp']
-            if (chain_json['blocks'][bl['index']]):
-                self.chain.blocks.append(temp_block)
+                transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
+                transaction.timestamp = tr['timestamp']
+                transaction.signature = tr['signature']
+                transactions.append(transaction)
+            block = Block(bl['index'], bl['previous_hash'], transactions)
+            block.timestamp = bl['timestamp']
+            chain.blocks.append(block)
+        return chain
+
+    def rebuild_transaction(self, transaction_json):
+        tmp = json.loads(transaction_json)
+        transaction = Transaction(tmp['sender'], tmp['recipient'], tmp['amount'])
+        transaction.timestamp = tmp['timestamp']
+        transaction.signature = tmp['signature']
+        return transaction
 
     def handle_connection(self):
         pass
 
     def send(self, sock, message_type, message):
         addr = sock.getpeername()
-        msg = ''.join((message_type, str(len(message)).zfill(8), message))
-        logging.info(f"Sending {len(message)} bytes to {addr[0]}:{addr[1]}...")
+        msg = ''.join((str(message_type), str(len(message)).zfill(8), message))
+        logging.debug(f"Sending {len(msg)} bytes to {addr[0]}:{addr[1]}")
         sock.sendall(msg.encode())
 
     def receive(self, sock):
         addr = sock.getpeername()
         message_type = int(sock.recv(1))
         message_len = int(sock.recv(8))
-        logging.info(f"Receiving {message_len} bytes from {addr[0]}:{addr[1]}...")
         message = sock.recv(message_len).decode()
         while (message_len > len(message)):
             tmp = sock.recv(message_len - len(message)).decode()
             message = ''.join((message, tmp))
+        logging.debug(f"Received {9 + message_len} bytes from {addr[0]}:{addr[1]}")
         return (message_type, message)
 
-    def listen(self):
-        logging.info(f"Listening for connections on {self.address[0]}:{self.address[1]}")
+    def wait_for_connection(self):
+        logging.debug(f"Listening for connections on {self.address[0]}:{self.address[1]}")
         while self.listening:
             try:
                 self.tsock.listen(8)
@@ -87,6 +102,11 @@ class Node(threading.Thread):
             except socket.error:
                 pass
 
+    def start_server(self):
+        pass
+
     def stop(self):
-        self.usock.close()
-        self.tsock.close()
+        if self.usock:
+            self.usock.close()
+        if self.tsock:
+            self.tsock.close()
