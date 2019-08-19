@@ -23,8 +23,8 @@ python -m pip install --user cryptography
 - [ ] peer to peer networking
 - [ ] consensus algorithm
 - [X] switch to cryptography instead of pycrypto
-- [ ] query the tracker's user database for account balance
-- [ ] disallow negative balances
+- [X] query the tracker's user database for account balance
+- [X] disallow negative balances
 
 ### Examples
 
