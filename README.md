@@ -8,83 +8,49 @@ An NFC-based transaction system for local events using blockchain.
 
 ###### a. [`python3`](https://www.python.org/downloads/)
 
-###### b. PyCrypto - for various cryptographic functions
+###### b. python library [`pyca/cryptography`](https://cryptography.io/en/latest/)
 
 ```
-python -m pip install --user pycryptodome
+python -m pip install --user cryptography
 ```
 
 ###### c. sqlite3 - for the client database
 
-### Notes on missing functionality/etc
+### TO DO
 
-- __networking:__ initially the blockchain should be on a single node which receives transactions from clients over a local network. Currently transactions are created and added on the same machine.
-
-- __client database:__ this is where client information such as their name, identity(public key), balance and pending balance(balance after all pending transactions are added) will be stored. For now, it will reside on the same machine that the single node will be on.
-
-- __actual client creation:__ when a client registers, for the users who will use the system to buy items, they probably don't need to know their private key since that is only used for signing transactions, which is the job of the stall owners/cashiers ("staff"). We need a way to securely send staff their private keys, or rethink about this part of the system.
+- [X] move chain.pending_transactions to tracker
+- [X] block creation is left to the tracker
+- [ ] peer to peer networking
+- [ ] consensus algorithm
+- [X] switch to cryptography instead of pycrypto
+- [X] query the tracker's user database for account balance
+- [X] disallow negative balances
 
 ### Examples
 
-- Requirements for testing locally:
+- Creating a tracker:
 
 ```
-> python
->>> import db
->>> import server
->>> from client import Client
->>> from transaction import Transaction
+>>> from nodetracker import Tracker
+>>> tracker = Tracker()
+>>> tracker.listen()
 ```
 
-- Create a client:
+This creates a tracker and tells it to start listening on the network for connections. It ultimately maintains and records the blockchain. It keeps a local database that contains all user identities and their balances. Connections come from peers, which mainly send transactions to be verified and added to the blockchain.
+
+- Creating a peer:
 
 ```
->>> c1 = Client("Villanueva, Daniel", 500)
->>> c2 = Client("Ibelgaufts, Justin", 500)
+>>> from nodepeer import Peer
+>>> peer = Peer([password=None], [filename="client.json"])
 ```
 
-This creates two clients and adds their public keys, names, and an initial amount of 500 to the client table in database.db.
-_Note:_ the private keys are stored in memory in the Client object created, which will be lost when exiting the python interpreter and so another client object will have to be made to sign transactions afterwards. This will be fixed eventually, but in the meantime the database can be deleted when wanting to start over.
+This creates a peer that can create transactions and send these to the tracker. A peer is usually a smartphone that can read NFC tags. Client information stored in `filename` is decrypted with `password`, and a client object is created with this. Requires a client object in order to create and sign transactions.
 
 - Create a transaction:
 
 ```
->>> t1 = Transaction(c1.identity, c2.identity, 100)
+>>> peer.send_transaction(sender, amount)
 ```
 
-We pass the client identities (_c1.identity, c2.identity_), which are hexadecimal representations of their public keys, and an amount (_100_). This creates a transaction object which still has to be signed by the person who will create the transaction. In this case it will be the recipient, as in the actual system they will be the vendors from whom the customers will purchase from.
-
-- Sign a transaction:
-
-```
->>> c2.sign(t1)
-```
-
-This takes the transaction object, strips the _signature_ field from it, gets its hash, and then signs it using c2's private key. The signature becomes part of the transaction, and it can be easily verified with the sender's identity([example shown in server.py under the function new_transaction](server.py)).
-
-We can see the transaction by `print()`ing the transaction's `json` property.
-
-- Add to blockchain:
-
-```
->>> server.new_transaction(t1.json)
-```
-
-We pass the JSON of the transaction instead of the actual transaction because the server will receive the transaction over a local network, and sending a stream of text is easier than python objects. The transaction is verified before it is added to the blockchain's list of pending transactions. This also updates the client database so that their pending balance reflects the newly added transactions.
-
-- Create a new block (and add pending transactions to it):
-
-```
->>> server.new_block()
-```
-
-This updates the client database so that the affected accounts have their balances updated.
-
-- Check client database
-
-```
->>> import helpers
->>> print(helpers.jsonify(db.search("Villanueva")))
-```
-
-The search function accepts both a partial string of the client's name or their identity. The above will print their entry in the database in JSON.
+This creates a transaction object with the peer's client object as the recipient. `sender`(of the amount, not the transaction) is the hexadecimal identifier found on an NFC chip that will be scanned by the peer. The peer then sends this to the tracker for verification before being added to a list of pending transactions to be added.

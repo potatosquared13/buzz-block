@@ -4,9 +4,9 @@ from datetime import datetime
 
 
 class Transaction:
-    def __init__(self, sender_identity, recipient_identity, amount):
-        self.sender = sender_identity
-        self.recipient = recipient_identity
+    def __init__(self, sender, recipient, amount):
+        self.sender = sender
+        self.recipient = recipient
         self.amount = amount
         self.timestamp = datetime.now().isoformat()
         self.signature = None
