@@ -25,6 +25,7 @@ python -m pip install --user cryptography
 - [X] switch to cryptography instead of pycrypto
 - [X] query the tracker's user database for account balance
 - [X] disallow negative balances
+- [ ] multiple trackers
 
 ### Examples
 
