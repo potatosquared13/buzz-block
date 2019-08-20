@@ -65,7 +65,10 @@ class Blockchain:
 
     @property
     def last_block(self):
-        return self.blocks[-1]
+        try:
+            return self.blocks[-1]
+        except IndexError:
+            return Block("0000000000000000000000000000000000000000000000000000000000000000", [])
 
     # @staticmethod
     # def mine(previous_nonce, block):

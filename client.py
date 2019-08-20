@@ -12,8 +12,7 @@ from binascii import hexlify, unhexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import ec
 
 # import db
 import helpers
@@ -23,10 +22,9 @@ class Client:
     def __init__(self, name = None, filename = None, password = None):
         if (name and not password):
             self.name = name
-            self._private_key = rsa.generate_private_key(
-                public_exponent=65537,
-                key_size=2048,
-                backend=default_backend()
+            self._private_key = ec.generate_private_key(
+                ec.SECP384R1(),
+                default_backend()
             )
             self._public_key = self._private_key.public_key()
         else:
@@ -44,11 +42,7 @@ class Client:
         msg = unhexlify(transaction.hash)
         signature = self._private_key.sign(
             msg,
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            hashes.SHA256()
+            ec.ECDSA(hashes.SHA256())
         )
         transaction.signature = hexlify(signature).decode()
 

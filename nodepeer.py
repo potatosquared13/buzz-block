@@ -10,7 +10,6 @@ class Peer(Node):
         if password:
             self.client = Client(filename=filename, password=password)
         self.tracker = None
-        self.uport = 60001
         self.tport = 50001
         self.pending_block = None
         self.hashes = []
@@ -46,6 +45,7 @@ class Peer(Node):
             transaction.signature = tr['signature']
             pending_transactions.append(tr)
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
+        self.hashes.append(self.pending_block.hash)
         if (self.peers):
             try:
                 for peer in self.peers:
@@ -62,22 +62,20 @@ class Peer(Node):
     # This function handles receiving other hashes and compares it with its own
     # TODO for each transaction in self.hashes, remove the transaction from self.pending_transactions
     def pbft_receive(self, hash=None):
-        if (hash not in self.hashes):
-            self.hashes.append(hash)
         if (not self.peers):
             self.get_peers()
-        if (len(self.hashes) == len(self.peers)):
-            if (self.hashes.count(self.pending_block.hash)/len(self.hashes) > 2/3):
-                logging.debug("Own hash matches majority of peer hashes.")
-                self.chain.blocks.append(self.pending_block)
-                logging.info("New block added to chain")
-                self.hashes = []
-                self.pending_block = None
-            else:
-                logging.debug("Requesting updated chain from tracker")
-                self.update_chain()
-                self.hashes = []
-                self.pending_block = None
+        if (len(self.hashes) == len(self.peers) and
+            self.hashes.count(self.pending_block.hash)/len(self.hashes) > 2/3):
+            logging.debug("Own hash matches majority of peer hashes.")
+            self.chain.blocks.append(self.pending_block)
+            logging.info("New block added to chain")
+            self.hashes = []
+            self.pending_block = None
+        else:
+            logging.debug("Requesting updated chain from tracker")
+            self.update_chain()
+            self.hashes = []
+            self.pending_block = None
 
     def get_balance(self, client):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -110,13 +108,14 @@ class Peer(Node):
     def connect(self):
         self.tracker = None
         msg = "62757a7aCN" + self.client.identity
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            sock.bind(('', 0))
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+            #sock.bind(('', 0))
+            #sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             sock.settimeout(4)
             try:
                 while (self.tracker == None):
-                    sock.sendto(msg.encode(), ('<broadcast>', 60000))
+                    sock.sendto(msg.encode(), ('224.1.1.1', 60000))
                     data, addr = sock.recvfrom(1024)
                     logging.debug(f"Found tracker at {addr[0]}")
                     self.tracker = addr[0]
@@ -154,3 +153,4 @@ class Peer(Node):
             self.listening = False
             self.write_block_to_file()
             self.stop()
+

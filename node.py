@@ -9,6 +9,8 @@
 
 import json
 import time
+import zlib
+import base64
 import socket
 import logging
 import os.path
@@ -18,8 +20,7 @@ from binascii import unhexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import ec
 
 from helpers import *
 from block import Blockchain, Block
@@ -30,11 +31,7 @@ from transaction import Transaction
 class Node(threading.Thread):
     def __init__(self):
         self.listening = False
-        self.address = socket.gethostbyname(socket.gethostname())
-        self.uport = 60000
         self.tport = 50000
-        self.usock = None
-        self.tsock = None
         self.peers = []
         self.pending_transactions = []
         self.chain = Blockchain()
@@ -77,21 +74,14 @@ class Node(threading.Thread):
     def validate_transaction(self, transaction):
         valid = False
         # check if transaction is valid:
-        # verify signature,
+        # verify signature
         if(transaction.signature):
             try:
                 msg = unhexlify(transaction.hash)
                 sig = unhexlify(transaction.signature)
                 identity = unhexlify(transaction.recipient)
                 key = serialization.load_der_public_key(identity, backend=default_backend())
-                key.verify(
-                    sig,
-                    msg,
-                    padding.PSS(
-                        mgf=padding.MGF1(hashes.SHA256()),
-                        salt_length=padding.PSS.MAX_LENGTH),
-                    hashes.SHA256()
-                )
+                key.verify(sig, msg, ec.ECDSA(hashes.SHA256()))
                 valid = True
             except cryptography.exceptions.InvalidSignature:
                 logging.error("Invalid transaction signature")
@@ -102,7 +92,8 @@ class Node(threading.Thread):
 
     def send(self, sock, message_type, message):
         addr = sock.getpeername()
-        msg = ''.join((message_type, str(len(message)).zfill(8), message))
+        payload = base64.b64encode(zlib.compress(message,9))
+        msg = message_type.encode() + str(len(message)).zfill(8).encode() + payload
         logging.debug(f"Sending {len(msg)} bytes to {addr[0]}")
         sock.sendall(msg.encode())
 
@@ -110,11 +101,12 @@ class Node(threading.Thread):
         addr = sock.getpeername()
         message_type = sock.recv(8).decode()
         message_len = int(sock.recv(8))
-        message = sock.recv(message_len).decode()
-        while (message_len > len(message)):
-            tmp = sock.recv(message_len - len(message)).decode()
-            message = ''.join((message, tmp))
-        logging.debug(f"Received {len(message_type+message)+8} bytes from {addr[0]}")
+        message_bytes = sock.recv(message_len)
+        while (message_len > len(message_bytes)):
+            tmp = sock.recv(message_len - len(message_bytes))
+            message_bytes = message_bytes + tmp
+        logging.debug(f"Received {len(message_type+message_bytes)+8} bytes from {addr[0]}")
+        message = base64.b64decode(zlib.decompress(message_bytes))
         return (message_type, message)
 
     def listen(self):
@@ -122,24 +114,21 @@ class Node(threading.Thread):
 
     def wait_for_connection(self):
         logging.debug(f"Listening for connections on {self.address}")
-        while self.listening:
-            try:
-                self.tsock.listen(8)
-                self.tsock.settimeout(4)
-                c, addr = self.tsock.accept()
-                threading.Thread(target=self.handle_connection, args=(c, addr)).start()
-            except socket.error:
-                pass
-            except (KeyboardInterrupt, SystemExit):
-                self.listening = False
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.bind((self.address, self.tport))
+            sock.settimeout(4)
+            while self.listening:
+                try:
+                    sock.listen(8)
+                    c, addr = sock.accept()
+                    threading.Thread(target=self.handle_connection, args=(c, addr)).start()
+                except socket.error:
+                    pass
+                except (KeyboardInterrupt, SystemExit):
+                    self.listening = False
 
     def start(self):
-        logging.debug("Started listening for connections")
         self.listening = True
-        self.usock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.tsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.usock.bind((self.address, self.uport))
-        self.tsock.bind((self.address, self.tport))
         threading.Thread(target=self.listen).start()
         time.sleep(0.1)
         threading.Thread(target=self.wait_for_connection).start()
@@ -148,7 +137,8 @@ class Node(threading.Thread):
 
     def stop(self):
         self.listening = False
-        if self.usock:
-            self.usock.close()
-        if self.tsock:
-            self.tsock.close()
+
+    @property
+    def address(self):
+        return socket.gethostbyname(socket.gethostname())
+

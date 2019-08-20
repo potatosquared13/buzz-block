@@ -6,6 +6,8 @@
 #      - take part in the consensus: send own hash as well
 #      - move balance update after consensus
 
+import struct
+
 import db
 
 from node import *
@@ -26,17 +28,17 @@ class Tracker(Node):
                 affected.add(transaction.recipient)
             for identity in affected:
                 db.update_balance(identity)
-            for peer in self.peers:
-                try:
+            try:
+                for peer in self.peers:
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                         sock.connect((peer[0], 50001))
                         self.send(sock, 'bftbegin', jsonify(self.pending_transactions))
-                except socket.error:
-                    logging.error("Peer refused connection")
-                    # listen for len(self.peers) replies and if 2/3 are in agreement, create new block and update all balances
-            new_block = Block(self.last_block.hash, self.pending_transactions)
-            self.chain.blocks.append(new_block)
-            self.write_block_to_file()
+                new_block = Block(self.chain.last_block.hash, self.pending_transactions)
+                self.chain.blocks.append(new_block)
+                self.write_block_to_file()
+            except socket.error:
+                logging.error("Peer refused connection")
+                # listen for len(self.peers) replies and if 2/3 are in agreement, create new block and update all balances
 
     def add_transaction(self, transaction_json):
         transaction = self.rebuild_transaction(transaction_json)
@@ -47,26 +49,36 @@ class Tracker(Node):
                 if (self.validate_transaction(transaction)):
                     db.update_pending(transaction.sender, transaction.recipient, transaction.amount)
                     self.pending_transactions.append(transaction)
+        else:
+            logging.info("No matches in database")
 
     def listen(self):
-        logging.debug("Listening for UDP messages")
-        while self.listening:
-            try:
-                self.usock.settimeout(4)
-                data, addr = self.usock.recvfrom(1024)
-                msg = data.decode()
-                if (msg.startswith('62757a7aCN')):
-                    logging.info(f"Peer {addr[0]} connected")
-                    if ((addr[0], msg[10:]) not in self.peers):
-                        self.peers.append((addr[0], msg[10:]))
-                    self.usock.sendto(self.address.encode(), addr)
-                elif (msg.startswith('62757a7aDC')):
-                    logging.info(f"Peer {addr[0]} disconnected")
-                    self.peers.remove((addr[0], msg[10:]))
-            except socket.error:
-                pass
-            except (KeyboardInterrupt, SystemExit):
-                self.listening = False
+        logging.debug("Listening for peers")
+        group = socket.inet_aton('224.1.1.1')
+        iface = socket.inet_aton(self.address)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
+            # mreq = struct.pack("4sl", socket.inet_aton(group), socket.INADDR_ANY)
+            # sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            sock.bind(('', 60000))
+            sock.settimeout(4)
+            while self.listening:
+                try:
+                    data, addr = sock.recvfrom(1024)
+                    msg = data.decode()
+                    if (msg.startswith('62757a7aCN')):
+                        logging.info(f"Peer {addr[0]} connected")
+                        if ((addr[0], msg[10:]) not in self.peers):
+                            self.peers.append((addr[0], msg[10:]))
+                        sock.sendto(self.address.encode(), addr)
+                    elif (msg.startswith('62757a7aDC')):
+                        logging.info(f"Peer {addr[0]} disconnected")
+                        self.peers.remove((addr[0], msg[10:]))
+                except socket.error:
+                    pass
+                except (KeyboardInterrupt, SystemExit):
+                    self.listening = False
 
     def handle_connection(self, c, addr):
         logging.debug(f"Accepted connection from {addr[0]}:{addr[1]}")
@@ -109,3 +121,4 @@ class Tracker(Node):
             self.listening = False
             # self.new_block()
             self.stop()
+
