@@ -131,12 +131,13 @@ class Node(threading.Thread):
                     self.listening = False
 
     def start(self):
-        self.listening = True
-        threading.Thread(target=self.listen).start()
-        time.sleep(0.1)
-        threading.Thread(target=self.wait_for_connection).start()
-        while self.listening:
-            time.sleep(1)
+        if (not self.listening):
+            self.listening = True
+            threading.Thread(target=self.listen).start()
+            time.sleep(0.1)
+            threading.Thread(target=self.wait_for_connection).start()
+            while self.listening:
+                time.sleep(1)
 
     def stop(self):
         self.listening = False

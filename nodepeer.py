@@ -23,6 +23,7 @@ class Peer(Node):
         transaction = Transaction(sender, self.client.identity, amount)
         self.client.sign(transaction)
         self.pending_transactions.append(transaction)
+        self.get_peers()
         for peer in self.peers:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -82,7 +83,7 @@ class Peer(Node):
             sock.connect((self.tracker, 50000))
             self.send(sock, 'balquery', client)
             response = self.receive(sock)
-            return response[1]
+            return float(response[1])
 
     def update_chain(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -101,8 +102,9 @@ class Peer(Node):
             sock.connect((self.tracker, 50000))
             self.send(sock, 'getpeers', self.client.identity)
             response = self.receive(sock)
+            self.peers = []
             for i in json.loads(response[1]):
-                if ((i[0], i[1]) not in self.peers and i[1] is not self.client.identity):
+                if (i[1] != self.client.identity):
                     self.peers.append((i[0], i[1]))
 
     def connect(self):
@@ -118,9 +120,9 @@ class Peer(Node):
                     logging.debug(f"Found tracker at {addr[0]}")
                     self.tracker = addr[0]
                     self.get_peers()
+                self.start()
             except socket.timeout:
                 logging.error("Tracker doesn't seem to be running")
-        self.start()
 
     def disconnect(self):
         msg = "62757a7aDC" + self.client.identity

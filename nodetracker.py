@@ -93,7 +93,7 @@ class Tracker(Node):
         elif (msg[0] == 'balquery'):
             logging.info(f"Balance query from {addr[0]}")
             response_type = 'balreply'
-            response = str(db.search(msg[1])[0].pending_balance)
+            response = str(db.search(msg[1].decode())[0].pending_balance)
         # block update
         elif (msg[0] == 'updchain'):
             logging.info(f"Chain update request from {addr[0]}")
