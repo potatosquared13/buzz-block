@@ -105,7 +105,7 @@ class Node(threading.Thread):
         while (message_len > len(message_bytes)):
             tmp = sock.recv(message_len - len(message_bytes))
             message_bytes = message_bytes + tmp
-        logging.debug(f"Received {len(message_type+message_bytes)+8} bytes from {addr[0]}")
+        logging.debug(f"Received {len(message_type+str(message_bytes))+8} bytes from {addr[0]}")
         message = base64.b64decode(zlib.decompress(message_bytes))
         return (message_type, message)
 
