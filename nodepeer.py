@@ -99,7 +99,7 @@ class Peer(Node):
     def get_peers(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((self.tracker, 50000))
-            self.send(sock, 'getpeers', "")
+            self.send(sock, 'getpeers', self.client.identity)
             response = self.receive(sock)
             for i in json.loads(response[1]):
                 if ((i[0], i[1]) not in self.peers and i[1] != self.client.identity):

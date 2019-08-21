@@ -90,24 +90,26 @@ class Node(threading.Thread):
     def handle_connection(self):
         pass
 
-    def send(self, sock, message_type, message):
+    def send(self, sock, msg_type, msg):
         addr = sock.getpeername()
-        payload = base64.b64encode(zlib.compress(message,9))
-        msg = message_type.encode() + str(len(message)).zfill(8).encode() + payload
-        logging.debug(f"Sending {len(msg)} bytes to {addr[0]}")
-        sock.sendall(msg.encode())
+        payload = base64.b64encode(zlib.compress(msg.encode(),9))
+        msg_bytes = msg_type.encode() + str(len(payload)).zfill(8).encode() + payload
+        logging.debug(f"Sending {len(msg_bytes)} bytes to {addr[0]}")
+        sock.sendall(msg_bytes)
 
     def receive(self, sock):
         addr = sock.getpeername()
-        message_type = sock.recv(8).decode()
-        message_len = int(sock.recv(8))
-        message_bytes = sock.recv(message_len)
-        while (message_len > len(message_bytes)):
-            tmp = sock.recv(message_len - len(message_bytes))
-            message_bytes = message_bytes + tmp
-        logging.debug(f"Received {len(message_type+str(message_bytes))+8} bytes from {addr[0]}")
-        message = base64.b64decode(zlib.decompress(message_bytes))
-        return (message_type, message)
+        msg_type = sock.recv(8).decode()
+        msg_len = int(sock.recv(8))
+        msg_bytes = sock.recv(msg_len)
+        while (msg_len > len(msg_bytes)):
+            print(msg_len)
+            print(len(msg_bytes))
+            tmp = sock.recv(msg_len - len(msg_bytes))
+            msg_bytes = msg_bytes + tmp
+        logging.debug(f"Received {len(msg_type+str(msg_bytes))+8} bytes from {addr[0]}")
+        msg = zlib.decompress(base64.b64decode(msg_bytes))
+        return (msg_type, msg)
 
     def listen(self):
         pass
