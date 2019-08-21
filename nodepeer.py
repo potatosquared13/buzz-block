@@ -102,7 +102,7 @@ class Peer(Node):
             self.send(sock, 'getpeers', self.client.identity)
             response = self.receive(sock)
             for i in json.loads(response[1]):
-                if ((i[0], i[1]) not in self.peers and i[1] != self.client.identity):
+                if ((i[0], i[1]) not in self.peers and i[1] is not self.client.identity):
                     self.peers.append((i[0], i[1]))
 
     def connect(self):
@@ -110,8 +110,6 @@ class Peer(Node):
         msg = "62757a7aCN" + self.client.identity
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-            #sock.bind(('', 0))
-            #sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             sock.settimeout(4)
             try:
                 while (self.tracker == None):
@@ -122,13 +120,13 @@ class Peer(Node):
                     self.get_peers()
             except socket.timeout:
                 logging.error("Tracker doesn't seem to be running")
+        self.start()
 
     def disconnect(self):
         msg = "62757a7aDC" + self.client.identity
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            sock.bind(('', 0))
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-            sock.sendto(msg.encode(), ('<broadcast>', 60000))
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+            sock.sendto(msg.encode(), ('224.1.1.1', 60000))
         self.stop()
 
     def handle_connection(self, c, addr):

@@ -117,6 +117,7 @@ class Node(threading.Thread):
     def wait_for_connection(self):
         logging.debug(f"Listening for connections on {self.address}")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind((self.address, self.tport))
             sock.settimeout(4)
             while self.listening:
