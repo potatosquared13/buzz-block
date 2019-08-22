@@ -121,8 +121,10 @@ class Peer(Node):
                     self.tracker = addr[0]
                     self.get_peers()
                 self.start()
+                return True
             except socket.timeout:
                 logging.error("Tracker doesn't seem to be running")
+        return False
 
     def disconnect(self):
         msg = "62757a7aDC" + self.client.identity
@@ -130,6 +132,7 @@ class Peer(Node):
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.sendto(msg.encode(), ('224.1.1.1', 60000))
         self.stop()
+        return True
 
     def handle_connection(self, c, addr):
         logging.debug(f"Accepted connection from {addr[0]}:{addr[1]}")

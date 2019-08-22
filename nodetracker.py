@@ -74,7 +74,8 @@ class Tracker(Node):
                         sock.sendto(self.address.encode(), addr)
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
-                        self.peers.remove((addr[0], msg[10:]))
+                        if ((addr[0], msg[10:]) in self.peers):
+                            self.peers.remove((addr[0], msg[10:]))
                 except socket.error:
                     pass
                 except (KeyboardInterrupt, SystemExit):
