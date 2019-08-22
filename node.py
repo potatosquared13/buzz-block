@@ -31,6 +31,7 @@ from transaction import Transaction
 class Node(threading.Thread):
     def __init__(self):
         self.listening = False
+        self.address = socket.gethostbyname(socket.gethostname())
         self.tport = 50000
         self.peers = []
         self.pending_transactions = []
@@ -141,8 +142,4 @@ class Node(threading.Thread):
 
     def stop(self):
         self.listening = False
-
-    @property
-    def address(self):
-        return socket.gethostbyname(socket.gethostname())
 
