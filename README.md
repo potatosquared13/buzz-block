@@ -6,26 +6,28 @@ An NFC-based transaction system for local events using blockchain.
 
 ### Requirements
 
-###### a. [`python3`](https://www.python.org/downloads/)
+ a. [`python3`](https://www.python.org/downloads/)
 
-###### b. python library [`pyca/cryptography`](https://cryptography.io/en/latest/)
+ b. python library [`pyca/cryptography`](https://cryptography.io/en/latest/)
 
 ```
 python -m pip install --user cryptography
 ```
 
-###### c. sqlite3 - for the client database
+ c. sqlite3 - for the client database
 
 ### TO DO
 
 - [X] move chain.pending_transactions to tracker
 - [X] block creation is left to the tracker
-- [ ] peer to peer networking
-- [ ] consensus algorithm
+- [X] peer to peer networking
+- [X] consensus algorithm
 - [X] switch to cryptography instead of pycrypto
 - [X] query the tracker's user database for account balance
 - [X] disallow negative balances
 - [ ] multiple trackers
+- [ ] web app for user registration
+- [ ] android app
 
 ### Examples
 
@@ -34,16 +36,17 @@ python -m pip install --user cryptography
 ```
 >>> from nodetracker import Tracker
 >>> tracker = Tracker()
->>> tracker.listen()
+>>> tracker.start()
 ```
 
-This creates a tracker and tells it to start listening on the network for connections. It ultimately maintains and records the blockchain. It keeps a local database that contains all user identities and their balances. Connections come from peers, which mainly send transactions to be verified and added to the blockchain.
+This creates a tracker and tells it to start listening on the network. It is a modified node without the ability to send transactions. Its main purpose is to maintain and record the blockchain. It keeps a local database that contains all user identities and their balances. Connections come from peers, which mainly send transactions to be verified and added to the blockchain.
+The tracker is also the node that will group transactions and request for the network to create a new block. This can be done by calling `tracker.new_block()`.
 
 - Creating a peer:
 
 ```
->>> from nodepeer import Peer
->>> peer = Peer([password=None], [filename="client.json"])
+>>> from node import Node
+>>> peer = Node([password=None], [filename="client.json"])
 ```
 
 This creates a peer that can create transactions and send these to the tracker. A peer is usually a smartphone that can read NFC tags. Client information stored in `filename` is decrypted with `password`, and a client object is created with this. Requires a client object in order to create and sign transactions.
@@ -54,4 +57,4 @@ This creates a peer that can create transactions and send these to the tracker. 
 >>> peer.send_transaction(sender, amount)
 ```
 
-This creates a transaction object with the peer's client object as the recipient. `sender`(of the amount, not the transaction) is the hexadecimal identifier found on an NFC chip that will be scanned by the peer. The peer then sends this to the tracker for verification before being added to a list of pending transactions to be added.
+This creates a transaction object with the peer's client object as the recipient. `sender`(of the amount, not the transaction) is the hexadecimal identifier found on an NFC chip that will be scanned by the peer. The peer sends this transaction to the entire network for recording until called to create a new block.
