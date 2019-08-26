@@ -1,6 +1,9 @@
 import sqlite3
+import threading
 
 import helpers
+
+lock = threading.Lock()
 
 # open connection to database
 conn = sqlite3.connect('database.db', check_same_thread=False)
@@ -18,24 +21,31 @@ def insert(client, amount):
 def update_balance(identity):
     # change balance to pending_balance
     with conn:
-        c.execute("update clients set current_balance=(select pending_balance from clients where identity=?) where identity=?", (identity, identity,))
+        try:
+            lock.acquire(True)
+            c.execute("update clients set current_balance=(select pending_balance from clients where identity=?) where identity=?", (identity, identity,))
+        finally:
+            lock.release()
 
 def update_pending(sender, recipient, amount):
     # get current pending_balance
     sender_balance=0
     recipient_balance=0
     with conn:
-        c.execute("select pending_balance from clients where identity=?", (sender,))
-        sender_balance=c.fetchone()[0]
-        c.execute("select pending_balance from clients where identity=?", (recipient,))
-        recipient_balance=c.fetchone()[0]
-    # adjust according to amount
-    sender_balance -= amount
-    recipient_balance += amount
-    # update entries in database
-    with conn:
-        c.execute("update clients set pending_balance=? where identity=?", (sender_balance, sender))
-        c.execute("update clients set pending_balance=? where identity=?", (recipient_balance, recipient))
+        try:
+            lock.acquire(True)
+            c.execute("select pending_balance from clients where identity=?", (sender,))
+            sender_balance=c.fetchone()[0]
+            c.execute("select pending_balance from clients where identity=?", (recipient,))
+            recipient_balance=c.fetchone()[0]
+            # adjust according to amount
+            sender_balance -= amount
+            recipient_balance += amount
+            # update entries in database
+            c.execute("update clients set pending_balance=? where identity=?", (sender_balance, sender))
+            c.execute("update clients set pending_balance=? where identity=?", (recipient_balance, recipient))
+        finally:
+            lock.release()
 
 # client object to be used for printing search results
 class Entry:
@@ -47,12 +57,16 @@ class Entry:
 
 # search the database for clients either by partial name or identity
 def search(string):
+    output = []
     with conn:
-        c.execute("select * from clients where name like ? or identity=?", ('%{}%'.format(string),'{}'.format(string),))
-        list = c.fetchall()
-        output = []
-        for entry in list:
-            e = Entry(entry[0], entry[1], entry[2], entry[3])
-            output.append(e)
-        return output
+        try:
+            lock.acquire(True)
+            c.execute("select * from clients where name like ? or identity=?", ('%{}%'.format(string),'{}'.format(string),))
+            list = c.fetchall()
+            for entry in list:
+                e = Entry(entry[0], entry[1], entry[2], entry[3])
+                output.append(e)
+        finally:
+            lock.release()
+    return output
 
