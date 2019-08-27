@@ -1,11 +1,5 @@
-# A node should be able to create transactions, verify block integrity
-# as well as read NFC tags and request the blockchain from other cashiers
-# this is basically the script that will be on the cashiers' systems
-# TODO - INC store private keys somewhere so we can resume
-#      - INC handle new node creation (adding a new client to the tracker)
-
-# import signal
-# signal.signal(signal.SIGINT, signal.SIG_DFL)
+# Source file for network node
+# Responsible for creating transactions and verifying other transactions
 
 import json
 import time
@@ -16,6 +10,7 @@ import logging
 import os.path
 import threading
 
+from enum import Enum
 from binascii import unhexlify
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -27,6 +22,17 @@ from block import Blockchain, Block
 from client import Client
 from transaction import Transaction
 
+class Con(Enum):
+    response = 0
+    transaction = 1
+    bftstart = 2
+    bftverify = 3
+    balancerequest = 4
+    balance = 5
+    chainrequest = 6
+    chain = 7
+    peerdiscovery = 8
+    unknown = 9
 
 class Node(threading.Thread):
     def __init__(self, filename="client.json", pin=None):
@@ -97,6 +103,8 @@ class Node(threading.Thread):
         transaction = self.rebuild_transaction(transaction_json)
         if (transaction.sender != transaction.recipient and self.validate_transaction(transaction)):
             self.pending_transactions.append(transaction)
+            return True
+        return False
 
     def send_transaction(self, sender, amount):
         transaction = Transaction(sender, self.client.identity, amount)
@@ -106,28 +114,35 @@ class Node(threading.Thread):
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((peer, 50001))
-                    self.send(sock, 'txnstore', transaction.json)
+                    self.send(sock, Con.transaction, transaction.json)
             except socket.error:
                 logging.error(f"Peer refused connection")
-        #with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        #    sock.connect((self.tracker, 50001))
-        #    self.send(sock, 'txnstore', transaction.json)
 
     def get_balance(self, client):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect((self.tracker, 50001))
-            self.send(sock, 'balquery', client)
-            response = self.receive(sock)
-            return float(response[1])
+        balance = 0
+        transactions = []
+        for block in self.chain.blocks:
+            for txn in block.transactions:
+                transactions.append(txn)
+        transactions = transactions + self.pending_transactions
+        sending = list((t for t in transactions if t.sender == client))
+        receiving = list((t for t in transactions if t.recipient == client))
+        if (not sending and not receiving):
+            return -1
+        for transaction in sending:
+            balance -= transaction.amount
+        for transaction in receiving:
+            balance += transaction.amount
+        return balance
 
     def update_chain(self, address=None):
         if (not address):
             address = self.tracker
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect((address, 50001))
-            self.send(sock, 'getchain', sha256(self.chain.json))
+            self.send(sock, Con.chainrequest, sha256(self.chain.json))
             response = self.receive(sock)
-            if (response[0] == "newchain" and response[1] != "UP TO DATE"):
+            if (response[0] == Con.chain and response[1] != "UP TO DATE"):
                 logging.info("Rebuilding chain")
                 self.chain = self.rebuild_chain(response[1])
                 return True
@@ -170,13 +185,15 @@ class Node(threading.Thread):
             logging.info(f"Discovered peer at {addr[0]}")
             self.peers.append(addr[0])
         msg = self.receive(c)
-        response = ""
+        if (msg[0] == Con.response):
+            logging.info(f"Response from {addr[0]}: {msg[1]}")
         # transaction
-        if (msg[0] == 'txnstore'):
+        elif (msg[0] == Con.transaction):
             logging.info(f"Transaction from {addr[0]}")
-            self.record_transaction(msg[1])
+            if(not self.record_transaction(msg[1])):
+                self.send(c, Con.response, "Invalid transaction")
         # validate block
-        elif (msg[0] == 'bftbegin'):
+        elif (msg[0] == Con.bftstart):
             logging.info(f"Validating block from {addr[0]}")
             pending_transactions_json = json.loads(msg[1])
             pending_transactions = []
@@ -187,14 +204,23 @@ class Node(threading.Thread):
                 pending_transactions.append(transaction)
             self.pbft_send(pending_transactions)
         # receive hashes
-        elif (msg[0] == 'bftverif'):
+        elif (msg[0] == Con.bftverify):
             logging.info(f"Hash from {addr[0]}")
             self.pbft_receive(addr[0], msg[1])
         # block update
-        elif (msg[0] == 'getchain'):
+        elif (msg[0] == Con.chainrequest):
             logging.info(f"Sending chain to {addr[0]}")
+            if (self.pending_block):
+                logging.info("Waiting for new block to be added before responding")
+            while (self.pending_block):
+                time.sleep(1)
             if (msg[1] != sha256(self.chain.json)):
-                self.send(c, "newchain", self.chain.json)
+                self.send(c, Con.chain, self.chain.json)
+            else:
+                self.send(c, Con.chain, "")
+        else:
+            logging.info(f"Unknown message ({msg[0]}, {msg[1]})")
+        logging.debug(f"Closed connection from {addr[0]}:{addr[1]}")
 
     def send(self, sock, msg_type, msg):
         addr = sock.getpeername()
@@ -205,7 +231,7 @@ class Node(threading.Thread):
 
     def receive(self, sock):
         addr = sock.getpeername()
-        msg_type = sock.recv(8).decode()
+        msg_type = ord(sock.recv(1))
         msg_len = int(sock.recv(8))
         msg_bytes = sock.recv(msg_len)
         while (msg_len > len(msg_bytes)):
@@ -234,7 +260,10 @@ class Node(threading.Thread):
                             logging.info(f"Responding to peer at {addr[0]}")
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
                                 rsock.connect((addr[0], 50001))
-                                self.send(rsock, 'resppeer', "")
+                                self.send(rsock, Con.peerdiscovery, "")
+                    elif (msg.startswwith('62757a7aCN')):
+                        logging.info(f"Sending tracker address to {addr[0]}")
+                        sock.sendto(self.tracker.encode(), addr)
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
                         if (addr[0] in self.peers):
@@ -292,7 +321,7 @@ class Node(threading.Thread):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((peer, 50001))
                     logging.debug(f"Sending own hash to {peer}")
-                    self.send(sock, 'bftverif', self.pending_block.hash)
+                    self.send(sock, Con.bftverify, self.pending_block.hash)
         except socket.error:
             logging.error("Peer refused connection")
 
