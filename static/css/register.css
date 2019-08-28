@@ -1,0 +1,41 @@
+body {
+  font-family: 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  background-color: rgb(219, 219, 219);
+}
+
+.form-container {
+  transition-duration: 2s;
+  border-radius: 2.5vw;
+  text-align: center;
+  font-size: 2vw;
+  margin: 0% auto;
+  background-color: gainsboro;
+  width: 29%;
+  padding-top: 2vw;
+  padding-bottom: 4vw;
+  opacity: 0;
+  box-shadow: 1vw 1vw 4vw 0vw;
+}
+
+.text-input {
+  text-align: center;
+  border: 0;
+  border-radius: 2vw;
+  font-size: 2vw;
+  margin-bottom: 12%;
+}
+
+.submit {
+  border: 0.3vw gray solid;
+  border-radius: 1vw;
+  padding: 1vw;
+  margin-top: 2%;
+  font-size: 2vw;
+}
+
+.submit:hover {
+  cursor: pointer;
+  background-color: cadetblue;
+  border: 0.3vw lightblue solid;
+  color: white;
+}

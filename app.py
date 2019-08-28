@@ -4,7 +4,8 @@ from client import Client
 from tracker import Tracker
 from transaction import Transaction
 
-from flask import Flask
+from flask import Flask, render_template, url_for
+app = Flask(__name__)
 
 # for registration
 clients = []
@@ -25,3 +26,9 @@ def finalize():
     for c in clients:
         db.insert(c[0], c[1])
     t.chain.genesis(transactions)
+
+@app.route('/register/')
+def register():
+    url_for('static', filename='css/register.css')
+    url_for('static', filename='js/animation.js')
+    return render_template('register.html')
