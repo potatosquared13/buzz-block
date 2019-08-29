@@ -1,5 +1,4 @@
 import helpers
-from copy import deepcopy
 from datetime import datetime
 from transaction import Transaction
 
@@ -15,8 +14,7 @@ class Block:
 
     @property
     def hash(self):
-        tmp_block = deepcopy(self)
-        return helpers.sha256(helpers.jsonify(tmp_block))
+        return helpers.sha256(helpers.jsonify(self))
 
 
 class Blockchain:
