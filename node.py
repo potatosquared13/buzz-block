@@ -44,7 +44,7 @@ class Node(threading.Thread):
         self.pending_transactions = []
         self.hashes = []
         self.chain = Blockchain()
-        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
+        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.DEBUG)
         if(os.path.isfile('./blockchain.json')):
             self.read_from_file()
         if pin:
@@ -181,8 +181,8 @@ class Node(threading.Thread):
 
     def handle_connection(self, c, addr):
         logging.debug(f"Accepted connection from {addr[0]}:{addr[1]}")
+        # add new address to peer list if it's not in there already
         if (addr[0] not in self.peers):
-            logging.info(f"Discovered peer at {addr[0]}")
             self.peers.append(addr[0])
         msg = self.receive(c)
         if (msg[0] == Con.response):
@@ -218,6 +218,11 @@ class Node(threading.Thread):
                 self.send(c, Con.chain, self.chain.json)
             else:
                 self.send(c, Con.chain, "")
+        elif (msg[0] == Con.peerdiscovery):
+            pass
+            #logging.info(f"Discovered peer at {addr[0]}")
+            #if (addr[0] not in self.peers):
+            #    self.peers.append(addr[0])
         else:
             logging.info(f"Unknown message ({msg[0]}, {msg[1]})")
         logging.debug(f"Closed connection from {addr[0]}:{addr[1]}")
@@ -225,21 +230,21 @@ class Node(threading.Thread):
     def send(self, sock, msg_type, msg):
         addr = sock.getpeername()
         payload = base64.b64encode(zlib.compress(msg.encode(),9))
-        msg_bytes = msg_type.encode() + str(len(payload)).zfill(8).encode() + payload
+        msg_bytes = str(msg_type.value).encode() + str(len(payload)).zfill(8).encode() + payload
         logging.debug(f"Sending {len(msg_bytes)} bytes to {addr[0]}")
         sock.sendall(msg_bytes)
 
     def receive(self, sock):
         addr = sock.getpeername()
-        msg_type = ord(sock.recv(1))
+        msg_type = int(sock.recv(1))
         msg_len = int(sock.recv(8))
         msg_bytes = sock.recv(msg_len)
         while (msg_len > len(msg_bytes)):
             tmp = sock.recv(msg_len - len(msg_bytes))
             msg_bytes = msg_bytes + tmp
-        logging.debug(f"Received {16 + len(msg_bytes)} bytes from {addr[0]}")
+        logging.debug(f"Received {9 + len(msg_bytes)} bytes from {addr[0]}")
         msg = zlib.decompress(base64.b64decode(msg_bytes))
-        return (msg_type, msg)
+        return (Con(msg_type), msg)
 
     def listen(self):
         group = socket.inet_aton('224.1.1.1')
@@ -261,9 +266,10 @@ class Node(threading.Thread):
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
                                 rsock.connect((addr[0], 50001))
                                 self.send(rsock, Con.peerdiscovery, "")
-                    elif (msg.startswwith('62757a7aCN')):
+                    elif (msg.startswith('62757a7aCN')):
                         logging.info(f"Sending tracker address to {addr[0]}")
-                        sock.sendto(self.tracker.encode(), addr)
+                        if (self.address == self.tracker):
+                            sock.sendto(self.tracker.encode(), addr)
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
                         if (addr[0] in self.peers):
@@ -315,11 +321,15 @@ class Node(threading.Thread):
     # This function creates a temporary block and sends its hash to other peers
     def pbft_send(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
-        #self.hashes.append(self.pending_block.hash)
+        self.hashes.append((self.address, self.pending_block.hash))
         try:
             for peer in self.peers:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect((peer, 50001))
+                    #if (not self.pending_block):
+                    #    logging.error("Waiting for own block to be generated before continuing")
+                    #while (not self.pending_block):
+                    #    time.sleep(1)
                     logging.debug(f"Sending own hash to {peer}")
                     self.send(sock, Con.bftverify, self.pending_block.hash)
         except socket.error:
@@ -328,21 +338,22 @@ class Node(threading.Thread):
     # implementation of the pBFT algorithm
     # This function handles receiving other hashes and compares it with its own
     def pbft_receive(self, addr, hash=None):
-        if (hash and hash not in self.hashes):
+        if (hash and (addr, hash) not in self.hashes):
             self.hashes.append((addr, hash.decode()))
-        if (len(self.hashes) == len(self.peers)):
+        if (len(self.hashes) > len(self.peers)):
             hashes = [h[1] for h in self.hashes]
             mode = max(set(hashes), key=hashes.count)
             if (hashes.count(mode)/len(hashes) > 2/3):
-                while (not self.pending_block):
+                if (not self.pending_block):
                     logging.error("Waiting for own block to be generated before continuing")
+                while (not self.pending_block):
                     time.sleep(1)
                 if (self.pending_block.hash == mode):
                     logging.info("Own block matches network majority")
                     self.chain.blocks.append(self.pending_block)
                     logging.info("New block added to chain")
                 else:
-                    for addr in [p[0] for p in self.hashes if p[1] == mode]:
+                    for addr in [p[0] for p in self.hashes if p[1] == mode and addr != self.address]:
                         try:
                             logging.info(f"Requesting current chain from {addr}")
                             self.update_chain(addr)
@@ -352,5 +363,7 @@ class Node(threading.Thread):
                 self.hashes = []
                 self.pending_transactions = []
                 self.pending_block = None
+        else:
+            logging.info(f"Received {len(self.hashes) - 1}/{len(self.peers)} hashes")
 
 
