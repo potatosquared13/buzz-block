@@ -37,8 +37,7 @@ class Con(Enum):
 class Node(threading.Thread):
     def __init__(self, filename="client.json", pin=None):
         self.listening = False
-        self.address = socket.gethostbyname(socket.gethostname())
-        self.tport = 50001
+        self.address = (socket.gethostbyname(socket.getfqdn()), 0)
         self.peers = []
         self.pending_block = None
         self.pending_transactions = []
@@ -99,8 +98,7 @@ class Node(threading.Thread):
                 logging.error("Invalid transaction signature")
         return valid
 
-    def record_transaction(self, transaction_json):
-        transaction = self.rebuild_transaction(transaction_json)
+    def record_transaction(self, transaction):
         if (transaction.sender != transaction.recipient and self.validate_transaction(transaction)):
             self.pending_transactions.append(transaction)
             return True
@@ -113,7 +111,7 @@ class Node(threading.Thread):
         for peer in self.peers:
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect((peer, 50001))
+                    sock.connect(peer)
                     self.send(sock, Con.transaction, transaction.json)
             except socket.error:
                 logging.error(f"Peer refused connection")
@@ -139,7 +137,7 @@ class Node(threading.Thread):
         if (not address):
             address = self.tracker
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect((address, 50001))
+            sock.connect(address)
             self.send(sock, Con.chainrequest, sha256(self.chain.json))
             response = self.receive(sock)
             if (response[0] == Con.chain and response[1] != "UP TO DATE"):
@@ -150,7 +148,7 @@ class Node(threading.Thread):
             return False
 
     def get_peers(self):
-        msg = "62757a7aGP"
+        msg = "62757a7aGP" + str(self.address[1])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.settimeout(1)
@@ -158,7 +156,7 @@ class Node(threading.Thread):
 
     def get_tracker(self):
         self.tracker = None
-        msg = "62757a7aCN" + self.client.identity
+        msg = "62757a7aCN" + str(self.address[1])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.settimeout(4)
@@ -166,8 +164,9 @@ class Node(threading.Thread):
                 while (self.tracker == None):
                     sock.sendto(msg.encode(), ('224.1.1.1', 60001))
                     data, addr = sock.recvfrom(1024)
-                    logging.info(f"Connected to {addr[0]}")
-                    self.tracker = addr[0]
+                    port = int(data)
+                    logging.info(f"Discovered tracker at {addr[0]}:{port}")
+                    self.tracker = (addr[0], port)
             except socket.timeout:
                 logging.error("Tracker doesn't seem to be running")
 
@@ -180,17 +179,15 @@ class Node(threading.Thread):
         return True
 
     def handle_connection(self, c, addr):
-        logging.debug(f"Accepted connection from {addr[0]}:{addr[1]}")
-        # add new address to peer list if it's not in there already
-        if (addr[0] not in self.peers):
-            self.peers.append(addr[0])
+        logging.debug(f"Accepted connection from {addr[0]}")
         msg = self.receive(c)
         if (msg[0] == Con.response):
-            logging.info(f"Response from {addr[0]}: {msg[1]}")
+            logging.info(f"Response from {addr[0]}")
         # transaction
         elif (msg[0] == Con.transaction):
             logging.info(f"Transaction from {addr[0]}")
-            if(not self.record_transaction(msg[1])):
+            transaction = self.rebuild_transaction(msg[1])
+            if(not self.record_transaction(transaction)):
                 self.send(c, Con.response, "Invalid transaction")
         # validate block
         elif (msg[0] == Con.bftstart):
@@ -206,7 +203,8 @@ class Node(threading.Thread):
         # receive hashes
         elif (msg[0] == Con.bftverify):
             logging.info(f"Hash from {addr[0]}")
-            self.pbft_receive(addr[0], msg[1])
+            peer = [p for p in self.peers if p[0] == addr[0]][0]
+            self.pbft_receive(peer, msg[1])
         # block update
         elif (msg[0] == Con.chainrequest):
             logging.info(f"Sending chain to {addr[0]}")
@@ -219,19 +217,19 @@ class Node(threading.Thread):
             else:
                 self.send(c, Con.chain, "")
         elif (msg[0] == Con.peerdiscovery):
-            pass
-            #logging.info(f"Discovered peer at {addr[0]}")
-            #if (addr[0] not in self.peers):
-            #    self.peers.append(addr[0])
+            port = int(msg[1])
+            if ((addr[0], port) not in self.peers):
+                logging.info(f"Discovered peer at {addr[0]}:{int(msg[1])}")
+                self.peers.append((addr[0], port))
         else:
             logging.info(f"Unknown message ({msg[0]}, {msg[1]})")
-        logging.debug(f"Closed connection from {addr[0]}:{addr[1]}")
+        logging.debug(f"Closed connection from {addr[0]}")
 
     def send(self, sock, msg_type, msg):
         addr = sock.getpeername()
-        payload = base64.b64encode(zlib.compress(msg.encode(),9))
+        payload = base64.b64encode(zlib.compress(str(msg).encode(),9))
         msg_bytes = str(msg_type.value).encode() + str(len(payload)).zfill(8).encode() + payload
-        logging.debug(f"Sending {len(msg_bytes)} bytes to {addr[0]}")
+        logging.debug(f"Sending {len(msg_bytes)} bytes to {addr[0]}:{addr[1]}")
         sock.sendall(msg_bytes)
 
     def receive(self, sock):
@@ -242,13 +240,13 @@ class Node(threading.Thread):
         while (msg_len > len(msg_bytes)):
             tmp = sock.recv(msg_len - len(msg_bytes))
             msg_bytes = msg_bytes + tmp
-        logging.debug(f"Received {9 + len(msg_bytes)} bytes from {addr[0]}")
+        logging.debug(f"Received {9 + len(msg_bytes)} bytes from {addr[0]}:{addr[1]}")
         msg = zlib.decompress(base64.b64decode(msg_bytes))
         return (Con(msg_type), msg)
 
     def listen(self):
         group = socket.inet_aton('224.1.1.1')
-        iface = socket.inet_aton(self.address)
+        iface = socket.inet_aton(self.address[0])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
@@ -259,21 +257,24 @@ class Node(threading.Thread):
                     data, addr = sock.recvfrom(1024)
                     msg = data.decode()
                     if (msg.startswith('62757a7aGP')):
-                        if (addr[0] != self.address):
-                            if (addr[0] not in self.peers):
-                                self.peers.append(addr[0])
+                        port = int(msg[10:])
+                        if (self.address != (addr[0], port)):
+                            if ((addr[0], port) not in self.peers):
+                                self.peers.append((addr[0], port))
                             logging.info(f"Responding to peer at {addr[0]}")
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
-                                rsock.connect((addr[0], 50001))
-                                self.send(rsock, Con.peerdiscovery, "")
+                                rsock.connect((addr[0], port))
+                                self.send(rsock, Con.peerdiscovery, self.address[1])
                     elif (msg.startswith('62757a7aCN')):
-                        logging.info(f"Sending tracker address to {addr[0]}")
                         if (self.address == self.tracker):
-                            sock.sendto(self.tracker.encode(), addr)
+                            logging.info(f"Sending port to {addr[0]}")
+                            sock.sendto(str(self.tracker[1]).encode(), addr)
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
-                        if (addr[0] in self.peers):
-                            self.peers.remove(addr[0])
+                        try:
+                            self.peers.remove(list(peer for peer in self.peers if peer[0] == addr[0])[0])
+                        except IndexError:
+                            pass
                 except socket.error:
                     pass
                 except (KeyboardInterrupt, SystemExit):
@@ -282,7 +283,8 @@ class Node(threading.Thread):
     def wait_for_connection(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind((self.address, self.tport))
+            sock.bind((self.address[0], 0))
+            self.address = sock.getsockname()
             sock.settimeout(4)
             while self.listening:
                 try:
@@ -306,11 +308,12 @@ class Node(threading.Thread):
     def init_server(self):
         if (not self.listening):
             self.listening = True
-            logging.info(f"Listening on {self.address}")
             if (self.listen.__code__.co_code != b'd\x00S\x00'):
                 threading.Thread(target=self.listen).start()
                 time.sleep(0.1)
             threading.Thread(target=self.wait_for_connection).start()
+            time.sleep(1)
+            logging.info(f"Listening on {self.address[0]}:{self.address[1]}")
             while self.listening:
                 time.sleep(1)
 
@@ -325,12 +328,8 @@ class Node(threading.Thread):
         try:
             for peer in self.peers:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect((peer, 50001))
-                    #if (not self.pending_block):
-                    #    logging.error("Waiting for own block to be generated before continuing")
-                    #while (not self.pending_block):
-                    #    time.sleep(1)
-                    logging.debug(f"Sending own hash to {peer}")
+                    sock.connect(peer)
+                    logging.debug(f"Sending own hash to {peer[0]}:{peer[1]}")
                     self.send(sock, Con.bftverify, self.pending_block.hash)
         except socket.error:
             logging.error("Peer refused connection")
@@ -341,9 +340,11 @@ class Node(threading.Thread):
         if (hash and (addr, hash) not in self.hashes):
             self.hashes.append((addr, hash.decode()))
         if (len(self.hashes) > len(self.peers)):
+            print("A")
             hashes = [h[1] for h in self.hashes]
             mode = max(set(hashes), key=hashes.count)
-            if (hashes.count(mode)/len(hashes) > 2/3):
+            if (hashes.count(mode)/len(hashes) >= 2/3):
+                print("B")
                 if (not self.pending_block):
                     logging.error("Waiting for own block to be generated before continuing")
                 while (not self.pending_block):
