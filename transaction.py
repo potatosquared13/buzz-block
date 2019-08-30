@@ -9,7 +9,6 @@ class Transaction:
         self.sender = sender
         self.recipient = recipient
         self.amount = amount
-        self.timestamp = datetime.now().isoformat()
         self.signature = None
 
     @property
