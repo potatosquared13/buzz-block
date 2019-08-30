@@ -1,20 +1,38 @@
 body {
   font-family: 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-  background-color: rgb(219, 219, 219);
+  background-repeat: no-repeat;
+  background-size: 100%;
 }
 
 .form-container {
-  transition-duration: 2s;
-  border-radius: 2.5vw;
+  position: absolute;
+  left: 0;
+  right: 0;
+  transition-duration: 1s;
+  border-radius: 2.5vw 0vw 2.5vw 2.5vw;
   text-align: center;
   font-size: 2vw;
   margin: 0% auto;
   background-color: gainsboro;
-  width: 29%;
-  padding-top: 2vw;
+  width: 30%;
   padding-bottom: 4vw;
   opacity: 0;
   box-shadow: 1vw 1vw 4vw 0vw;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.close-button {
+  z-index: 2;
+  font-size: 3vw;
+  margin-left: 26vw;
+  margin-top: 1vw;
+  margin-bottom: 1.5vw;
+}
+
+.close-button:hover {
+  color: rgb(168, 168, 168);
+  cursor: pointer;
 }
 
 .text-input {

@@ -7,20 +7,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Registration Page</title>
     <link href="../static/css/register.css" rel="stylesheet" type="text/css" />
-    <script src="../static/js/animation.js"></script>
+    <script src="../static/js/register.js"></script>
   </head>
 
   <body>
 
+    <button type="button" onclick="displayForm()">click</button>
+
     <div id="form-container" class="form-container">
 
-      <form method="" action="">
+      <form>
 
-        NAME <br /> <input type="text" class="text-input" name="name" />
+        <span class="close-button" onclick="hideForm()">&times;</span>
         <br />
-        AMOUNT <br /> <input type="text" class="text-input" name="amount" />
+        NAME <br /> <input id="username" type="text" class="text-input" name="name" />
         <br />
-        <input type="submit" class="submit" value="REGISTER" />
+        AMOUNT <br /> <input id="password" type="text" class="text-input" name="amount" />
+        <br />
+        <button type="button" class="submit" onclick="addClient()">REGISTER</button>
 
       </form>
 

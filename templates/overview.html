@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transaction Overview</title>
+  </head>
+
+  <body>
+
+    <ul>
+
+      {% for b in blocks %}
+
+      <h2>Block {{blocks.index(b)}}</h2>
+
+        {%for t in b.transactions %}
+          <h4>sender: {{t.sender}}</h4>
+          <h4>sender: {{t.amount}}</h4>
+        {% endfor %}
+
+      {% endfor %}
+
+    </ul>
+
+  </body>
+
+</html>
