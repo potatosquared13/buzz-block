@@ -212,7 +212,7 @@ class Node(threading.Thread):
             if (msg[1] != sha256(self.chain.json)):
                 self.send(c, Con.chain, self.chain.json)
             else:
-                self.send(c, Con.chain, "")
+                self.send(c, Con.chain, "UP TO DATE")
         elif (msg[0] == Con.peerdiscovery):
             port = int(msg[1])
             if ((addr[0], port) not in self.peers):
