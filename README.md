@@ -18,13 +18,13 @@ python -m pip install --user cryptography
 
 ### TO DO
 
-- [X] move chain.pending_transactions to tracker
-- [X] block creation is left to the tracker
 - [X] peer to peer networking
 - [X] consensus algorithm
-- [X] switch to cryptography instead of pycrypto
-- [X] query the tracker's user database for account balance
+- [ ] query own blockchain for account balance
+- [ ] fallback tracker query for balance
 - [X] disallow negative balances
+- [ ] allow adding funds after genesis block is created
+- [ ] better transaction structure
 - [ ] multiple trackers
 - [ ] web app for user registration
 - [ ] android app
