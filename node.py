@@ -1,5 +1,4 @@
-# Source file for network node
-# Responsible for creating transactions and verifying other transactions
+# network node responsible for creating transactions and verifying other transactions
 
 import json
 import time
@@ -22,6 +21,7 @@ from block import Blockchain, Block
 from client import Client
 from transaction import Transaction
 
+# enum for tcp connection type
 class Con(Enum):
     response = 0
     transaction = 1
@@ -60,7 +60,6 @@ class Node(threading.Thread):
         self.chain = self.rebuild_chain(open('blockchain.json', 'r').read())
 
     def rebuild_chain(self, chain_json):
-        # TODO verify chain has not been tampered with
         tmp = json.loads(chain_json)
         chain = Blockchain()
         for bl in tmp['blocks']:
@@ -71,7 +70,6 @@ class Node(threading.Thread):
                 transaction.signature = tr['signature']
                 transactions.append(transaction)
             block = Block(bl['previous_hash'], transactions)
-            # block.timestamp = bl['timestamp']
             chain.blocks.append(block)
         return chain
 
@@ -84,8 +82,6 @@ class Node(threading.Thread):
 
     def validate_transaction(self, transaction):
         valid = False
-        # check if transaction is valid:
-        # verify signature
         if(transaction.signature):
             try:
                 msg = unhexlify(transaction.hash)
@@ -170,12 +166,13 @@ class Node(threading.Thread):
             except socket.timeout:
                 logging.error("Tracker doesn't seem to be running")
 
+    # tell peers to remove this node as an active node
     def disconnect(self):
         msg = "62757a7aDC"
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.sendto(msg.encode(), ('224.1.1.1', 60001))
-        self.stop()
+        self.listening = False
         return True
 
     def handle_connection(self, c, addr):
@@ -244,6 +241,7 @@ class Node(threading.Thread):
         msg = zlib.decompress(base64.b64decode(msg_bytes))
         return (Con(msg_type), msg)
 
+    # handles udp multicasts
     def listen(self):
         group = socket.inet_aton('224.1.1.1')
         iface = socket.inet_aton(self.address[0])
@@ -280,6 +278,7 @@ class Node(threading.Thread):
                 except (KeyboardInterrupt, SystemExit):
                     self.listening = False
 
+    # handles tcp connections
     def wait_for_connection(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -296,6 +295,7 @@ class Node(threading.Thread):
                 except (KeyboardInterrupt, SystemExit):
                     self.listening = False
 
+    # tells node to start listening for multicasts / accept connections
     def start(self):
         try:
             threading.Thread(target=self.init_server).start()
@@ -303,7 +303,6 @@ class Node(threading.Thread):
             logging.error("Interrupt received. Stopping threads")
             self.listening = False
             self.write_to_file()
-            self.stop()
 
     def init_server(self):
         if (not self.listening):
@@ -317,11 +316,8 @@ class Node(threading.Thread):
             while self.listening:
                 time.sleep(1)
 
-    def stop(self):
-        self.listening = False
-
-    # implementation of the practical byzantine fault tolerance consensus algorithm
-    # This function creates a temporary block and sends its hash to other peers
+    # practical byzantine fault tolerance 1/2
+    # creates a block out of received transactions and sends the computed hash to other nodes
     def pbft_send(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
         self.hashes.append((self.address, self.pending_block.hash))
@@ -334,17 +330,15 @@ class Node(threading.Thread):
         except socket.error:
             logging.error("Peer refused connection")
 
-    # implementation of the pBFT algorithm
-    # This function handles receiving other hashes and compares it with its own
+    # pBFT 2/2
+    # waits until all other nodes' hashes are received and compares it with its own
     def pbft_receive(self, addr, hash=None):
         if (hash and (addr, hash) not in self.hashes):
             self.hashes.append((addr, hash.decode()))
         if (len(self.hashes) > len(self.peers)):
-            print("A")
             hashes = [h[1] for h in self.hashes]
             mode = max(set(hashes), key=hashes.count)
             if (hashes.count(mode)/len(hashes) >= 2/3):
-                print("B")
                 if (not self.pending_block):
                     logging.error("Waiting for own block to be generated before continuing")
                 while (not self.pending_block):

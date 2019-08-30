@@ -1,5 +1,4 @@
-# Source file for tracker
-# Responsible for recording transactions and controlling block creation
+# tracker node esponsible for recording transactions and controlling block creation
 
 import db
 

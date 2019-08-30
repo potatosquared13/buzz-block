@@ -1,3 +1,5 @@
+# database functions
+
 import sqlite3
 import threading
 
@@ -29,8 +31,8 @@ def update_balance(identity):
 
 def update_pending(sender, recipient, amount):
     # get current pending_balance
-    sender_balance=0
-    recipient_balance=0
+    sender_balance = 0
+    recipient_balance = 0
     with conn:
         try:
             lock.acquire(True)
@@ -69,4 +71,5 @@ def search(string):
         finally:
             lock.release()
     return output
+
 

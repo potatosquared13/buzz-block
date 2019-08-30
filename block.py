@@ -1,3 +1,5 @@
+# data structures for blockchain
+
 import helpers
 from datetime import datetime
 from transaction import Transaction
@@ -5,7 +7,6 @@ from transaction import Transaction
 class Block:
     def __init__(self, previous_hash, transactions):
         self.previous_hash = previous_hash
-        # self.timestamp = datetime.now().isoformat()
         self.transactions = transactions
 
     @property
@@ -15,7 +16,6 @@ class Block:
     @property
     def hash(self):
         return helpers.sha256(helpers.jsonify(self))
-
 
 class Blockchain:
     def __init__(self):

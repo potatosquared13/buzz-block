@@ -1,10 +1,4 @@
-# TODO - INC include client type (seller/buyer)
-#      - OK  write/read private key from file
-
-# import Crypto.Random
-# from Crypto.Cipher import AES
-# from Crypto.PublicKey import RSA
-# from Crypto.Signature import PKCS1_v1_5
+# client object for nodes
 
 import json
 
@@ -14,9 +8,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-# import db
 import helpers
-
 
 class Client:
     def __init__(self, name = None, filename = None, password = None):
@@ -63,3 +55,5 @@ class Client:
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
         return hexlify(identity).decode()
+
+
