@@ -43,7 +43,7 @@ class Node(threading.Thread):
         self.pending_transactions = []
         self.hashes = []
         self.chain = Blockchain()
-        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.DEBUG)
+        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
         if(os.path.isfile('./blockchain.json')):
             self.read_from_file()
         if pin:
@@ -65,23 +65,18 @@ class Node(threading.Thread):
         for bl in tmp['blocks']:
             transactions = []
             for tr in bl['transactions']:
-                transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
-                transaction.timestamp = tr['timestamp']
-                transaction.signature = tr['signature']
-                transactions.append(transaction)
+                transactions.append(self.rebuild_transaction(tr))
             block = Block(bl['previous_hash'], transactions)
             chain.blocks.append(block)
         return chain
 
-    def rebuild_transaction(self, transaction_json):
-        tmp = json.loads(transaction_json)
-        transaction = Transaction(tmp['sender'], tmp['recipient'], tmp['amount'])
-        transaction.timestamp = tmp['timestamp']
-        transaction.signature = tmp['signature']
+    def rebuild_transaction(self, t):
+        transaction = Transaction(t['sender'], t['recipient'], t['amount'])
+        transaction.signature = t['signature']
         return transaction
 
     def validate_transaction(self, transaction):
-        valid = False
+        is_valid = False
         if(transaction.signature):
             try:
                 msg = unhexlify(transaction.hash)
@@ -89,10 +84,10 @@ class Node(threading.Thread):
                 identity = unhexlify(transaction.recipient)
                 key = serialization.load_der_public_key(identity, backend=default_backend())
                 key.verify(sig, msg, ec.ECDSA(hashes.SHA256()))
-                valid = True
+                is_valid = True
             except cryptography.exceptions.InvalidSignature:
                 logging.error("Invalid transaction signature")
-        return valid
+        return is_valid
 
     def record_transaction(self, transaction):
         if (transaction.sender != transaction.recipient and self.validate_transaction(transaction)):
@@ -172,7 +167,7 @@ class Node(threading.Thread):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.sendto(msg.encode(), ('224.1.1.1', 60001))
-        self.listening = False
+        self.stop()
         return True
 
     def handle_connection(self, c, addr):
@@ -183,25 +178,22 @@ class Node(threading.Thread):
         # transaction
         elif (msg[0] == Con.transaction):
             logging.info(f"Transaction from {addr[0]}")
-            transaction = self.rebuild_transaction(msg[1])
+            transaction = self.rebuild_transaction(json.loads(msg[1]))
             if(not self.record_transaction(transaction)):
                 self.send(c, Con.response, "Invalid transaction")
         # validate block
         elif (msg[0] == Con.bftstart):
             logging.info(f"Validating block from {addr[0]}")
-            pending_transactions_json = json.loads(msg[1])
-            pending_transactions = []
-            for tr in pending_transactions_json:
-                transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
-                transaction.timestamp = tr['timestamp']
-                transaction.signature = tr['signature']
-                pending_transactions.append(transaction)
-            self.pbft_send(pending_transactions)
+            pending_hashes = json.loads(msg[1])
+            pending_transactions = [t for t in self.pending_transactions if sha256(t.json) in pending_hashes]
+            pending_transactions.sort(key=lambda x: pending_hashes.index(sha256(x.json)))
+            if (len(self.pending_transactions) == len(pending_transactions)):
+                self.pbft_send(pending_transactions)
         # receive hashes
         elif (msg[0] == Con.bftverify):
             logging.info(f"Hash from {addr[0]}")
             peer = [p for p in self.peers if p[0] == addr[0]][0]
-            self.pbft_receive(peer, msg[1])
+            self.pbft_receive(peer, msg[1].decode())
         # block update
         elif (msg[0] == Con.chainrequest):
             logging.info(f"Sending chain to {addr[0]}")
@@ -276,7 +268,7 @@ class Node(threading.Thread):
                 except socket.error:
                     pass
                 except (KeyboardInterrupt, SystemExit):
-                    self.listening = False
+                    self.stop()
 
     # handles tcp connections
     def wait_for_connection(self):
@@ -293,7 +285,7 @@ class Node(threading.Thread):
                 except socket.error:
                     pass
                 except (KeyboardInterrupt, SystemExit):
-                    self.listening = False
+                    self.stop()
 
     # tells node to start listening for multicasts / accept connections
     def start(self):
@@ -301,8 +293,8 @@ class Node(threading.Thread):
             threading.Thread(target=self.init_server).start()
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
-            self.listening = False
             self.write_to_file()
+            self.stop()
 
     def init_server(self):
         if (not self.listening):
@@ -316,25 +308,28 @@ class Node(threading.Thread):
             while self.listening:
                 time.sleep(1)
 
+    def stop(self):
+        self.listening = False
+
     # practical byzantine fault tolerance 1/2
     # creates a block out of received transactions and sends the computed hash to other nodes
     def pbft_send(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
-        self.hashes.append((self.address, self.pending_block.hash))
         try:
+            logging.info(f"Sending own hash to peers")
             for peer in self.peers:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect(peer)
-                    logging.debug(f"Sending own hash to {peer[0]}:{peer[1]}")
                     self.send(sock, Con.bftverify, self.pending_block.hash)
         except socket.error:
             logging.error("Peer refused connection")
+        self.pbft_receive((self.address), self.pending_block.hash)
 
     # pBFT 2/2
     # waits until all other nodes' hashes are received and compares it with its own
-    def pbft_receive(self, addr, hash=None):
-        if (hash and (addr, hash) not in self.hashes):
-            self.hashes.append((addr, hash.decode()))
+    def pbft_receive(self, addr, hash):
+        if ((addr, hash) not in self.hashes):
+            self.hashes.append((addr, hash))
         if (len(self.hashes) > len(self.peers)):
             hashes = [h[1] for h in self.hashes]
             mode = max(set(hashes), key=hashes.count)
@@ -359,6 +354,6 @@ class Node(threading.Thread):
                 self.pending_transactions = []
                 self.pending_block = None
         else:
-            logging.info(f"Received {len(self.hashes) - 1}/{len(self.peers)} hashes")
+            logging.info(f"Received {len(self.hashes)}/{len(self.peers) + 1} hashes")
 
 
