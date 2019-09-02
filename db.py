@@ -51,9 +51,11 @@ def update_pending(sender, recipient, amount):
 
 # client object to be used for printing search results
 class Entry:
-    def __init__(self, name, identity, current_balance, pending_balance):
+    def __init__(self, name, identity, contact, is_vendor, current_balance, pending_balance):
         self.name = name
         self.identity = identity
+        self.contact = contact
+        self.is_vendor = "yes" if is_vendor else "no"
         self.current_balance = current_balance
         self.pending_balance = pending_balance
 
@@ -66,7 +68,7 @@ def search(string):
             c.execute("select * from clients where name like ? or identity=?", ('%{}%'.format(string),'{}'.format(string),))
             list = c.fetchall()
             for entry in list:
-                e = Entry(entry[0], entry[1], entry[2], entry[3])
+                e = Entry(entry[0], entry[1], entry[2], entry[3], entry[4], entry[5])
                 output.append(e)
         finally:
             lock.release()
