@@ -6,27 +6,61 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Registration Page</title>
-    <link href="../static/css/register.css" rel="stylesheet" type="text/css" />
     <script src="../static/js/register.js"></script>
   </head>
 
   <body>
 
-    <button type="button" onclick="displayForm()">click</button>
+    <button type="button" onclick="showForm()">FORM</button>
+    <button type="button" onclick="showTransactions()">TRANSACTIONS</button>
 
     <div id="form-container" class="form-container">
 
-      <form>
+      <button type="button" onclick="showNonVendorForm()">NON VENDOR</button>
+      <button type="button" onclick="showVendorForm()">VENDOR</button>
 
-        <span class="close-button" onclick="hideForm()">&times;</span>
+      <form id="non-vendor-form">
+
         <br />
-        NAME <br /> <input id="username" type="text" class="text-input" name="name" />
+        NAME <br /> <input id="non-vendor-name" type="text" class="text-input" name="non-vendor-name" />
         <br />
-        AMOUNT <br /> <input id="password" type="text" class="text-input" name="amount" />
+        AMOUNT <br /> <input id="amount" type="text" class="text-input" name="amount" />
         <br />
-        <button type="button" class="submit" onclick="addClient()">REGISTER</button>
+        CONTACT NUMBER <br /> <input id="non-vendor-contact-number" type="text" class="text-input" name="non-vendor-contact-number" />
+        <br />
+        <button type="button" class="submit" onclick="addNonVendor()">REGISTER</button>
 
       </form>
+
+      <form id="vendor-form">
+
+          <br />
+          BUSINESS NAME <br /> <input id="vendor-name" type="text" class="text-input" name="vendor-name" />
+          <br />
+          CONTACT NUMBER <br /> <input id="vendor-contact-number" type="text" class="text-input" name="vendor-contact-number" />
+          <br />
+          <button type="button" class="submit" onclick="addVendor()">REGISTER</button>
+  
+        </form>
+
+    </div>
+
+    <div id="transactions-container">
+
+        <ul style="list-style-type: none;">
+
+            {% for b in blocks %}
+      
+            <li><strong>Block {{blocks.index(b)}}</strong></li>
+      
+            {%for t in b.transactions %}
+            <li>sender: {{t.sender}}</li>
+            <li>amount: {{t.amount}}</li>
+            {% endfor %}
+      
+            {% endfor %}
+      
+          </ul>
 
     </div>
 

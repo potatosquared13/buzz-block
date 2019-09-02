@@ -15,36 +15,35 @@ t = Tracker()
 
 # create a client and a transaction to add balance into the blockchain
 # name should be a string, amount should be a float or int
-def create_client(name, amount, is_vendor):
+def create_client(name, contact, amount, is_vendor):
     c = Client(name)
-    clients.append((c, amount, is_vendor))
+    clients.append((c, contact, amount, is_vendor))
     transactions.append(Transaction("genesis", c.identity, amount))
 
 # create the genesis block, which introduces the initial balance for all clients to the blockchain
 # so that the balance can be determined by reading through the blockchain in the future
 def finalize():
     for c in clients:
-        db.insert(c[0], c[1], c[2])
+        db.insert(c[0], c[1], c[2], c[3])
     t.chain.genesis(transactions)
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
-    url_for('static', filename='css/register.css')
     url_for('static', filename='js/register.js')
-    return render_template('register.html')
+    return render_template('register.html', blocks=t.chain.blocks)
 
 @app.route('/register', methods=['POST'])
 def register():
     print('good')
-    uname = request.args.get('username')
+    uname = request.args.get('name')
     amt = request.args.get('amount')
+    contact = request.args.get('contactNumber')
+    is_vendor = request.args.get('isVendor')
     print(uname)
     print(amt)
+    print(contact)
+    print(is_vendor)
     for transaction in t.chain.blocks:
         print(transaction.transactions)
-    create_client(uname, amt)
+    create_client(uname, contact, amt, int(is_vendor))
     return ''
-
-@app.route('/overview')
-def overview():
-    return render_template('overview.html', blocks=t.chain.blocks)

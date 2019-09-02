@@ -1,36 +1,59 @@
-function displayForm() {
-
-  document.getElementById('form-container').style.pointerEvents = "all";
-  document.getElementById('form-container').style.margin = "5% auto";
-  document.getElementById('form-container').style.opacity = "1";
-
+window.onload = () => {
+  showForm();
+  showNonVendorForm();
 }
 
-function hideForm() {
+function addNonVendor() {
 
-  document.getElementById('form-container').style.pointerEvents = "all";
-  document.getElementById('form-container').style.margin = "0% auto";
-  document.getElementById('form-container').style.opacity = "0";
-
-}
-
-function addClient() {
-
-  let username = document.getElementById('username').value;
-  let amount = document.getElementById('password').value;
-  let url = `/register?username=${username}&amount=${amount}`;
+  let name = document.getElementById('non-vendor-name').value;
+  let amount = document.getElementById('amount').value;
+  let contactNumber = document.getElementById('non-vendor-contact-number').value;
+  let url = `/register?name=${name}&amount=${amount}&contactNumber=${contactNumber}&isVendor=0`;
 
   let xhr = new XMLHttpRequest();
 
-  xhr.onreadystatechange = () => {
+  xhr.open('POST', url, true);
+  xhr.send()
 
-    if (xhr.readyState == 4 && xhr.status == 200) {
-      hideForm();
-    }
+}
 
-  }
+function addVendor() {
+
+  let name = document.getElementById('vendor-name').value;
+  let contactNumber = document.getElementById('vendor-contact-number').value;
+  let url = `/register?name=${name}&amount=0&contactNumber=${contactNumber}&isVendor=1`;
+
+  let xhr = new XMLHttpRequest();
 
   xhr.open('POST', url, true);
   xhr.send()
+
+}
+
+function showForm() {
+
+  document.getElementById('form-container').style.display = "block";
+  document.getElementById('transactions-container').style.display = "none";
+
+}
+
+function showNonVendorForm() {
+
+  document.getElementById('non-vendor-form').style.display = "block";
+  document.getElementById('vendor-form').style.display = "none";
+
+}
+
+function showVendorForm() {
+
+  document.getElementById('non-vendor-form').style.display = "none";
+  document.getElementById('vendor-form').style.display = "block";
+
+}
+
+function showTransactions() {
+
+  document.getElementById('form-container').style.display = "none";
+  document.getElementById('transactions-container').style.display = "block";
 
 }
