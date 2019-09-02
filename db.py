@@ -14,11 +14,11 @@ c = conn.cursor()
 # create database if it doesn't exist
 with conn:
     c.execute('''create table if not exists clients
-                 (name text, identity text, is_vendor boolean not null check(is_vendor in (0, 1)), current_balance real, pending_balance real, unique(name, identity))''')
+                 (name text, identity text, contact text, is_vendor boolean not null check(is_vendor in (0, 1)), current_balance real, pending_balance real, unique(name, identity))''')
 
-def insert(client, amount, is_vendor=0):
+def insert(client, contact, amount, is_vendor=0):
     with conn:
-        c.execute("insert into clients values(?, ?, ?, ?, ?)", (client.name, client.identity, is_vendor, amount, amount,))
+        c.execute("insert into clients values(?, ?, ?, ?, ?, ?)", (client.name, client.identity, contact, is_vendor, amount, amount,))
 
 def update_balance(identity):
     # change balance to pending_balance
