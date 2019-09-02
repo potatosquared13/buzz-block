@@ -14,14 +14,11 @@ class Tracker(Node):
 
     def new_block(self):
         if self.pending_transactions:
-            pending_hashes = []
-            for transaction in self.pending_transactions:
-                pending_hashes.append(sha256(transaction.json))
             for peer in self.peers:
                 if (peer[0] != self.address):
                     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                         sock.connect(peer)
-                        self.send(sock, Con.bftstart, jsonify(pending_hashes))
+                        self.send(sock, Con.bftstart, jsonify(self.pending_transactions))
             self.pbft_send(self.pending_transactions)
             logging.info("Waiting for network consensus")
             while (self.pending_block):
