@@ -5,7 +5,7 @@ from copy import deepcopy
 from datetime import datetime
 
 class Transaction:
-    def __init__(self, sender, recipient, amount):
+    def __init__(self, sender=None, recipient=None, amount=0):
         self.sender = sender
         self.recipient = recipient
         self.amount = amount
@@ -21,5 +21,4 @@ class Transaction:
         tmp_transaction = deepcopy(self)
         del tmp_transaction.signature
         return helpers.sha256(helpers.jsonify(tmp_transaction))
-
 

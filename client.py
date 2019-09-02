@@ -38,7 +38,7 @@ class Client:
         )
         transaction.signature = hexlify(signature).decode()
 
-    def write_to_file(self, password, filename="client.json"):
+    def write_to_file(self, password=None, filename="client.json"):
         key = self._private_key.private_bytes(
             encoding=serialization.Encoding.DER,
             format=serialization.PrivateFormat.PKCS8,
@@ -54,6 +54,6 @@ class Client:
             encoding=serialization.Encoding.DER,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-        return hexlify(identity).decode()
+        return hexlify(identity).decode()[48:]
 
 
