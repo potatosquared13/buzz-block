@@ -1,6 +1,5 @@
 window.onload = () => {
   showForm();
-  showNonVendorForm();
 }
 
 function addNonVendor() {
@@ -34,20 +33,6 @@ function showForm() {
 
   document.getElementById('form-container').style.display = "block";
   document.getElementById('transactions-container').style.display = "none";
-
-}
-
-function showNonVendorForm() {
-
-  document.getElementById('non-vendor-form').style.display = "block";
-  document.getElementById('vendor-form').style.display = "none";
-
-}
-
-function showVendorForm() {
-
-  document.getElementById('non-vendor-form').style.display = "none";
-  document.getElementById('vendor-form').style.display = "block";
 
 }
 
