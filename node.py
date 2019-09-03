@@ -205,7 +205,6 @@ class Node(threading.Thread):
             self.pbft_send(pending_transactions)
         # receive hashes
         elif (msg[0] == Con.bftverify):
-            logging.info(f"Hash from {addr[0]}")
             peer = [p.address for p in self.peers if p.address[0] == addr[0]][0]
             self.pbft_receive(peer, msg[1].decode())
         # block update
@@ -352,6 +351,7 @@ class Node(threading.Thread):
                     self.send(sock, Con.bftverify, self.pending_block.hash)
         except socket.error:
             logging.error("Peer refused connection")
+        logging.log("Waiting for network consensus")
         self.pbft_receive(self.address, self.pending_block.hash)
 
     # pBFT 2/2
