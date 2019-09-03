@@ -11,14 +11,16 @@ app = Flask(__name__)
 clients = []
 transactions = []
 
-t = Tracker()
+t = Tracker("1111")
 
 # create a client and a transaction to add balance into the blockchain
 # name should be a string, amount should be a float or int
 def create_client(name, contact, amount, is_vendor):
     c = Client(name)
     clients.append((c, contact, amount, is_vendor))
-    transactions.append(Transaction("genesis", c.identity, amount))
+    transaction = Transaction("add funds", c.identity, amount)
+    t.client.sign(transaction)
+    transactions.append(transaction)
 
 # create the genesis block, which introduces the initial balance for all clients to the blockchain
 # so that the balance can be determined by reading through the blockchain in the future
