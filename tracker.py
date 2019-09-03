@@ -41,8 +41,7 @@ class Tracker(Node):
         if (recipient.is_vendor == "yes" and sender.is_vendor == "no"):
             if (sender.pending_balance > transaction.amount):
                 db.update_pending(transaction.sender, transaction.recipient, transaction.amount)
-                self.pending_transactions.append(transaction)
-                return True
+                return super().record_transaction(transaction)
         return False
 
     def listen(self):
