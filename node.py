@@ -342,16 +342,14 @@ class Node(threading.Thread):
     def pbft_send(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
         logging.info("Sending own hash to peers")
-        i = 1
         try:
             for peer in self.peers:
-                i += 1
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect(peer.address)
                     self.send(sock, Con.bftverify, self.pending_block.hash)
         except socket.error:
             logging.error("Peer refused connection")
-        logging.log("Waiting for network consensus")
+        logging.info("Waiting for network consensus")
         self.pbft_receive(self.address, self.pending_block.hash)
 
     # pBFT 2/2
