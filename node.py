@@ -8,6 +8,7 @@ import socket
 import logging
 import os.path
 import threading
+import cryptography.exceptions
 
 from enum import Enum
 from binascii import unhexlify
@@ -91,9 +92,9 @@ class Node(threading.Thread):
         if(transaction.signature):
             try:
                 if (transaction.sender == "add funds"):
-                    identity = unhexlify(self.tracker.identity)
+                    identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + self.tracker.identity)
                 else:
-                    identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004"+transaction.recipient)
+                    identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + transaction.recipient)
                 msg = unhexlify(transaction.hash)
                 sig = unhexlify(transaction.signature)
                 key = serialization.load_der_public_key(identity, backend=default_backend())
@@ -104,7 +105,10 @@ class Node(threading.Thread):
         return is_valid
 
     def record_transaction(self, transaction):
-        if (transaction.sender != transaction.recipient and self.validate_transaction(transaction)):
+        if (transaction.sender != transaction.recipient and
+            transaction.sender != self.tracker.identity and
+            transaction.recipient != self.tracker.identity and
+            self.validate_transaction(transaction)):
             self.pending_transactions.append(transaction)
             return True
         return False
@@ -190,7 +194,7 @@ class Node(threading.Thread):
                 self.send(c, Con.response, "Invalid transaction")
         # validate block
         elif (msg[0] == Con.bftstart):
-            logging.info(f"Validating block from {addr[0]}")
+            logging.info(f"Validating new block")
             pending_transactions_json = json.loads(msg[1])
             pending_transactions = []
             for tr in pending_transactions_json:

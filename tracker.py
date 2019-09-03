@@ -5,20 +5,22 @@ import db
 from node import *
 
 class Tracker(Node):
-    def __init__(self):
+    def __init__(self, pin):
         super().__init__()
-        self.start()
-        while (not self.address[1]):
-            time.sleep(1)
-        self.tracker = self.address
+        self.new_funds = []
+        if (os.path.isfile('./tracker.json')):
+            self.client = Client(filename="tracker.json", password=pin)
+        else:
+            self.client = Client("admin")
+            self.client.write_to_file(pin, "tracker.json")
 
     def new_block(self):
+        self.pending_transactions = self.new_funds + self.pending_transactions
         if self.pending_transactions:
             for peer in self.peers:
-                if (peer[0] != self.address):
-                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                        sock.connect(peer)
-                        self.send(sock, Con.bftstart, jsonify(self.pending_transactions))
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.connect(peer.address)
+                    self.send(sock, Con.bftstart, jsonify(self.pending_transactions))
             self.pbft_send(self.pending_transactions)
             logging.info("Waiting for network consensus")
             while (self.pending_block):
@@ -30,17 +32,88 @@ class Tracker(Node):
                 affected.add(transaction.recipient)
             for identity in affected:
                 db.update_balance(identity)
+            self.new_funds = []
+            self.write_to_file()
 
     def record_transaction(self, transaction):
-        if (db.search(transaction.sender)):
-            if (db.search(transaction.sender)[0].pending_balance > transaction.amount):
-                    db.update_pending(transaction.sender, transaction.recipient, transaction.amount)
-                    return super().record_transaction(transaction)
+        sender = db.search(transaction.sender)[0]
+        recipient = db.search(transaction.recipient)[0]
+        if (recipient.is_vendor == "yes" and sender.is_vendor == "no"):
+            if (sender.pending_balance > transaction.amount):
+                db.update_pending(transaction.sender, transaction.recipient, transaction.amount)
+                self.pending_transactions.append(transaction)
+                return True
         return False
 
+    def listen(self):
+        group = socket.inet_aton('224.1.1.1')
+        iface = socket.inet_aton(self.address[0])
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
+            sock.bind(('', 60001))
+            sock.settimeout(2)
+            while self.listening:
+                try:
+                    data, addr = sock.recvfrom(1024)
+                    msg = data.decode()
+                    while (not self.address[1]):
+                        time.sleep(1)
+                    if (msg.startswith('62757a7aGP')):
+                        p = msg[10:].split(",")
+                        port = int(p[0])
+                        identity = p[1]
+                        if (self.address != (addr[0], port)):
+                            if (not any(p.identity == identity for p in self.peers)):
+                            # if (Peer((addr[0],port), identity) not in self.peers):
+                                logging.info(f"New peer at {addr[0]}")
+                            # if (not any(p.address == (addr[0], port) for p in self.peers)):
+                                self.peers.add(Peer((addr[0], port), identity))
+                            logging.info(f"Responding to peer at {addr[0]}")
+                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
+                                rsock.connect((addr[0], port))
+                                msg = str(self.address[1]) + "," + self.client.identity
+                                self.send(rsock, Con.peer, msg)
+                    elif (msg.startswith('62757a7aCN')):
+                        logging.info(f"Sending port and identity to {addr[0]}")
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
+                            rsock.connect((addr[0], int(msg[10:])))
+                            msg = str(self.address[1]) + "," + self.client.identity
+                            self.send(rsock, Con.tracker, msg)
+                    elif (msg.startswith('62757a7aDC')):
+                        logging.info(f"Peer {addr[0]} disconnected")
+                        try:
+                            self.peers.remove(list(peer for peer in self.peers if peer[0] == addr[0])[0])
+                        except IndexError:
+                            pass
+                except socket.error:
+                    pass
+                except (KeyboardInterrupt, SystemExit):
+                    self.stop()
+
+    def start(self):
+        try:
+            threading.Thread(target=self.init_server).start()
+            while (not self.address[1]):
+                time.sleep(1)
+            self.tracker = Peer(self.address, self.client.identity)
+        except (KeyboardInterrupt, SystemExit):
+            logging.error("Interrupt received. Stopping threads")
+            self.stop()
+            self.write_to_file()
+
     # TODO
-    def add_funds(self):
-        pass
+    def add_funds(self, recipient, amount):
+        transaction = Transaction("add funds", recipient, amount)
+        self.client.sign(transaction)
+        self.pending_transactions.append(transaction)
+        for peer in self.peers:
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.connect(peer.address)
+                    self.send(sock, Con.transaction, transaction.json)
+            except socket.error:
+                logging.error(f"Peer refused connection")
 
     def get_tracker(self):
         pass
