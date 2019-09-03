@@ -33,13 +33,12 @@ class Tracker(Node):
             for identity in affected:
                 db.update_balance(identity)
             self.new_funds = []
-            self.write_to_file()
 
     def record_transaction(self, transaction):
         sender = db.search(transaction.sender)[0]
         recipient = db.search(transaction.recipient)[0]
         if (recipient.is_vendor == "yes" and sender.is_vendor == "no"):
-            if (sender.pending_balance > transaction.amount):
+            if (sender.pending_balance >= transaction.amount):
                 db.update_pending(transaction.sender, transaction.recipient, transaction.amount)
                 return super().record_transaction(transaction)
         return False

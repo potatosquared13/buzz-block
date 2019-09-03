@@ -106,7 +106,6 @@ class Node(threading.Thread):
 
     def record_transaction(self, transaction):
         if (transaction.sender != transaction.recipient and
-            transaction.sender != self.tracker.identity and
             transaction.recipient != self.tracker.identity and
             self.validate_transaction(transaction)):
             self.pending_transactions.append(transaction)
@@ -368,6 +367,7 @@ class Node(threading.Thread):
                     logging.info("Own block matches network majority")
                     self.chain.blocks.append(self.pending_block)
                     logging.info("New block added to chain")
+                    self.write_to_file()
                 else:
                     for addr in [p[0] for p in self.hashes if p[1] == mode and addr != self.address]:
                         try:
@@ -381,5 +381,4 @@ class Node(threading.Thread):
                 self.pending_block = None
         else:
             logging.info(f"Received {len(self.hashes)}/{len(self.peers)} hashes")
-
 
