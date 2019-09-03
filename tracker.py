@@ -35,8 +35,8 @@ class Tracker(Node):
             self.new_funds = []
 
     def record_transaction(self, transaction):
-        sender = db.search(transaction.sender)[0]
-        recipient = db.search(transaction.recipient)[0]
+        sender = db.search(transaction.sender)
+        recipient = db.search(transaction.recipient)
         if (recipient.is_vendor == "yes" and sender.is_vendor == "no"):
             if (sender.pending_balance >= transaction.amount):
                 db.update_pending(transaction.sender, transaction.recipient, transaction.amount)
@@ -111,6 +111,9 @@ class Tracker(Node):
                     self.send(sock, Con.transaction, transaction.json)
             except socket.error:
                 logging.error(f"Peer refused connection")
+
+    def get_balance(self, client):
+        return db.search(client).pending_balance
 
     def get_tracker(self):
         pass

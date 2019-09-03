@@ -61,16 +61,14 @@ class Entry:
 
 # search the database for clients either by partial name or identity
 def search(string):
-    output = []
+    e = None
     with conn:
         try:
             lock.acquire(True)
             c.execute("select * from clients where name like ? or identity=?", ('%{}%'.format(string),'{}'.format(string),))
-            list = c.fetchall()
-            for entry in list:
-                e = Entry(entry[0], entry[1], entry[2], entry[3], entry[4], entry[5])
-                output.append(e)
+            result = c.fetchone()
+            e = Entry(result[0], result[1], result[2], result[3], result[4], result[5])
         finally:
             lock.release()
-    return output
+    return e
 
