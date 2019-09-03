@@ -35,24 +35,25 @@ python -m pip install --user cryptography
 
 ```
 >>> from tracker import Tracker
->>> t = Tracker()
+>>> t = Tracker(pin)
 >>> t.start()
 ```
 
 This creates a tracker and tells it to start listening on the network. It is a modified node without the ability to send transactions. Its main purpose is to maintain and record the blockchain. It keeps a local database that contains all user identities and their balances. Connections come from peers, which mainly send transactions to be verified and added to the blockchain.
 The tracker is also the node that will group transactions and request for the network to create a new block. This can be done by calling `tracker.new_block()`.
+_pin_ is a four-character string that will be used to sign transactions that introduce new funds to the network.
 
 - Creating a peer:
 
 ```
 >>> from node import Node
->>> p = Node([password=None], [filename="client.json"])
->>> p.get_tracker()
+>>> p = Node(password="1111", filename="client.json")
 >>> p.start()
+>>> p.get_tracker()
+>>> p.get_peers()
 ```
 
-This creates a peer that can create transactions and send these to the tracker. A peer is usually a smartphone that can read NFC tags. Client information stored in `filename` is decrypted with `password`, and a client object is created with this. Requires a client object in order to create and sign transactions.
-`get_tracker()` asks the tracker to respond so it can get its port number, while `start()` enables the node to listen for messages on the network.
+This creates a peer that can create transactions and send these to the network. A peer will be a smartphone that can read NFC tags. Client information stored in `filename` is decrypted with `password`, and a client object is created with this. Requires a client object in order to create and sign transactions.
 
 - Create a transaction:
 

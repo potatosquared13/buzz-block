@@ -25,7 +25,7 @@ class Blockchain:
         if (self.blocks):
             raise Exception("can't create new genesis block; the blockchain is already populated")
         else:
-            self.blocks.append(Block(None, transactions))
+            self.blocks.append(Block("0000000000000000000000000000000000000000000000000000000000000000", transactions))
 
     @property
     def json(self):
@@ -33,9 +33,5 @@ class Blockchain:
 
     @property
     def last_block(self):
-        try:
-            return self.blocks[-1]
-        except IndexError:
-            return Block("0000000000000000000000000000000000000000000000000000000000000000", [])
-
+        return self.blocks[-1]
 

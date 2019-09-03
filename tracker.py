@@ -102,7 +102,6 @@ class Tracker(Node):
             self.stop()
             self.write_to_file()
 
-    # TODO
     def add_funds(self, recipient, amount):
         transaction = Transaction("add funds", recipient, amount)
         self.client.sign(transaction)

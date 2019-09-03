@@ -56,4 +56,3 @@ class Client:
         )
         return hexlify(identity).decode()[48:]
 
-
