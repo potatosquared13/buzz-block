@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+
+<html lang="en-us">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="../static/js/overview.js"></script>
+  </head>
+
+  <body>
+
+    <div id="transactions-container">
+
+      <table>
+
+        <thead>
+          <th>
+            <td>BLOCK</td>
+            <td>NAME</td>
+            <td>IDENTITY</td>
+            <td>AMOUNT</td>
+          </th>
+        </thead>
+      
+        <tbody>
+      
+          {% set ns = namespace() %}
+          {% set ns.index = 0 %}
+
+          {% for block in blocks %}
+      
+            {% for transaction in block.transactions %}
+        
+        
+            <tr>
+        
+              <td>{{blocks.index(block)}}</td>
+              <td>{{senders[ns.index]}}</td>
+              <td>{{transaction.sender[:8]}}</td>
+              <td>{{transaction.amount}}</td>
+        
+            </tr>
+
+                  {% set ns.index = ns.index + 1 %}
+                  {{ns.index}}
+      
+            {% endfor %}
+      
+          {% endfor %}
+      
+        </tbody>
+      
+      </table>
+
+    </div>
+
+  </body>
+
+</html>

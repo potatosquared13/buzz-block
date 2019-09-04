@@ -1,7 +1,3 @@
-window.onload = () => {
-  showForm();
-}
-
 function addNonVendor() {
 
   let name = document.getElementById('non-vendor-name').value;
@@ -29,16 +25,22 @@ function addVendor() {
 
 }
 
-function showForm() {
+function finalize() {
 
-  document.getElementById('form-container').style.display = "block";
-  document.getElementById('transactions-container').style.display = "none";
+  let xhr = new XMLHttpRequest();
 
-}
+  xhr.onreadystatechange = () => {
 
-function showTransactions() {
+    if (xhr.readyState == 4 && xhr.status == 200) {
 
-  document.getElementById('form-container').style.display = "none";
-  document.getElementById('transactions-container').style.display = "block";
+      document.getElementById('non-vendor-register').disabled = true;
+      document.getElementById('vendor-register').disabled = true;
+
+    }
+
+  }
+
+  xhr.open('POST', '/finalize', true);
+  xhr.send();
 
 }

@@ -18,8 +18,9 @@
 
       <h4>NON VENDOR</h4>
 
-      <form id="non-vendor-form">
 
+      <form id="non-vendor-form">
+ 
         <br />
         NAME <br /> <input id="non-vendor-name" type="text" class="text-input" name="non-vendor-name" />
         <br />
@@ -27,7 +28,7 @@
         <br />
         CONTACT NUMBER <br /> <input id="non-vendor-contact-number" type="text" class="text-input" name="non-vendor-contact-number" />
         <br />
-        <button type="button" class="submit" onclick="addNonVendor()">REGISTER</button>
+        <button id="non-vendor-register" type="button" class="submit" onclick="addNonVendor()">REGISTER</button>
 
       </form>
 
@@ -40,28 +41,11 @@
           <br />
           CONTACT NUMBER <br /> <input id="vendor-contact-number" type="text" class="text-input" name="vendor-contact-number" />
           <br />
-          <button type="button" class="submit" onclick="addVendor()">REGISTER</button>
+          <button id="vendor-register" type="button" class="submit" onclick="addVendor()">REGISTER</button>
   
         </form>
 
-    </div>
-
-    <div id="transactions-container">
-
-        <ul style="list-style-type: none;">
-
-            {% for b in blocks %}
-      
-            <li><strong>Block {{blocks.index(b)}}</strong></li>
-      
-            {%for t in b.transactions %}
-            <li>sender: {{t.sender}}</li>
-            <li>amount: {{t.amount}}</li>
-            {% endfor %}
-      
-            {% endfor %}
-      
-          </ul>
+        <button id="finalize" type="button" onclick="finalize()">FINALIZE</button>
 
     </div>
 
