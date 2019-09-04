@@ -23,9 +23,9 @@ class Blockchain:
 
     def genesis(self, transactions):
         if (self.blocks):
-            raise Exception("can't create new genesis block; the blockchain is already populated")
+            raise Exception("blockchain already exists")
         else:
-            self.blocks.append(Block("0000000000000000000000000000000000000000000000000000000000000000", transactions))
+            self.blocks.append(Block("0".zfill(64), transactions))
 
     @property
     def json(self):
