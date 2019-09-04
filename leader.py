@@ -1,26 +1,23 @@
 # leader node esponsible for recording transactions and controlling block creation
 
 import db
-
 from node import *
 
 class Leader(Node):
-    def __init__(self, pin):
-        super().__init__()
+    def __init__(self, password):
+        if (not os.path.isfile('./leader.json')):
+            self.client = Client("")
+            self.client.export("leader.json", password)
+        super().__init__("leader.json", password)
         self.new_funds = []
-        if (os.path.isfile('./leader.json')):
-            self.client = Client(filename="leader.json", password=pin)
-        else:
-            self.client = Client("admin")
-            self.client.write_to_file(pin, "leader.json")
 
-    def new_block(self):
+    def consense(self):
         self.pending_transactions = self.new_funds + self.pending_transactions
         if self.pending_transactions:
             for peer in self.peers:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect(peer.address)
-                    self.send(sock, Con.bftstart, jsonify(self.pending_transactions))
+                    self.send(sock, Con.bftstart, helpers.jsonify(self.pending_transactions))
             self.pbft_send(self.pending_transactions)
             logging.info("Waiting for network consensus")
             while (self.pending_block):
@@ -44,12 +41,12 @@ class Leader(Node):
         return False
 
     def listen(self):
-        group = socket.inet_aton('224.1.1.1')
+        group = socket.inet_aton('224.98.117.122')
         iface = socket.inet_aton(self.address[0])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
-            sock.bind(('', 60001))
+            sock.bind(('', 60000))
             sock.settimeout(2)
             while self.listening:
                 try:
@@ -98,7 +95,7 @@ class Leader(Node):
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
-            self.write_to_file()
+            self.chain.export()
 
     def add_funds(self, recipient, amount):
         transaction = Transaction("add funds", recipient, amount)
