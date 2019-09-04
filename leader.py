@@ -1,18 +1,18 @@
-# tracker node esponsible for recording transactions and controlling block creation
+# leader node esponsible for recording transactions and controlling block creation
 
 import db
 
 from node import *
 
-class Tracker(Node):
+class Leader(Node):
     def __init__(self, pin):
         super().__init__()
         self.new_funds = []
-        if (os.path.isfile('./tracker.json')):
-            self.client = Client(filename="tracker.json", password=pin)
+        if (os.path.isfile('./leader.json')):
+            self.client = Client(filename="leader.json", password=pin)
         else:
             self.client = Client("admin")
-            self.client.write_to_file(pin, "tracker.json")
+            self.client.write_to_file(pin, "leader.json")
 
     def new_block(self):
         self.pending_transactions = self.new_funds + self.pending_transactions
@@ -77,7 +77,7 @@ class Tracker(Node):
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
                             rsock.connect((addr[0], int(msg[10:])))
                             msg = str(self.address[1]) + "," + self.client.identity
-                            self.send(rsock, Con.tracker, msg)
+                            self.send(rsock, Con.leader, msg)
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
                         try:
@@ -94,7 +94,7 @@ class Tracker(Node):
             threading.Thread(target=self.init_server).start()
             while (not self.address[1]):
                 time.sleep(1)
-            self.tracker = Peer(self.address, self.client.identity)
+            self.leader = Peer(self.address, self.client.identity)
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
@@ -115,7 +115,7 @@ class Tracker(Node):
     def get_balance(self, client):
         return db.search(client).pending_balance
 
-    def get_tracker(self):
+    def get_leader(self):
         pass
 
     def send_transaction(self, sender, amount):

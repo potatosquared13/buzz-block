@@ -33,7 +33,7 @@ class Con(Enum):
     chainrequest = 6
     chain = 7
     peer = 8
-    tracker = 9
+    leader = 9
     unknown = 10
 
 # class for peerlist
@@ -56,7 +56,7 @@ class Node(threading.Thread):
             self.read_from_file()
         if pin:
             self.client = Client(filename=filename, password=pin)
-            self.tracker = None
+            self.leader = None
 
     def write_to_file(self):
         logging.info("Writing chain to file")
@@ -92,7 +92,7 @@ class Node(threading.Thread):
         if(transaction.signature):
             try:
                 if (transaction.sender == "add funds"):
-                    identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + self.tracker.identity)
+                    identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + self.leader.identity)
                 else:
                     identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + transaction.recipient)
                 msg = unhexlify(transaction.hash)
@@ -106,7 +106,7 @@ class Node(threading.Thread):
 
     def record_transaction(self, transaction):
         if (transaction.sender != transaction.recipient and
-            transaction.recipient != self.tracker.identity and
+            transaction.recipient != self.leader.identity and
             self.validate_transaction(transaction)):
             self.pending_transactions.append(transaction)
             return True
@@ -143,7 +143,7 @@ class Node(threading.Thread):
 
     def update_chain(self, address=None):
         if (not address):
-            address = self.tracker.address
+            address = self.leader.address
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect(address)
             self.send(sock, Con.chainrequest, sha256(self.chain.json))
@@ -164,8 +164,8 @@ class Node(threading.Thread):
             sock.settimeout(1)
             sock.sendto(msg.encode(), ('224.1.1.1', 60001))
 
-    def get_tracker(self):
-        self.tracker = None
+    def get_leader(self):
+        self.leader = None
         msg = "62757a7aCN" + str(self.address[1])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
@@ -217,21 +217,19 @@ class Node(threading.Thread):
                 self.send(c, Con.chain, self.chain.json)
             else:
                 self.send(c, Con.chain, "UP TO DATE")
-        elif (msg[0] == Con.peer or msg[0] == Con.tracker):
+        elif (msg[0] == Con.peer or msg[0] == Con.leader):
             p = msg[1].decode().split(",")
             port = int(p[0])
             identity = p[1]
             peer = Peer((addr[0], port), identity)
             if (msg[0] == Con.peer):
                 if (not any(p.identity == identity for p in self.peers)):
-                # if (Peer((addr[0], port), identity) not in self.peers):
-                # if (not [p for p in self.peers if p.address == (addr[0], port)]):
                     logging.info(f"Discovered peer at {addr[0]}:{port}")
                     self.peers.add(Peer((addr[0], port), identity))
             else:
-                logging.info(f"Tracker discovered at {addr[0]}:{port}")
+                logging.info(f"Leader discovered at {addr[0]}:{port}")
                 t = Peer((addr[0], port), identity)
-                self.tracker = t
+                self.leader = t
         else:
             logging.info(f"Unknown message ({msg[0]}, {msg[1]})")
         logging.debug(f"Closed connection from {addr[0]}")

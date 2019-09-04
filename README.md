@@ -21,26 +21,25 @@ python -m pip install --user cryptography
 - [X] peer to peer networking
 - [X] consensus algorithm
 - [X] query own blockchain for account balance
-- [ ] fallback tracker query for balance
+- [ ] fallback leader query for balance
 - [X] disallow negative balances
 - [X] allow adding funds after genesis block is created
 - [ ] better node structure: keep peer connections always open
-- [ ] multiple trackers
 - [ ] web app for user registration and transaction tracking
 - [ ] android app
 
 ### Examples
 
-- Creating a tracker:
+- Creating a leader:
 
 ```
->>> from tracker import Tracker
->>> t = Tracker(pin)
+>>> from leader import Leader
+>>> t = Leader(pin)
 >>> t.start()
 ```
 
-This creates a tracker and tells it to start listening on the network. It is a modified node without the ability to send transactions. Its main purpose is to maintain and record the blockchain. It keeps a local database that contains all user identities and their balances. Connections come from peers, which mainly send transactions to be verified and added to the blockchain.
-The tracker is also the node that will group transactions and request for the network to create a new block. This can be done by calling `tracker.new_block()`.
+This creates a leader node and tells it to start listening on the network. It is a modified node without the ability to send transactions. Its main purpose is to maintain and record the blockchain. It keeps a local database that contains all user identities and their balances. Connections come from peers, which mainly send transactions to be verified and added to the blockchain.
+The leader is also the node that will group transactions and request for the network to create a new block. This can be done by calling `leader.new_block()`.
 _pin_ is a four-character string that will be used to sign transactions that introduce new funds to the network.
 
 - Creating a peer:
@@ -49,7 +48,7 @@ _pin_ is a four-character string that will be used to sign transactions that int
 >>> from node import Node
 >>> p = Node(password="1111", filename="client.json")
 >>> p.start()
->>> p.get_tracker()
+>>> p.get_leader()
 >>> p.get_peers()
 ```
 
