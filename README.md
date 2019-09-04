@@ -24,7 +24,7 @@ python -m pip install --user cryptography
 - [ ] fallback tracker query for balance
 - [X] disallow negative balances
 - [X] allow adding funds after genesis block is created
-- [ ] better transaction/block structure
+- [ ] better node structure: keep peer connections always open
 - [ ] multiple trackers
 - [ ] web app for user registration and transaction tracking
 - [ ] android app
