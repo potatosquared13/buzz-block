@@ -5,22 +5,21 @@ import time
 import zlib
 import base64
 import socket
+import helpers
 import logging
 import os.path
 import threading
 import cryptography.exceptions
 
 from enum import Enum
+from block import Blockchain, Block
+from client import Client
 from binascii import unhexlify
+from transaction import Transaction
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-
-from helpers import *
-from block import Blockchain, Block
-from client import Client
-from transaction import Transaction
 
 # enum for tcp connection type
 class Con(Enum):
@@ -43,7 +42,7 @@ class Peer():
         self.identity = identity
 
 class Node(threading.Thread):
-    def __init__(self, filename="client.json", pin=None):
+    def __init__(self, filename, password):
         self.listening = False
         self.address = (socket.gethostbyname(socket.getfqdn()), 0)
         self.peers = set()
@@ -54,14 +53,9 @@ class Node(threading.Thread):
         logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
         if(os.path.isfile('./blockchain.json')):
             self.read_from_file()
-        if pin:
-            self.client = Client(filename=filename, password=pin)
+        if password:
+            self.client = Client(filename, password)
             self.leader = None
-
-    def write_to_file(self):
-        logging.info("Writing chain to file")
-        with open('blockchain.json', 'w') as f:
-            f.write(jsonify(self.chain))
 
     def read_from_file(self):
         logging.info("Reading block from file")
@@ -78,7 +72,8 @@ class Node(threading.Thread):
                 transaction.signature = tr['signature']
                 transactions.append(transaction)
             block = Block(bl['previous_hash'], transactions)
-            chain.blocks.append(block)
+            chain.new_block(block)
+            chain.timestamp = tmp['timestamp']
         return chain
 
     def rebuild_transaction(self, transaction_json):
@@ -146,7 +141,7 @@ class Node(threading.Thread):
             address = self.leader.address
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.connect(address)
-            self.send(sock, Con.chainrequest, sha256(self.chain.json))
+            self.send(sock, Con.chainrequest, helpers.sha256(self.chain.json))
             response = self.receive(sock)
             if (response[0] == Con.chain and response[1] != "UP TO DATE"):
                 logging.info("Rebuilding chain")
@@ -162,21 +157,21 @@ class Node(threading.Thread):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.settimeout(1)
-            sock.sendto(msg.encode(), ('224.1.1.1', 60001))
+            sock.sendto(msg.encode(), ('224.98.117.122', 60000))
 
     def get_leader(self):
         self.leader = None
         msg = "62757a7aCN" + str(self.address[1])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-            sock.sendto(msg.encode(), ('224.1.1.1', 60001))
+            sock.sendto(msg.encode(), ('224.98.117.122', 60000))
 
     # tell peers to remove this node as an active node
     def disconnect(self):
         msg = "62757a7aDC"
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-            sock.sendto(msg.encode(), ('224.1.1.1', 60001))
+            sock.sendto(msg.encode(), ('224.98.117.122', 60000))
         self.stop()
         return True
 
@@ -213,7 +208,7 @@ class Node(threading.Thread):
                 logging.info("Waiting for new block to be added before responding")
             while (self.pending_block):
                 time.sleep(1)
-            if (msg[1] != sha256(self.chain.json)):
+            if (msg[1] != helpers.sha256(self.chain.json)):
                 self.send(c, Con.chain, self.chain.json)
             else:
                 self.send(c, Con.chain, "UP TO DATE")
@@ -255,12 +250,12 @@ class Node(threading.Thread):
 
     # handles udp multicasts
     def listen(self):
-        group = socket.inet_aton('224.1.1.1')
+        group = socket.inet_aton('224.98.117.122')
         iface = socket.inet_aton(self.address[0])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
-            sock.bind(('', 60001))
+            sock.bind(('', 60000))
             sock.settimeout(2)
             while self.listening:
                 try:
@@ -286,7 +281,7 @@ class Node(threading.Thread):
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
                         try:
-                            self.peers.remove(list(peer for peer in self.peers if peer[0] == addr[0])[0])
+                            self.peers.remove(list(peer for peer in list(self.peers) if peer[0] == addr[0])[0])
                         except IndexError:
                             pass
                 except socket.error:
@@ -299,7 +294,6 @@ class Node(threading.Thread):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind((self.address[0], 0))
-            time.sleep(2)
             self.address = sock.getsockname()
             sock.settimeout(4)
             logging.info(f"Listening on {self.address[0]}:{self.address[1]}")
@@ -320,7 +314,7 @@ class Node(threading.Thread):
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
-            self.write_to_file()
+            self.chain.export()
 
     def init_server(self):
         if (not self.listening):
@@ -363,9 +357,9 @@ class Node(threading.Thread):
                     time.sleep(1)
                 if (self.pending_block.hash == mode):
                     logging.info("Own block matches network majority")
-                    self.chain.blocks.append(self.pending_block)
+                    self.chain.new_block(self.pending_block)
                     logging.info("New block added to chain")
-                    self.write_to_file()
+                    self.chain.export()
                 else:
                     for addr in [p[0] for p in self.hashes if p[1] == mode and addr != self.address]:
                         try:
