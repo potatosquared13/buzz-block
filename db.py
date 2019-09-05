@@ -66,9 +66,12 @@ def search(string):
         try:
             lock.acquire(True)
             c.execute("select * from clients where name like ? or identity=?", ('%{}%'.format(string),'{}'.format(string),))
-            result = c.fetchone()
-            e = Entry(result[0], result[1], result[2], result[3], result[4], result[5])
+            e = c.fetchone()
+            if (e is not None):
+                entry = Entry(e[0], e[1], e[2], e[3], e[4], e[5])
+            else:
+                entry = None
         finally:
             lock.release()
-    return e
+    return entry
 
