@@ -11,43 +11,55 @@
 
   <body>
 
-    <button type="button" onclick="showForm()">FORM</button>
-    <button type="button" onclick="showTransactions()">TRANSACTIONS</button>
+    {% if can_register == True %}
 
-    <div id="form-container" class="form-container">
+      <button type="button" onclick="showForm()">FORM</button>
+      <button type="button" onclick="showTransactions()">TRANSACTIONS</button>
 
-      <h4>NON VENDOR</h4>
+      <div id="form-container" class="form-container">
+
+        <h4>NON VENDOR</h4>
 
 
-      <form id="non-vendor-form">
- 
-        <br />
-        NAME <br /> <input id="non-vendor-name" type="text" class="text-input" name="non-vendor-name" />
-        <br />
-        AMOUNT <br /> <input id="amount" type="text" class="text-input" name="amount" />
-        <br />
-        CONTACT NUMBER <br /> <input id="non-vendor-contact-number" type="text" class="text-input" name="non-vendor-contact-number" />
-        <br />
-        <button id="non-vendor-register" type="button" class="submit" onclick="addNonVendor()">REGISTER</button>
-
-      </form>
-
-      <h4>VENDOR</h4>
-
-      <form id="vendor-form">
-
-          <br />
-          BUSINESS NAME <br /> <input id="vendor-name" type="text" class="text-input" name="vendor-name" />
-          <br />
-          CONTACT NUMBER <br /> <input id="vendor-contact-number" type="text" class="text-input" name="vendor-contact-number" />
-          <br />
-          <button id="vendor-register" type="button" class="submit" onclick="addVendor()">REGISTER</button>
+        <form id="non-vendor-form">
   
+          <br />
+          NAME <br /> <input id="non-vendor-name" type="text" class="text-input" name="non-vendor-name" />
+          <br />
+          AMOUNT <br /> <input id="amount" type="text" class="text-input" name="amount" />
+          <br />
+          CONTACT NUMBER <br /> <input id="non-vendor-contact-number" type="text" class="text-input" name="non-vendor-contact-number" />
+          <br />
+          <button id="non-vendor-register" type="button" class="submit" onclick="addNonVendor()">REGISTER</button>
+
         </form>
 
-        <button id="finalize" type="button" onclick="finalize()">FINALIZE</button>
+        <h4>VENDOR</h4>
 
-    </div>
+        <form id="vendor-form">
+
+            <br />
+            BUSINESS NAME <br /> <input id="vendor-name" type="text" class="text-input" name="vendor-name" />
+            <br />
+            CONTACT NUMBER <br /> <input id="vendor-contact-number" type="text" class="text-input" name="vendor-contact-number" />
+            <br />
+            <button id="vendor-register" type="button" class="submit" onclick="addVendor()">REGISTER</button>
+    
+          </form>
+
+          <button id="finalize" type="button" onclick="finalize()">FINALIZE</button>
+
+      </div>
+
+    {% else %}
+
+      <div>
+
+        <h1>YOU CANNOT REGISTER ANYMORE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</h1>
+
+      </div>
+
+    {% endif %}
 
   </body>
 

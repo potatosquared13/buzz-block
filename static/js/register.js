@@ -27,7 +27,7 @@ function addVendor() {
 
 function finalize() {
 
-  let xhr = new XMLHttpRequest();
+  /*let xhr = new XMLHttpRequest();
 
   xhr.onreadystatechange = () => {
 
@@ -40,7 +40,9 @@ function finalize() {
 
   }
 
-  xhr.open('POST', '/finalize', true);
-  xhr.send();
+  xhr.open('GET', '/finalize', true);
+  xhr.send();*/
+
+  window.location.href = '/finalize';
 
 }

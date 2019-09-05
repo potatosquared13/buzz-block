@@ -1,9 +1,10 @@
 import db
 
 from client import Client
-from tracker import Tracker
+from leader import Leader
 from transaction import Transaction
 from helpers import jsonify
+import os.path
 
 from flask import Flask, render_template, url_for, request
 app = Flask(__name__)
@@ -12,7 +13,7 @@ app = Flask(__name__)
 clients = []
 transactions = []
 
-t = Tracker("1111")
+l = Leader("1111")
 
 # create a client and a transaction to add balance into the blockchain
 # name should be a string, amount should be a float or int
@@ -20,7 +21,7 @@ def create_client(name, contact, amount, is_vendor):
     c = Client(name)
     clients.append((c, contact, amount, is_vendor))
     transaction = Transaction("add funds", c.identity, amount)
-    t.client.sign(transaction)
+    l.client.sign(transaction)
     transactions.append(transaction)
 
 # create the genesis block, which introduces the initial balance for all clients to the blockchain
@@ -29,21 +30,25 @@ def create_client(name, contact, amount, is_vendor):
 
 @app.route('/')
 def home():
+    if os.path.isfile('./blockchain.json'):
+        can_register = False
+    else:
+        can_register = True
     url_for('static', filename='js/register.js')
-    return render_template('register.html')
+    return render_template('register.html', can_register=can_register)
 
 @app.route('/overview')
 def overview():
     url_for('static', filename='js/overview.js')
     senders = []
-    for block in t.chain.blocks:
+    for block in l.chain.blocks:
         for transaction in block.transactions:
             sender = db.search(transaction.sender)
             if sender is not None:
                 senders.append(sender.name)
             else:
                 senders.append('unnamed')
-    return render_template('overview.html', blocks=t.chain.blocks, senders=senders)
+    return render_template('overview.html', blocks=l.chain.blocks, senders=senders)
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -56,15 +61,15 @@ def register():
     print(amt)
     print(contact)
     print(is_vendor)
-    for transaction in t.chain.blocks:
+    for transaction in l.chain.blocks:
         print(dir(transaction.transactions[0]))
     create_client(uname, contact, amt, int(is_vendor))
     return ''
 
-@app.route('/finalize', methods=['POST'])
+@app.route('/finalize', methods=['GET'])
 def finalize():
     for c in clients:
         db.insert(c[0], c[1], c[2], c[3])
-    t.chain.genesis(transactions)
+    l.chain.genesis(transactions)
     # finalize_for_real()
-    return ''
+    return render_template('register.html', can_register=False)
