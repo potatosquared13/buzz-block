@@ -11,7 +11,7 @@ class Leader(Node):
         super().__init__("leader.json", password)
         self.new_funds = []
 
-    def consense(self):
+    def start_consensus(self):
         self.pending_transactions = self.new_funds + self.pending_transactions
         if self.pending_transactions:
             for peer in self.peers:
@@ -60,9 +60,7 @@ class Leader(Node):
                         identity = p[1]
                         if (self.address != (addr[0], port)):
                             if (not any(p.identity == identity for p in self.peers)):
-                            # if (Peer((addr[0],port), identity) not in self.peers):
                                 logging.info(f"New peer at {addr[0]}")
-                            # if (not any(p.address == (addr[0], port) for p in self.peers)):
                                 self.peers.add(Peer((addr[0], port), identity))
                             logging.info(f"Responding to peer at {addr[0]}")
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
@@ -120,5 +118,4 @@ class Leader(Node):
 
     def disconnect(self):
         pass
-
 

@@ -269,9 +269,7 @@ class Node(threading.Thread):
                         identity = p[1]
                         if (self.address != (addr[0], port)):
                             if (not any(p.identity == identity for p in self.peers)):
-                            # if (Peer((addr[0],port), identity) not in self.peers):
                                 logging.info(f"New peer at {addr[0]}")
-                            # if (not any(p.address == (addr[0], port) for p in self.peers)):
                                 self.peers.add(Peer((addr[0], port), identity))
                             logging.info(f"Responding to peer at {addr[0]}")
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
