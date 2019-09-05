@@ -41,6 +41,7 @@ def home():
 def overview():
     url_for('static', filename='js/overview.js')
     senders = []
+    recipients = []
     for block in l.chain.blocks:
         for transaction in block.transactions:
             sender = db.search(transaction.sender)
@@ -48,7 +49,12 @@ def overview():
                 senders.append(sender.name)
             else:
                 senders.append('unnamed')
-    return render_template('overview.html', blocks=l.chain.blocks, senders=senders)
+            recipient = db.search(transaction.recipient)
+            if recipient is not None:
+                recipients.append(recipient.name)
+            else:
+                recipients.append('unnamed')
+    return render_template('overview.html', blocks=l.chain.blocks, senders=senders, recipients=recipients)
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -71,5 +77,6 @@ def finalize():
     for c in clients:
         db.insert(c[0], c[1], c[2], c[3])
     l.chain.genesis(transactions)
+    l.chain.export()
     # finalize_for_real()
     return render_template('register.html', can_register=False)

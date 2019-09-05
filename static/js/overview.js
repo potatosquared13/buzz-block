@@ -1,16 +1,11 @@
 window.onload = () => {
 
-  setInterval(() => {
+  setTimeout(() => {
     update();
-  }, 10000);
+  }, 5000);
 
 }
 
 function update() {
-
-  let xhr = new XMLHttpRequest();
-
-  xhr.open('GET', '/overview', true);
-  xhr.send();
-
+  window.location.href = "/overview";
 }

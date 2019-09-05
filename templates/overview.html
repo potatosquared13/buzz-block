@@ -16,9 +16,10 @@
 
         <thead>
           <th>
-            <td>BLOCK</td>
-            <td>NAME</td>
-            <td>IDENTITY</td>
+            <td>SENDER NAME</td>
+            <td>SENDER ID</td>
+            <td>RECIPIENT NAME</td>
+            <td>RECIPIENT ID</td>
             <td>AMOUNT</td>
           </th>
         </thead>
@@ -35,15 +36,15 @@
         
             <tr>
         
-              <td>{{blocks.index(block)}}</td>
               <td>{{senders[ns.index]}}</td>
               <td>{{transaction.sender[:8]}}</td>
+              <td>{{recipients[ns.index]}}</td>
+              <td>{{transaction.recipient[:8]}}</td>
               <td>{{transaction.amount}}</td>
         
             </tr>
 
                   {% set ns.index = ns.index + 1 %}
-                  {{ns.index}}
       
             {% endfor %}
       
