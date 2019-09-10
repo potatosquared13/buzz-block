@@ -21,11 +21,12 @@ python -m pip install --user cryptography
 - [X] peer to peer networking
 - [X] consensus algorithm
 - [X] query own blockchain for account balance
-- [ ] fallback leader query for balance
+- [ ] ~~fallback leader query for balance~~
 - [X] disallow negative balances
 - [X] allow adding funds after genesis block is created
-- [ ] better node structure: keep peer connections always open
+- [ ] ~~better node structure: keep peer connections always open~~
 - [ ] web app for user registration and transaction tracking
+- [ ] rewrite scripts in java
 - [ ] android app
 
 ### Examples
