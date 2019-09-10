@@ -76,7 +76,7 @@ class Leader(Node):
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
                         try:
-                            self.peers.remove(list(peer for peer in self.peers if peer[0] == addr[0])[0])
+                            self.peers.remove(list(peer for peer in self.peers if peer.address == addr[0])[0])
                         except IndexError:
                             pass
                 except socket.error:

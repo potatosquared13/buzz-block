@@ -52,29 +52,11 @@ class Node(threading.Thread):
         self.chain = Blockchain()
         logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
         if(os.path.isfile('./blockchain.json')):
-            self.read_from_file()
+            self.chain.rebuild(open('./blockchain.json', 'r').read())
         if password:
             self.client = Client(filename, password)
             self.leader = None
-
-    def read_from_file(self):
-        logging.info("Reading block from file")
-        self.chain = self.rebuild_chain(open('blockchain.json', 'r').read())
-
-    def rebuild_chain(self, chain_json):
-        tmp = json.loads(chain_json)
-        chain = Blockchain()
-        for bl in tmp['blocks']:
-            transactions = []
-            for tr in bl['transactions']:
-                transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
-                transaction.timestamp = tr['timestamp']
-                transaction.signature = tr['signature']
-                transactions.append(transaction)
-            block = Block(bl['previous_hash'], transactions)
-            chain.new_block(block)
-            chain.timestamp = tmp['timestamp']
-        return chain
+        self.start()
 
     def rebuild_transaction(self, transaction_json):
         transaction = Transaction(transaction_json['sender'], transaction_json['recipient'], transaction_json['amount'])
@@ -145,7 +127,7 @@ class Node(threading.Thread):
             response = self.receive(sock)
             if (response[0] == Con.chain and response[1] != "UP TO DATE"):
                 logging.info("Rebuilding chain")
-                self.chain = self.rebuild_chain(response[1])
+                self.chain = self.chain.rebuild(response[1])
                 return True
             logging.info("Chain is up to date")
             return False
@@ -279,7 +261,7 @@ class Node(threading.Thread):
                     elif (msg.startswith('62757a7aDC')):
                         logging.info(f"Peer {addr[0]} disconnected")
                         try:
-                            self.peers.remove(list(peer for peer in list(self.peers) if peer[0] == addr[0])[0])
+                            self.peers.remove(list(peer for peer in list(self.peers) if peer.address == addr[0])[0])
                         except IndexError:
                             pass
                 except socket.error:

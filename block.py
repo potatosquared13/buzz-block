@@ -1,5 +1,7 @@
 # data structures for blockchain
 
+import json
+
 import helpers
 from datetime import datetime
 from transaction import Transaction
@@ -35,6 +37,19 @@ class Blockchain:
     def export(self):
         with open('blockchain.json', 'w') as f:
             f.write(helpers.jsonify(self))
+
+    def rebuild(self, block_json):
+        tmp = json.loads(block_json)
+        for bl in tmp['blocks']:
+            transactions = []
+            for tr in bl['transactions']:
+                transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
+                transaction.timestamp = tr['timestamp']
+                transaction.signature = tr['signature']
+                transactions.append(transaction)
+            block = Block(bl['previous_hash'], transactions)
+            self.new_block(block)
+            self.timestamp = tmp['timestamp']
 
     @property
     def json(self):
