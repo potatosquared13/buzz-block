@@ -8,8 +8,8 @@ class Transaction:
     def __init__(self, sender=None, recipient=None, amount=0):
         self.sender = sender
         self.recipient = recipient
-        self.amount = amount
-        self.timestamp = datetime.now().isoformat()
+        self.amount = float(amount)
+        self.timestamp = datetime.now().isoformat("T", "seconds")
         self.signature = None
 
     @property

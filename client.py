@@ -1,6 +1,7 @@
 # client object for nodes
 
-import json
+import os
+# import json
 import helpers
 
 from binascii import hexlify, unhexlify
@@ -11,24 +12,43 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 
 class Client:
-    def __init__(self, name = None, password = None):
-        if (not password):
+    def __init__(self, name = None, filename=None):
+        if (name and not filename):
             self.name = name
             self._private_key = ec.generate_private_key(
                 ec.SECP384R1(),
                 default_backend()
             )
             self._public_key = self._private_key.public_key()
+            # client_json =  json.load(open(name, 'r'))
+            # self.name = client_json["name"]
+            # key_encrypted = client_json["key"]
         else:
-            client_json =  json.load(open(name, 'r'))
-            self.name = client_json["name"]
-            key_encrypted = client_json["key"]
-            self._private_key = serialization.load_der_private_key(
-                unhexlify(key_encrypted),
-                password=helpers.sha256(password).encode(),
-                backend=default_backend()
-            )
-            self._public_key = self._private_key.public_key()
+            with open(filename, 'r') as f:
+                self.name = f.readline()
+                priv = "-----BEGIN PRIVATE KEY-----\n" + f.readline() + "-----END PRIVATE KEY-----"
+                pub = "-----BEGIN PUBLIC KEY-----\n" + f.readline() + "\n-----END PUBLIC KEY-----"
+                print(pub)
+            # with open("private.pem", 'r') as f:
+                self._private_key = serialization.load_pem_private_key(
+                    priv.encode(),
+                    password=None,
+                    backend=default_backend()
+                )
+            # with open("public.pem", 'r') as f:
+                self._public_key = serialization.load_pem_public_key(
+                    pub.encode(),
+                    backend=default_backend()
+                )
+            # file = open(name, 'r')
+            # self.name = file.readline().rstrip()
+            # self._private_key = serialization.load_pem_private_key(
+            #     file.read().encode(),
+            #     # password=helpers.sha256(password).encode(),
+            #     password=None,
+            #     backend=default_backend()
+            # )
+            # self._public_key = self._private_key.public_key()
 
     def sign(self, transaction):
         msg = unhexlify(transaction.hash)
@@ -38,15 +58,32 @@ class Client:
         )
         transaction.signature = hexlify(signature).decode()
 
-    def export(self, filename="client.json", password=None):
-        key = self._private_key.private_bytes(
-            encoding=serialization.Encoding.DER,
+    def export(self):
+        private_key = self._private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(helpers.sha256(password).encode())
-        )
-        o = {'name': self.name, 'key': hexlify(key).decode()}
+            # encryption_algorithm=serialization.BestAvailableEncryption(helpers.sha256(password).encode())
+            encryption_algorithm=serialization.NoEncryption()
+        ).decode().replace("-----BEGIN PRIVATE KEY-----","").replace("-----END PRIVATE KEY-----","")
+        public_key = self._public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode().replace("-----BEGIN PUBLIC KEY-----","").replace("-----END PUBLIC KEY-----","")
+        # o = {'name': self.name, 'key': key.decode()}
+            # f.write(helpers.jsonify(o))
+        import unicodedata
+        import re
+        filename = self.name
+        filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').decode()
+        filename = re.sub('[^\w\s-]', '', filename).strip().lower()
+        filename = re.sub('[-\s]+', '-', filename)
+        filename = filename + ".key"
         with open(filename, 'w') as f:
-            f.write(helpers.jsonify(o))
+            f.write(f"{self.name}\n{''.join(private_key.splitlines())}\n{''.join(public_key.splitlines())}")
+        # with open("private.pem", 'w') as f:
+            # f.write(f"{private_key}")
+        # with open("public.pem", 'w') as f:
+            # f.write(f"{public_key}")
 
     @property
     def identity(self):

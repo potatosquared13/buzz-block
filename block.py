@@ -22,7 +22,7 @@ class Block:
 class Blockchain:
     def __init__(self):
         self.blocks = []
-        self.timestamp = datetime.now().isoformat()
+        self.timestamp = datetime.now().isoformat("T", "seconds")
 
     def genesis(self, transactions):
         if (self.blocks):
@@ -32,7 +32,7 @@ class Blockchain:
 
     def new_block(self, block):
         self.blocks.append(block)
-        self.timestamp = datetime.now().isoformat()
+        self.timestamp = datetime.now().isoformat("T", "seconds")
 
     def export(self):
         with open('blockchain.json', 'w') as f:

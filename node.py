@@ -42,7 +42,7 @@ class Peer():
         self.identity = identity
 
 class Node(threading.Thread):
-    def __init__(self, filename, password):
+    def __init__(self):
         self.listening = False
         self.address = (socket.gethostbyname(socket.getfqdn()), 0)
         self.peers = set()
@@ -53,9 +53,8 @@ class Node(threading.Thread):
         logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
         if(os.path.isfile('./blockchain.json')):
             self.chain.rebuild(open('./blockchain.json', 'r').read())
-        if password:
-            self.client = Client(filename, password)
-            self.leader = None
+        self.client = Client()
+        self.leader = None
         self.start()
 
     def rebuild_transaction(self, transaction_json):

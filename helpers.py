@@ -16,5 +16,5 @@ def sha256(message):
 
 # returns obj as a json object
 def jsonify(obj):
-    return json.dumps(obj, default=lambda o: o.__dict__, indent=4)
+    return json.dumps(obj, default=lambda o: o.__dict__, separators=(',',':'), indent=None)
 
