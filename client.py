@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TODO - INC include client type (seller/buyer)
 #      - OK  write/read private key from file
 
@@ -15,6 +16,22 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
 # import db
+=======
+# NOTE - This script will be run from the server, after a user signs up
+#      - The user's public key will be saved to the database, along with other
+#        identifying information like name, etc.
+#      - This object is only used to create the client object
+#        the balance, actual name, etc., will be handled in the database
+
+# I was here
+
+import Crypto.Random
+from binascii import hexlify
+from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+
+import db
+>>>>>>> 9042558ecd0bd1d53be5cfda0e73e3bccade6ca3
 import helpers
 
 
