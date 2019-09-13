@@ -1,4 +1,4 @@
-package com.example.peng.nfcreadwrite;
+package testapp;
 
 import java.io.File;
 import java.util.Scanner;
@@ -17,21 +17,15 @@ import java.security.NoSuchAlgorithmException;
 
 public class Client {
     public String name;
-    public PrivateKey private_key;
+    private PrivateKey private_key;
     public PublicKey public_key;
 
     public Client() {
         try {
             Scanner file = new Scanner(new File("client.txt"));
-            file.useDelimiter("\\Z");
+            file.useDelimiter("\n");
             this.name = file.next();
-            file.close();
-            file = new Scanner(new File("private.pem"));
-            file.useDelimiter("\\Z");
             String private_key = file.next();
-            file.close();
-            file = new Scanner(new File("public.pem"));
-            file.useDelimiter("\\Z");
             String public_key = file.next();
             file.close();
 
