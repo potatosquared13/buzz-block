@@ -4,11 +4,11 @@ import db
 from node import *
 
 class Leader(Node):
-    def __init__(self, password):
-        if (not os.path.isfile('./leader.json')):
-            self.client = Client("")
-            self.client.export("leader.json", password)
-        super().__init__("leader.json", password)
+    def __init__(self):
+        if (not os.path.isfile('./admin.key')):
+            self.client = Client("admin")
+            self.client.export()
+        super().__init__("admin.key")
         self.new_funds = []
 
     def start_consensus(self):
@@ -18,7 +18,7 @@ class Leader(Node):
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect(peer.address)
                     self.send(sock, Con.bftstart, helpers.jsonify(self.pending_transactions))
-            self.pbft_send(self.pending_transactions)
+            self.send_hash(self.pending_transactions)
             logging.info("Waiting for network consensus")
             while (self.pending_block):
                 time.sleep(1)

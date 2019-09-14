@@ -42,7 +42,7 @@ class Peer():
         self.identity = identity
 
 class Node(threading.Thread):
-    def __init__(self):
+    def __init__(self, filename):
         self.listening = False
         self.address = (socket.gethostbyname(socket.getfqdn()), 0)
         self.peers = set()
@@ -53,9 +53,10 @@ class Node(threading.Thread):
         logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
         if(os.path.isfile('./blockchain.json')):
             self.chain.rebuild(open('./blockchain.json', 'r').read())
-        self.client = Client()
+        self.client = Client(filename=filename)
         self.leader = None
-        self.start()
+        self.lock = threading.Lock()
+        # self.start()
 
     def rebuild_transaction(self, transaction_json):
         transaction = Transaction(transaction_json['sender'], transaction_json['recipient'], transaction_json['amount'])
@@ -137,7 +138,6 @@ class Node(threading.Thread):
         msg = "62757a7aGP" + str(self.address[1]) + "," + self.client.identity
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-            sock.settimeout(1)
             sock.sendto(msg.encode(), ('224.98.117.122', 60000))
 
     def get_leader(self):
@@ -153,11 +153,11 @@ class Node(threading.Thread):
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
             sock.sendto(msg.encode(), ('224.98.117.122', 60000))
-        self.stop()
         return True
 
     def handle_connection(self, c, addr):
         logging.debug(f"Accepted connection from {addr[0]}")
+        c.settimeout(10)
         msg = self.receive(c)
         if (msg[0] == Con.response):
             logging.info(f"Response from {addr[0]}")
@@ -177,11 +177,13 @@ class Node(threading.Thread):
                 transaction.timestamp = tr['timestamp']
                 transaction.signature = tr['signature']
                 pending_transactions.append(transaction)
-            self.pbft_send(pending_transactions)
+            self.send_hash(pending_transactions)
         # receive hashes
         elif (msg[0] == Con.bftverify):
-            peer = [p.address for p in self.peers if p.address[0] == addr[0]][0]
-            self.pbft_receive(peer, msg[1].decode())
+            # peer = [p.address for p in self.peers if p.address[0] == addr[0]][0]
+            self.lock.acquire()
+            self.hashes.append((addr, msg[1].decode()))
+            self.lock.release()
         # block update
         elif (msg[0] == Con.chainrequest):
             logging.info(f"Sending chain to {addr[0]}")
@@ -237,7 +239,7 @@ class Node(threading.Thread):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
             sock.bind(('', 60000))
-            sock.settimeout(2)
+            sock.settimeout(4)
             while self.listening:
                 try:
                     data, addr = sock.recvfrom(1024)
@@ -258,9 +260,9 @@ class Node(threading.Thread):
                                 msg = str(self.address[1]) + "," + self.client.identity
                                 self.send(rsock, Con.peer, msg)
                     elif (msg.startswith('62757a7aDC')):
-                        logging.info(f"Peer {addr[0]} disconnected")
                         try:
                             self.peers.remove(list(peer for peer in list(self.peers) if peer.address == addr[0])[0])
+                            logging.info(f"Peer {addr[0]} disconnected")
                         except IndexError:
                             pass
                 except socket.error:
@@ -305,11 +307,12 @@ class Node(threading.Thread):
                 time.sleep(1)
 
     def stop(self):
-        self.listening = False
+        if (self.listening):
+            self.listening = False
+            self.disconnect()
 
-    # practical byzantine fault tolerance 1/2
     # creates a block out of received transactions and sends the computed hash to other nodes
-    def pbft_send(self, pending_transactions):
+    def send_hash(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
         logging.info("Sending own hash to peers")
         try:
@@ -319,37 +322,41 @@ class Node(threading.Thread):
                     self.send(sock, Con.bftverify, self.pending_block.hash)
         except socket.error:
             logging.error("Peer refused connection")
-        logging.info("Waiting for network consensus")
-        self.pbft_receive(self.address, self.pending_block.hash)
+        self.lock.acquire()
+        self.hashes.append((self.address, self.pending_block.hash))
+        self.lock.release()
+        self.pbft()
 
-    # pBFT 2/2
-    # waits until all other nodes' hashes are received and compares it with its own
-    def pbft_receive(self, addr, hash):
-        self.hashes.append((addr, hash))
-        if (len(self.hashes) > len(self.peers)):
-            hashes = [h[1] for h in self.hashes]
-            mode = max(set(hashes), key=hashes.count)
-            if (hashes.count(mode)/len(hashes) >= 2/3):
-                if (not self.pending_block):
-                    logging.error("Waiting for own block to be generated before continuing")
-                while (not self.pending_block):
-                    time.sleep(1)
-                if (self.pending_block.hash == mode):
-                    logging.info("Own block matches network majority")
-                    self.chain.new_block(self.pending_block)
-                    logging.info("New block added to chain")
-                    self.chain.export()
-                else:
-                    for addr in [p[0] for p in self.hashes if p[1] == mode and addr != self.address]:
-                        try:
-                            logging.info(f"Requesting current chain from {addr}")
-                            self.update_chain(addr)
-                            break
-                        except socket.error:
-                            pass
-                self.hashes = []
-                self.pending_transactions = []
-                self.pending_block = None
+    # practical byzantine fault tolerance algorithm
+    # waits until it has all other nodes' hashes, or until a minute has passed
+    # then it compares its hash against the received hashes
+    # if at least 2/3rds of the received hashes are the same as its own computed one,
+    # it accepts its generated block as the next official one.
+    # the remaining 1/3rd could comprise of wrong hashes, or a lack of one
+    def pbft(self):
+        logging.info("Started consensus")
+        self.pending_transactions = []
+        start = time.time()
+        logging.info("Waiting for all hashes or elapsed time")
+        while (time.time() - start < 60 or len(self.hashes) < len(self.peers) + 1):
+            time.sleep(1)
+        hashes = [h[1] for h in self.hashes]
+        if (len(hashes) < len(self.peers) + 1):
+            hashes += ['0'] * (1 + len(self.peers) - len(hashes))
+        mode = max(set(hashes), key=hashes.count)
+        if (hashes.count(mode)/len(hashes) >= 2/3 and self.pending_block.hash == mode):
+            logging.info("Own block matches network majority")
+            self.chain.new_block(self.pending_block)
+            logging.info("New block added to chain")
+            self.chain.export()
         else:
-            logging.info(f"Received {len(self.hashes)}/{len(self.peers)} hashes")
+            for addr in [p[0] for p in self.hashes if p[1] == mode and addr != self.address]:
+                try:
+                    logging.info(f"Requesting current chain from {addr}")
+                    self.update_chain(addr)
+                    break
+                except socket.error:
+                    pass
+            self.hashes = []
+            self.pending_block = None
 
