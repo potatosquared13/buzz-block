@@ -22,7 +22,7 @@ public class Client {
 
     public Client() {
         try {
-            Scanner file = new Scanner(new File("client.txt"));
+            Scanner file = new Scanner(new File("client.key"));
             file.useDelimiter("\n");
             this.name = file.next();
             String private_key = file.next();
