@@ -1,4 +1,6 @@
-package com.example.peng.nfcreadwrite;
+package testapp;
+
+import com.google.gson.*;
 
 import java.util.Date;
 import java.text.SimpleDateFormat;
@@ -22,5 +24,9 @@ public class Transaction extends HashableObject{
         Transaction tmp = new Transaction(this.sender, this.recipient, this.amount);
         tmp.timestamp = this.timestamp;
         return Helper.getSHA256Hash(tmp.toJson());
+    }
+
+    public static Transaction fromJson(String j){
+        return new Gson().fromJson(j, Transaction.class);
     }
 }

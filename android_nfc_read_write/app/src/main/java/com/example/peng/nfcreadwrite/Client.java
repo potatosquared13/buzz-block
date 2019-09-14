@@ -20,9 +20,9 @@ public class Client {
     private PrivateKey private_key;
     public PublicKey public_key;
 
-    public Client() {
+    public Client(File f) {
         try {
-            Scanner file = new Scanner(new File("client.key"));
+            Scanner file = new Scanner(f);
             file.useDelimiter("\n");
             this.name = file.next();
             String private_key = file.next();
