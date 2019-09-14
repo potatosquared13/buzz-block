@@ -24,11 +24,11 @@ class Client:
             # self.name = client_json["name"]
             # key_encrypted = client_json["key"]
         else:
-            with open(filename, 'r') as f:
-                self.name = f.readline()
-                priv = "-----BEGIN PRIVATE KEY-----\n" + f.readline() + "-----END PRIVATE KEY-----"
-                pub = "-----BEGIN PUBLIC KEY-----\n" + f.readline() + "\n-----END PUBLIC KEY-----"
-                print(pub)
+            with open(filename, 'r') as file:
+                f = file.read().splitlines()
+                self.name = f[0]
+                priv = "-----BEGIN PRIVATE KEY-----\n" + f[1] + "\n-----END PRIVATE KEY-----"
+                pub = "-----BEGIN PUBLIC KEY-----\n" + f[2] + "\n-----END PUBLIC KEY-----"
             # with open("private.pem", 'r') as f:
                 self._private_key = serialization.load_pem_private_key(
                     priv.encode(),
