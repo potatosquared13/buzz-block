@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
@@ -145,6 +146,8 @@ public class MainActivity extends Activity {
         int    langLength = langBytes.length;
         int    textLength = textBytes.length;
         byte[] payload    = new byte[1 + langLength + textLength];
+        Client c          = new Client(new File("Insert File"));
+        byte[] stuffToWriteToNfc = Helper.hexToBytes(c.getIdentity());
 
         // set status byte (see NDEF spec for actual bits)
         payload[0] = (byte) langLength;
