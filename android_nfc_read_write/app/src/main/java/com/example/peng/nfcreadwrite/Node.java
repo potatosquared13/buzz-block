@@ -436,7 +436,8 @@ public class Node {
             od.write(input);
             od.flush();
             od.close();
-            byte[] payload = Base64.getEncoder().encode(baos.toByteArray());
+//            byte[] payload = Base64.getEncoder().encode(baos.toByteArray());
+            byte[] payload = android.util.Base64.encode(baos.toByteArray());    //FIX!!
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             out.write(String.format("%02d", t).getBytes());
             out.write(String.format("%08d", payload.length).getBytes());
@@ -448,6 +449,12 @@ public class Node {
         }
     }
 
+    /*
+        TODO:
+            - Read Bytes
+            - Fix Flag Warnings
+     */
+
     private Message receive(Socket s){
         try {
             DataInputStream input = new DataInputStream(s.getInputStream());
@@ -455,7 +462,7 @@ public class Node {
             int length = Integer.parseInt(new String(input.readNBytes(8)));
 
             byte[] encoded_compressed_data = input.readNBytes(length);
-            byte[] compressed_data = Base64.getDecoder().decode(encoded_compressed_data);
+            byte[] compressed_data = android.util.Base64.decode(encoded_compressed_data, 1);   //FLAGS FIX
             InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data));
             s.close();
             return new Message(type, new String(iis.readAllBytes()));
