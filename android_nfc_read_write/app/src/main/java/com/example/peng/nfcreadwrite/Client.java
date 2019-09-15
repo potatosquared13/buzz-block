@@ -1,8 +1,8 @@
-package testapp;
+package com.example.peng.nfcreadwrite;
 
 import java.io.File;
 import java.util.Scanner;
-import java.util.Base64;
+import android.util.Base64;
 
 import java.security.PublicKey;
 import java.security.Signature;
@@ -32,11 +32,11 @@ public class Client {
             private_key = private_key.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----",
                     "");
             private_key = private_key.replace("\n", "").replace("\r", "");
-            byte[] privkey = Base64.getDecoder().decode(private_key);
+            byte[] privkey = android.util.Base64.decode(private_key);    //FIX!!
 
             public_key = public_key.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");
             public_key = public_key.replace("\n", "").replace("\r", "");
-            byte[] pubkey = Base64.getDecoder().decode(public_key);
+            byte[] pubkey = Base64.getDecoder().decode(public_key); //FIX!!
 
             KeyFactory factory = KeyFactory.getInstance("EC");
             this.private_key = factory.generatePrivate(new PKCS8EncodedKeySpec(privkey));

@@ -1,4 +1,4 @@
-package testapp;
+package com.example.peng.nfcreadwrite;
 
 public class Message{
     public int type;

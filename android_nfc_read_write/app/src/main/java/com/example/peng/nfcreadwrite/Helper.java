@@ -1,4 +1,4 @@
-package testapp;
+package com.example.peng.nfcreadwrite;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

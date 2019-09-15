@@ -1,4 +1,4 @@
-package testapp;
+package com.example.peng.nfcreadwrite;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.ArrayList;
-import java.util.Base64;
+import android.util.Base64;
 import java.util.Collections;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
