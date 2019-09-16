@@ -19,6 +19,7 @@ import java.net.ServerSocket;
 import java.net.MulticastSocket;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Locale;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -27,6 +28,7 @@ import android.util.Base64;
 import java.util.Collections;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
+import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 import java.security.Signature;
 import java.security.PublicKey;
@@ -134,8 +136,8 @@ public class Node {
                         String[] p = msg.substring(10).split(",");
                         int port = Integer.parseInt(p[0]);
                         String identity = p[1];
-                        if (control.ip != ip && control.port != port){
-                            Boolean alreadyKnown = false;
+                        if (!control.ip.equals(ip) && control.port != port){
+                            boolean alreadyKnown = false;
                             synchronized (control.peers){
                                 for (Peer peer : control.peers)
                                     if (peer.identity == identity){
@@ -201,7 +203,11 @@ public class Node {
                 break;
             case BFTVERIFY:
                 if (control.hashes.isEmpty())
-                    Thread.sleep(1000);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e){
+                        e.printStackTrace();
+                    }
                 synchronized (control.hashes){
                     for (Peer peer : control.peers)
                         if (peer.ip == address && peer.port == sock.getPort())
@@ -437,10 +443,10 @@ public class Node {
             od.flush();
             od.close();
 //            byte[] payload = Base64.getEncoder().encode(baos.toByteArray());
-            byte[] payload = android.util.Base64.encode(baos.toByteArray());    //FIX!!
+            byte[] payload = android.util.Base64.encode(baos.toByteArray(), Base64.DEFAULT);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
-            out.write(String.format("%02d", t).getBytes());
-            out.write(String.format("%08d", payload.length).getBytes());
+            out.write(String.format(Locale.getDefault(), "%02d", t).getBytes());
+            out.write(String.format(Locale.getDefault(), "%08d", payload.length).getBytes());
             out.write(payload);
             DataOutputStream output = new DataOutputStream(s.getOutputStream());
             output.write(out.toByteArray());
@@ -458,14 +464,24 @@ public class Node {
     private Message receive(Socket s){
         try {
             DataInputStream input = new DataInputStream(s.getInputStream());
-            int type = Integer.parseInt(new String(input.readNBytes(2)));
-            int length = Integer.parseInt(new String(input.readNBytes(8)));
+            byte[] btype = new byte[2];
+            input.read(btype, 0, 2);
+            int type = Integer.parseInt(new String(btype));
+//            int type = Integer.parseInt(new String(input.read()));
+            byte[] blength = new byte[8];
+            input .read(blength, 2, 8);
+            int length = Integer.parseInt(new String(blength));
+//            int length = Integer.parseInt(new String(input.readNBytes(8)));
 
-            byte[] encoded_compressed_data = input.readNBytes(length);
-            byte[] compressed_data = android.util.Base64.decode(encoded_compressed_data, 1);   //FLAGS FIX
-            InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data));
+            byte[] ecdata =  new byte[length];
+            input.readFully(ecdata, 10, length);
+//            byte[] encoded_compressed_data = input.readNBytes(length);
+            byte[] compressed_data = android.util.Base64.decode(ecdata, Base64.DEFAULT);
+            InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data), new Inflater());
             s.close();
-            return new Message(type, new String(iis.read(iis.len())));
+            byte[] msg = new byte[length];
+            iis.read(msg, 0, length);
+            return new Message(type, new String(msg));
         } catch (IOException e){
             e.printStackTrace();
         }
