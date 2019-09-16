@@ -465,7 +465,7 @@ public class Node {
             byte[] compressed_data = android.util.Base64.decode(encoded_compressed_data, 1);   //FLAGS FIX
             InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data));
             s.close();
-            return new Message(type, new String(iis.readAllBytes()));
+            return new Message(type, new String(iis.read(iis.len())));
         } catch (IOException e){
             e.printStackTrace();
         }
