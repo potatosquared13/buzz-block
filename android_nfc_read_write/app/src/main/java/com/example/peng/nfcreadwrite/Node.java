@@ -52,7 +52,7 @@ public class Node {
         String ip;
         int port;
         String identity;
-        public Peer(String i, int p, String id){
+        Peer(String i, int p, String id){
             ip = i;
             port = p;
             identity = id;
@@ -62,28 +62,28 @@ public class Node {
     private class PeerHashPair {
         Peer peer;
         String hash;
-        public PeerHashPair(Peer p, String h){
+        PeerHashPair(Peer p, String h){
             peer = p;
             hash = h;
         }
     }
 
     public class Control{
-        public volatile Boolean listening;
-        public volatile String ip;
-        public volatile int port;
-        public volatile Set<Peer> peers;
-        public volatile ArrayList<Transaction> pending_transactions;
-        public volatile Block pending_block;
-        public volatile Blockchain chain;
-        public volatile ArrayList<PeerHashPair> hashes;
-        public volatile Client client;
-        public volatile Peer leader;
+        volatile Boolean listening;
+        volatile String ip;
+        volatile int port;
+        volatile Set<Peer> peers;
+        volatile ArrayList<Transaction> pending_transactions;
+        volatile Block pending_block;
+        volatile Blockchain chain;
+        volatile ArrayList<PeerHashPair> hashes;
+        volatile Client client;
+        volatile Peer leader;
     }    
     public final Control control = new Control();
 
     private class TCPListener implements Runnable{
-        public Boolean isActive = false;
+        boolean isActive = false;
         private Thread t;
         @Override
         public void run() {
@@ -109,7 +109,7 @@ public class Node {
                 e.printStackTrace();
             }
         }
-        public void start(){
+        void start(){
             if (t == null)
                 t = new Thread(this);
             t.start();
@@ -117,7 +117,7 @@ public class Node {
     }
 
     private class UDPListener implements Runnable{
-        public Boolean isActive = false;
+        boolean isActive = false;
         private Thread t;
         @Override
         public void run() {
@@ -138,9 +138,9 @@ public class Node {
                         String identity = p[1];
                         if (!control.ip.equals(ip) && control.port != port){
                             boolean alreadyKnown = false;
-                            synchronized (control.peers){
+                            synchronized (control){
                                 for (Peer peer : control.peers)
-                                    if (peer.identity == identity){
+                                    if (peer.identity.equals(identity)){
                                         alreadyKnown = true;
                                         break;
                                     }
@@ -153,9 +153,9 @@ public class Node {
                             sock.close();
                         }
                     } else if (msg.startsWith("62757a7aDC")){
-                        synchronized (control.peers){
+                        synchronized (control){
                             for (Peer peer : control.peers){
-                                if (peer.ip == ip && peer.port == ms.getPort())
+                                if (peer.ip.equals(ip) && peer.port == ms.getPort())
                                     control.peers.remove(peer);
                             }
                         }
@@ -167,7 +167,7 @@ public class Node {
                 e.printStackTrace();
             }
         }
-        public void start(){
+        void start(){
             if (t == null)
                 t = new Thread(this);
             t.start();
@@ -176,7 +176,7 @@ public class Node {
 
     private class ConnectionManager implements Runnable{
         private Socket sock;
-        public ConnectionManager(Socket c){
+        ConnectionManager(Socket c){
             sock = c;
         }    
         @Override
@@ -208,9 +208,9 @@ public class Node {
                     } catch (InterruptedException e){
                         e.printStackTrace();
                     }
-                synchronized (control.hashes){
+                synchronized (control){
                     for (Peer peer : control.peers)
-                        if (peer.ip == address && peer.port == sock.getPort())
+                        if (peer.ip.equals(address) && peer.port == sock.getPort())
                             control.hashes.add(new PeerHashPair(peer, m.data));
                 }
                 break;
@@ -221,16 +221,16 @@ public class Node {
                     } catch (InterruptedException e){
                         e.printStackTrace();
                     }
-                synchronized (control.chain){
-                    if (m.data != control.chain.getHash()){
+                synchronized (control){
+                    if (!m.data.equals(control.chain.getHash())){
                         System.out.println("Sending chain to " + address);
                         send(sock, CHAIN, control.chain.toJson());
                     }
                 }
                 break;
             case CHAIN:
-                synchronized (control.chain){
-                    if (m.data != "UP TO DATE"){
+                synchronized (control){
+                    if (!m.data.equals("UP TO DATE")){
                         System.out.println("Rebuilding chain");
                         control.chain.rebuild(m.data);
                     } else
@@ -241,10 +241,10 @@ public class Node {
                 p = m.data.split(",");
                 port = Integer.parseInt(p[0]);
                 identity = p[1];
-                Boolean alreadyKnown = false;
-                synchronized (control.peers){
+                boolean alreadyKnown = false;
+                synchronized (control){
                     for (Peer peer : control.peers){
-                        if (peer.identity == identity){
+                        if (peer.identity.equals(identity)){
                             alreadyKnown = true;
                             break;
                         }
@@ -262,7 +262,7 @@ public class Node {
                 control.leader = new Peer(address, port, identity);
                 System.out.println("Leader discovered at " + address + ":" + port);
                 break;
-            default:;
+            default:
                 System.out.println("Unknown message (" + m.type + ", " + m.data + ")");
             }
             try {
@@ -324,10 +324,10 @@ public class Node {
     public void sendTransaction(String sender, double amount) {
         Transaction t = new Transaction(sender, control.client.getIdentity(), amount);
         control.client.sign(t);
-        synchronized (control.pending_transactions){
+        synchronized (control){
             control.pending_transactions.add(t);
         }
-        synchronized (control.peers){
+        synchronized (control){
             for (Peer p : control.peers){
                 try{
                     Socket sock = new Socket(p.ip, p.port);
@@ -345,26 +345,26 @@ public class Node {
 
     public double getBalance(String client){
         double balance = 0;
-        synchronized (control.chain){
+        synchronized (control){
             for (Block b : control.chain.blocks)
                 for (Transaction t : b.transactions)
-                    if (t.sender == client)
+                    if (t.sender.equals(client))
                         balance -= t.amount;
-                    else if (t.recipient == client)
+                    else if (t.recipient.equals(client))
                         balance += t.amount;
             for (Transaction t : control.pending_transactions)
-                if (t.sender == client)
+                if (t.sender.equals(client))
                     balance -= t.amount;
-                else if (t.recipient == client)
+                else if (t.recipient.equals(client))
                     balance += t.amount;
         }
         return balance;
     }
 
-    public Boolean isValidTransaction(Transaction t){
+    private Boolean isValidTransaction(Transaction t){
         byte[] identity;
         if (! t.signature.isEmpty()){
-            if (t.sender == "add funds")
+            if (t.sender.equals("add funds"))
                 identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + control.leader.identity);
             else
                 identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + t.recipient);
@@ -382,8 +382,8 @@ public class Node {
     }
 
     private Boolean recordTransaction(Transaction t){
-        if (t.sender != t.recipient && t.recipient != control.leader.identity && this.isValidTransaction(t)){
-            synchronized (control.pending_transactions){
+        if (!t.sender.equals(t.recipient) && !t.recipient.equals(control.leader.identity) && this.isValidTransaction(t)){
+            synchronized (control){
                 control.pending_transactions.add(t);
             }
             return true;
@@ -393,7 +393,7 @@ public class Node {
 
     private void updateChain(Peer p) throws IOException{
         Socket sock = new Socket(p.ip, p.port);
-        synchronized (control.chain){
+        synchronized (control){
             if (control.chain.blocks.size() == 0)
                 send(sock, CHAINREQUEST, "0");
             else
@@ -413,7 +413,7 @@ public class Node {
         ms.close();
     }
 
-    private void getLeader() throws InterruptedException, IOException {
+    private void getLeader() throws IOException {
         control.leader = null;
         byte[] msg = ("62757a7aCN" + control.port).getBytes();
         MulticastSocket ms = new MulticastSocket();
@@ -423,7 +423,7 @@ public class Node {
         ms.close();
     }
 
-    private void disconnect() throws InterruptedException, IOException{
+    private void disconnect() throws IOException{
         byte[] msg = "62757a7aDC".getBytes();
         MulticastSocket ms = new MulticastSocket();
         InetAddress group = InetAddress.getByName("224.98.117.122");
@@ -458,7 +458,6 @@ public class Node {
     /*
         TODO:
             - Read Bytes
-            - Fix Flag Warnings
      */
 
     private Message receive(Socket s){
@@ -498,7 +497,7 @@ public class Node {
         } catch (IOException e){
             System.out.println("Peer refused connection");
         }
-        synchronized (control.hashes){
+        synchronized (control){
             if (!control.hashes.isEmpty())
             control.hashes = new ArrayList<PeerHashPair>();
             control.hashes.add(new PeerHashPair(new Peer(control.ip, control.port, control.client.getIdentity()), control.pending_block.getHash()));
@@ -525,25 +524,24 @@ public class Node {
                 hashes.add("0");
         int  maxCount=0;
         String mode = null;
-        String[] ha = (String[]) hashes.toArray(new String[0]);
+        String[] ha = hashes.toArray(new String[0]);
         for (int i = 0; i < hashes.size(); ++i) {
             int count = 0;
             for (int j = 0; j < hashes.size(); ++j)
-                if (ha[j] == ha[i])
+                if (ha[j].equals(ha[i]))
                     count++;
             if (count > maxCount) {
                 maxCount = count;
                 mode = ha[i];
             }
         }
-        if (Collections.frequency(hashes, mode) >= 2/3 && control.pending_block.getHash() == mode){
+        if (Collections.frequency(hashes, mode) >= 2/3 && control.pending_block.getHash().equals(mode)){
             System.out.println("Own hash matches network majority");
             control.chain.newBlock(control.pending_block);
             control.chain.export();
         } else {
-            String currentHash = control.chain.getHash();
             for (PeerHashPair ph : control.hashes){
-                if (ph.hash == mode){
+                if (ph.hash.equals(mode)){
                     try{
                         updateChain(ph.peer);
                         break;

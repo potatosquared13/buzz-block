@@ -22,6 +22,7 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends Activity {
 
@@ -30,7 +31,7 @@ public class MainActivity extends Activity {
     public static final String WRITE_ERROR = "Error during writing, is the NFC tag close enough to your device?";
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
-    IntentFilter writeTagFilters[];
+    IntentFilter[] writeTagFilters;
     boolean writeMode;
     Tag myTag;
     Context context;
@@ -45,9 +46,9 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        tvNFCContent = (TextView) findViewById(R.id.nfc_contents);
-        message = (TextView) findViewById(R.id.edit_message);
-        btnWrite = (Button) findViewById(R.id.button);
+        tvNFCContent = findViewById(R.id.nfc_contents);
+        message = findViewById(R.id.edit_message);
+        btnWrite = findViewById(R.id.button);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,11 +60,8 @@ public class MainActivity extends Activity {
                         write(message.getText().toString(), myTag);
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                     }
-                } catch (IOException e) {
-                    Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG ).show();
-                    e.printStackTrace();
-                } catch (FormatException e) {
-                    Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG ).show();
+                } catch (IOException | FormatException e) {
+                    Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             }
@@ -106,21 +104,21 @@ public class MainActivity extends Activity {
     private void buildTagViews(NdefMessage[] msgs) {
         if (msgs == null || msgs.length == 0) return;
 
-        String text = "";
+        String text;
 //        String tagId = new String(msgs[0].getRecords()[0].getType());
         byte[] payload = msgs[0].getRecords()[0].getPayload();
-        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
-        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
+//        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
+//        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
         // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
+        text = "NFC Content: " + Helper.bytesToHex(payload);
+//        try {
+//            // Get the Text
+//            text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
+//        } catch (UnsupportedEncodingException e) {
+//            Log.e("UnsupportedEncoding", e.toString());
+//        }
 
-        try {
-            // Get the Text
-            text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
-        } catch (UnsupportedEncodingException e) {
-            Log.e("UnsupportedEncoding", e.toString());
-        }
-
-        tvNFCContent.setText("NFC Content: " + text);
+        tvNFCContent.setText(text);
     }
 
 
@@ -139,13 +137,16 @@ public class MainActivity extends Activity {
         // Close the connection
         ndef.close();
     }
-    private NdefRecord createRecord(String text) throws UnsupportedEncodingException {
+    private NdefRecord createRecord(String text) {
         String lang       = "en";
         byte[] textBytes  = text.getBytes();
-        byte[] langBytes  = lang.getBytes("US-ASCII");
+        byte[] langBytes  = lang.getBytes(StandardCharsets.ISO_8859_1);
         int    langLength = langBytes.length;
         int    textLength = textBytes.length;
         byte[] payload    = new byte[1 + langLength + textLength];
+        /* TODO
+            read client.key from a default location
+         */
         Client c          = new Client(new File("Insert File"));
         byte[] stuffToWriteToNfc = Helper.hexToBytes(c.getIdentity());
 
@@ -157,8 +158,7 @@ public class MainActivity extends Activity {
         System.arraycopy(textBytes, 0, payload, 1 + langLength, textLength);
 
 //        NdefRecord recordNFC = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,  NdefRecord.RTD_TEXT,  new byte[0], payload);
-        NdefRecord recordNFC = new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, stuffToWriteToNfc, payload);
-        return recordNFC;
+        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, stuffToWriteToNfc, payload);
     }
 
 
