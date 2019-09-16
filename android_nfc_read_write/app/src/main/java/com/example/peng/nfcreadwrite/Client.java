@@ -32,11 +32,11 @@ public class Client {
             private_key = private_key.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----",
                     "");
             private_key = private_key.replace("\n", "").replace("\r", "");
-            byte[] privkey = android.util.Base64.decode(private_key);           //FIX FLAGS!!
+            byte[] privkey = android.util.Base64.decode(private_key, Base64.DEFAULT);           //FIX FLAGS!!
 
             public_key = public_key.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "");
             public_key = public_key.replace("\n", "").replace("\r", "");
-            byte[] pubkey = android.util.Base64.decode(public_key);         //FIX!!
+            byte[] pubkey = android.util.Base64.decode(public_key, Base64.DEFAULT);         //FIX!!
 
             KeyFactory factory = KeyFactory.getInstance("EC");
             this.private_key = factory.generatePrivate(new PKCS8EncodedKeySpec(privkey));
