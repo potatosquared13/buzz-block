@@ -65,7 +65,6 @@ class Node(threading.Thread):
         return transaction
 
     def validate_transaction(self, transaction):
-        is_valid = False
         if(transaction.signature):
             try:
                 if (transaction.sender == "add funds"):
@@ -76,10 +75,10 @@ class Node(threading.Thread):
                 sig = unhexlify(transaction.signature)
                 key = serialization.load_der_public_key(identity, backend=default_backend())
                 key.verify(sig, msg, ec.ECDSA(hashes.SHA256()))
-                is_valid = True
+                return true
             except cryptography.exceptions.InvalidSignature:
                 logging.error("Invalid transaction signature")
-        return is_valid
+        return false
 
     def record_transaction(self, transaction):
         if (transaction.sender != transaction.recipient and
@@ -170,6 +169,7 @@ class Node(threading.Thread):
         # validate block
         elif (msg[0] == Con.bftstart):
             logging.info(f"Validating new block")
+            self.get_peers()
             pending_transactions_json = json.loads(msg[1])
             pending_transactions = []
             for tr in pending_transactions_json:
@@ -181,6 +181,7 @@ class Node(threading.Thread):
         # receive hashes
         elif (msg[0] == Con.bftverify):
             # peer = [p.address for p in self.peers if p.address[0] == addr[0]][0]
+            logging.info(f"Hash from {addr[0]}")
             self.lock.acquire()
             self.hashes.append((addr, msg[1].decode()))
             self.lock.release()
@@ -200,14 +201,18 @@ class Node(threading.Thread):
             port = int(p[0])
             identity = p[1]
             peer = Peer((addr[0], port), identity)
+            self.lock.acquire()
             if (msg[0] == Con.peer):
                 if (not any(p.identity == identity for p in self.peers)):
                     logging.info(f"Discovered peer at {addr[0]}:{port}")
                     self.peers.add(Peer((addr[0], port), identity))
+                    self.get_peers()
             else:
                 logging.info(f"Leader discovered at {addr[0]}:{port}")
                 t = Peer((addr[0], port), identity)
                 self.leader = t
+                self.peers.add(t)
+            self.lock.release()
         else:
             logging.info(f"Unknown message ({msg[0]}, {msg[1]})")
         logging.debug(f"Closed connection from {addr[0]}")
@@ -254,7 +259,6 @@ class Node(threading.Thread):
                             if (not any(p.identity == identity for p in self.peers)):
                                 logging.info(f"New peer at {addr[0]}")
                                 self.peers.add(Peer((addr[0], port), identity))
-                            logging.info(f"Responding to peer at {addr[0]}")
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
                                 rsock.connect((addr[0], port))
                                 msg = str(self.address[1]) + "," + self.client.identity
@@ -338,7 +342,7 @@ class Node(threading.Thread):
         self.pending_transactions = []
         start = time.time()
         logging.info("Waiting for all hashes or elapsed time")
-        while (time.time() - start < 60 or len(self.hashes) < len(self.peers) + 1):
+        while (time.time() - start < 60 and len(self.hashes) <= len(self.peers)):
             time.sleep(1)
         hashes = [h[1] for h in self.hashes]
         if (len(hashes) < len(self.peers) + 1):
@@ -357,6 +361,6 @@ class Node(threading.Thread):
                     break
                 except socket.error:
                     pass
-            self.hashes = []
-            self.pending_block = None
+        self.hashes = []
+        self.pending_block = None
 

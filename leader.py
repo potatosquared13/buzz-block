@@ -1,4 +1,5 @@
-# leader node esponsible for recording transactions and controlling block creation
+# leader node responsible for recording transactions and controlling block creation
+# TODO ask peer for pending transactions if leader goes down for any reason
 
 import db
 from node import *
@@ -47,7 +48,7 @@ class Leader(Node):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
             sock.bind(('', 60000))
-            sock.settimeout(2)
+            sock.settimeout(4)
             while self.listening:
                 try:
                     data, addr = sock.recvfrom(1024)
@@ -62,7 +63,6 @@ class Leader(Node):
                             if (not any(p.identity == identity for p in self.peers)):
                                 logging.info(f"New peer at {addr[0]}")
                                 self.peers.add(Peer((addr[0], port), identity))
-                            logging.info(f"Responding to peer at {addr[0]}")
                             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
                                 rsock.connect((addr[0], port))
                                 msg = str(self.address[1]) + "," + self.client.identity
@@ -90,6 +90,11 @@ class Leader(Node):
             while (not self.address[1]):
                 time.sleep(1)
             self.leader = Peer(self.address, self.client.identity)
+            self.start = time.time()
+            while (self.listening):
+                while (time.time() - start  < 600 and len(self.pending_transactions) < 100):
+                    sleep(10)
+                self.start_consensus()
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
