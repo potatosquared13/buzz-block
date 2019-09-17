@@ -183,6 +183,10 @@ public class Node {
         public void run() {
             String address = sock.getInetAddress().getHostAddress();
             Message m = receive(sock);
+            if (m == null) {
+                System.out.println("Message is malformed.");
+                return;
+            }
             String[] p;
             int port;
             String identity;
@@ -202,12 +206,6 @@ public class Node {
                 sendHash(transactions);
                 break;
             case BFTVERIFY:
-                if (control.hashes.isEmpty())
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e){
-                        e.printStackTrace();
-                    }
                 synchronized (control){
                     for (Peer peer : control.peers)
                         if (peer.ip.equals(address) && peer.port == sock.getPort())
@@ -259,8 +257,12 @@ public class Node {
                 p = m.data.split(",");
                 port = Integer.parseInt(p[0]);
                 identity = p[1];
-                control.leader = new Peer(address, port, identity);
-                System.out.println("Leader discovered at " + address + ":" + port);
+                synchronized (control){
+                    Peer peer = new Peer(address, port, identity);
+                    control.leader = peer;
+                    control.peers.add(peer);
+                    System.out.println("Leader discovered at " + address + ":" + port);
+                }
                 break;
             default:
                 System.out.println("Unknown message (" + m.type + ", " + m.data + ")");
@@ -466,15 +468,12 @@ public class Node {
             byte[] btype = new byte[2];
             input.read(btype, 0, 2);
             int type = Integer.parseInt(new String(btype));
-//            int type = Integer.parseInt(new String(input.read()));
             byte[] blength = new byte[8];
             input .read(blength, 2, 8);
             int length = Integer.parseInt(new String(blength));
-//            int length = Integer.parseInt(new String(input.readNBytes(8)));
 
             byte[] ecdata =  new byte[length];
             input.readFully(ecdata, 10, length);
-//            byte[] encoded_compressed_data = input.readNBytes(length);
             byte[] compressed_data = android.util.Base64.decode(ecdata, Base64.DEFAULT);
             InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data), new Inflater());
             s.close();
@@ -510,7 +509,7 @@ public class Node {
         control.pending_transactions = new ArrayList<Transaction>();
         long start = System.nanoTime();
         System.out.println("Waiting for all hashes or elapsed time");
-        while (System.nanoTime() - start > 60E9 || control.hashes.size() < control.peers.size() + 1)
+        while (System.nanoTime() - start < 60E9 && control.hashes.size() <= control.peers.size())
             try{
                 Thread.sleep(1000);
             } catch (InterruptedException e){
