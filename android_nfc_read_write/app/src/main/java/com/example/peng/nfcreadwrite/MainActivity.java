@@ -18,6 +18,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -37,6 +39,9 @@ public class MainActivity extends Activity {
     TextView tvNFCContent;
     TextView message;
     Button btnWrite;
+    Button btnGetBalance;
+    Node node;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,9 +49,9 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        tvNFCContent = findViewById(R.id.nfc_contents);
-        message = findViewById(R.id.edit_message);
-        btnWrite = findViewById(R.id.btnWrite);
+        tvNFCContent = (TextView) findViewById(R.id.nfc_contents);
+        message = (TextView) findViewById(R.id.edit_message);
+        btnWrite = (Button) findViewById(R.id.btnWrite);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,6 +114,7 @@ public class MainActivity extends Activity {
 //        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
         // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
         text = "NFC Content: " + Helper.bytesToHex(payload);
+
 //        try {
 //            // Get the Text
 //            text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
@@ -116,9 +122,16 @@ public class MainActivity extends Activity {
 //            Log.e("UnsupportedEncoding", e.toString());
 //        }
 
+        /* TODO
+            - add button click event. so confusing
+         */
         tvNFCContent.setText(text);
+
     }
 
+    public void getBalance(View view) {
+
+    }
 
     /******************************************************************************
      **********************************Write to NFC Tag****************************

@@ -29,9 +29,22 @@
             android:layout_weight="1"
             android:text="Write" />
     </LinearLayout>
+
     <TextView
         android:id="@+id/nfc_contents"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        />
+        android:layout_height="91dp" />
+
+    <Button
+        android:id="@+id/btnSendTransaction"
+        android:layout_width="match_parent"
+        android:layout_height="86dp"
+        android:text="Send Transactions" />
+
+    <Button
+        android:id="@+id/btnGetBalance"
+        android:layout_width="match_parent"
+        android:layout_height="87dp"
+        android:text="Get Balance"
+        android:onClick="getBalance"/>
 </LinearLayout>
