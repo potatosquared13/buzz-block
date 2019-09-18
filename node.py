@@ -278,7 +278,7 @@ class Node(threading.Thread):
     def send_transaction(self, transaction_type, identity, amount):
         if (self.pending_block is not None):
             logging.debug("Waiting until consensus is over before sending transaction")
-        while(self.pending_block is not None):
+        while(self.active and self.pending_block is not None):
             time.sleep(1)
         if (transaction_type == 1):
             transaction = Transaction(1, identity, self.client.identity, amount)
@@ -315,6 +315,7 @@ class Node(threading.Thread):
     # send the hash of the pending block to other nodes for comparison
     def send_hash(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
+        self.pending_transactions = []
         logging.info("Sending hash to peers")
         for peer in self.peers.copy():
             logging.debug(f"Sending hash to {peer.identity[:8]}")
@@ -329,7 +330,6 @@ class Node(threading.Thread):
     # it accepts its generated block as the next official one.
     # the remaining 1/3rd could comprise of wrong hashes, or a lack of one
     def pbft(self):
-        self.pending_transactions = []
         start = time.time()
         while (time.time() - start < 60 and len(self.hashes) <= len(self.peers)):
             time.sleep(2)
@@ -344,7 +344,7 @@ class Node(threading.Thread):
             self.chain.export()
         else:
             current_chain = helpers.sha256(self.chain.json)
-            for peer in [p for p in self.hashes if p[0] in [h[0] for h in self.hashes if h[1] == mode]]:
+            for peer in [p for p in self.hashes if p[0] in [h for h in hashes if h == mode]]:
                 try:
                     logging.debug(f"Requesting current chain from {peer.identity[:8]}")
                     self.update_chain(peer.address)
