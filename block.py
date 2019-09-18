@@ -43,7 +43,7 @@ class Blockchain:
         for bl in tmp['blocks']:
             transactions = []
             for tr in bl['transactions']:
-                transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
+                transaction = Transaction(tr['transaction'], tr['sender'], tr['address'], tr['amount'])
                 transaction.timestamp = tr['timestamp']
                 transaction.signature = tr['signature']
                 transactions.append(transaction)

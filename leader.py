@@ -5,100 +5,70 @@ import db
 from node import *
 
 class Leader(Node):
-    def __init__(self):
+    def __init__(self, block_size):
         if (not os.path.isfile('./admin.key')):
             self.client = Client("admin")
             self.client.export()
         super().__init__("admin.key")
         self.new_funds = []
+        self.block_size = block_size
 
     def start_consensus(self):
         self.pending_transactions = self.new_funds + self.pending_transactions
         if self.pending_transactions:
             for peer in self.peers:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect(peer.address)
-                    self.send(sock, Con.bftstart, helpers.jsonify(self.pending_transactions))
-            self.send_hash(self.pending_transactions)
+                self.send(peer.socket, BFTSTART, helpers.jsonify(self.pending_transactions))
             logging.info("Waiting for network consensus")
+            self.send_hash(self.pending_transactions)
             while (self.pending_block):
                 time.sleep(1)
             logging.info("Updating client balances")
             affected = set()
             for transaction in self.pending_transactions:
-                affected.add(transaction.sender)
-                affected.add(transaction.recipient)
+                if (transaction.transaction == 1):
+                    affected.add(transaction.sender)
+                affected.add(transaction.address)
             for identity in affected:
                 db.update_balance(identity)
             self.new_funds = []
 
-    def record_transaction(self, transaction):
+    def record_transaction(self, transaction, peer_identity):
         sender = db.search(transaction.sender)
-        recipient = db.search(transaction.recipient)
-        if (recipient.is_vendor == "yes" and sender.is_vendor == "no"):
-            if (sender.pending_balance >= transaction.amount):
-                db.update_pending(transaction.sender, transaction.recipient, transaction.amount)
-                return super().record_transaction(transaction)
+        recipient = db.search(transaction.address)
+        if (transaction.sender != transaction.address and
+            self.is_valid_transaction(transaction, peer_identity)):
+            if (transaction.transaction == 1 and sender.pending_balance >= transaction.amount):
+                db.update_pending(transaction.sender, transaction.address, transaction.amount)
+            elif (transaction.transaction == 2 and recipient.is_vendor == "no"):
+                db.update_pending(None, transaction.address, transaction.amount)
+            else:
+                return False
+            self.pending_transactions.append(transaction)
+            return True
         return False
-
-    def listen(self):
-        group = socket.inet_aton('224.98.117.122')
-        iface = socket.inet_aton(self.address[0])
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
-            sock.bind(('', 60000))
-            sock.settimeout(4)
-            while self.listening:
-                try:
-                    data, addr = sock.recvfrom(1024)
-                    msg = data.decode()
-                    while (not self.address[1]):
-                        time.sleep(1)
-                    if (msg.startswith('62757a7aGP')):
-                        p = msg[10:].split(",")
-                        port = int(p[0])
-                        identity = p[1]
-                        if (self.address != (addr[0], port)):
-                            if (not any(p.identity == identity for p in self.peers)):
-                                logging.info(f"New peer at {addr[0]}")
-                                self.peers.add(Peer((addr[0], port), identity))
-                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
-                                rsock.connect((addr[0], port))
-                                msg = str(self.address[1]) + "," + self.client.identity
-                                self.send(rsock, Con.peer, msg)
-                    elif (msg.startswith('62757a7aCN')):
-                        logging.info(f"Sending port and identity to {addr[0]}")
-                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
-                            rsock.connect((addr[0], int(msg[10:])))
-                            msg = str(self.address[1]) + "," + self.client.identity
-                            self.send(rsock, Con.leader, msg)
-                    elif (msg.startswith('62757a7aDC')):
-                        logging.info(f"Peer {addr[0]} disconnected")
-                        try:
-                            self.peers.remove(list(peer for peer in self.peers if peer.address == addr[0])[0])
-                        except IndexError:
-                            pass
-                except socket.error:
-                    pass
-                except (KeyboardInterrupt, SystemExit):
-                    self.stop()
 
     def start(self):
         try:
-            threading.Thread(target=self.init_server).start()
-            while (not self.address[1]):
-                time.sleep(1)
-            self.leader = Peer(self.address, self.client.identity)
-            self.start = time.time()
-            while (self.listening):
-                while (time.time() - start  < 600 and len(self.pending_transactions) < 100):
-                    sleep(10)
-                self.start_consensus()
+            if (not self.active):
+                self.active = True
+                threading.Thread(target=self.accept_connections).start()
+                threading.Thread(target=self.listen).start()
+                threading.Thread(target=self.sleep).start()
+                while (self.address is None):
+                    time.sleep(1)
+                self.leader = Peer(None, self.address, self.client.identity)
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
             self.chain.export()
+
+    def sleep(self):
+        while (self.active):
+            start = time.time()
+            while (self.active and time.time() - start < 600 and len(self.pending_transactions) < self.block_size):
+                time.sleep(10)
+            if (len(self.pending_transactions) >= self.block_size):
+                self.start_consensus()
 
     def add_funds(self, recipient, amount):
         transaction = Transaction("add funds", recipient, amount)
@@ -108,19 +78,13 @@ class Leader(Node):
             try:
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                     sock.connect(peer.address)
-                    self.send(sock, Con.transaction, transaction.json)
+                    self.send(sock, TRANSACTION, transaction.json)
             except socket.error:
                 logging.error(f"Peer refused connection")
 
     def get_balance(self, client):
         return db.search(client).pending_balance
 
-    def get_leader(self):
-        pass
-
     def send_transaction(self, sender, amount):
-        pass
-
-    def disconnect(self):
         pass
 

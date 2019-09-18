@@ -5,9 +5,10 @@ from copy import deepcopy
 from datetime import datetime
 
 class Transaction:
-    def __init__(self, sender=None, recipient=None, amount=0):
+    def __init__(self, transaction, sender=None, recipient=None, amount=0):
+        self.transaction = transaction
         self.sender = sender
-        self.recipient = recipient
+        self.address = recipient
         self.amount = float(amount)
         self.timestamp = datetime.now().isoformat("T", "seconds")
         self.signature = None

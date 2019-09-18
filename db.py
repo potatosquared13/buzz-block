@@ -23,31 +23,27 @@ def insert(client, contact, amount, is_vendor=0):
 def update_balance(identity):
     # change balance to pending_balance
     with conn:
-        try:
-            lock.acquire(True)
-            c.execute("update clients set current_balance=(select pending_balance from clients where identity=?) where identity=?", (identity, identity,))
-        finally:
-            lock.release()
+        lock.acquire()
+        c.execute("update clients set current_balance=(select pending_balance from clients where identity=?) where identity=?", (identity, identity,))
+        lock.release()
 
-def update_pending(sender, recipient, amount):
+def update_pending(sender, recipient=None, amount=None):
     # get current pending_balance
     sender_balance = 0
     recipient_balance = 0
+    lock.acquire()
     with conn:
-        try:
-            lock.acquire(True)
-            c.execute("select pending_balance from clients where identity=?", (sender,))
-            sender_balance=c.fetchone()[0]
+        if (recipient is not None):
             c.execute("select pending_balance from clients where identity=?", (recipient,))
             recipient_balance=c.fetchone()[0]
-            # adjust according to amount
-            sender_balance -= amount
             recipient_balance += amount
-            # update entries in database
-            c.execute("update clients set pending_balance=? where identity=?", (sender_balance, sender))
             c.execute("update clients set pending_balance=? where identity=?", (recipient_balance, recipient))
-        finally:
-            lock.release()
+        if (sender is not None):
+            c.execute("select pending_balance from clients where identity=?", (sender,))
+            sender_balance=c.fetchone()[0]
+            sender_balance -= amount
+            c.execute("update clients set pending_balance=? where identity=?", (sender_balance, sender))
+    lock.release()
 
 # client object to be used for printing search results
 class Entry:

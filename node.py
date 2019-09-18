@@ -1,114 +1,304 @@
-# network node responsible for creating transactions and verifying other transactions
-
-import json
+import sys
 import time
+import json
 import zlib
+import errno
 import base64
 import socket
-import helpers
 import logging
 import os.path
 import threading
 import cryptography.exceptions
 
-from enum import Enum
+import helpers
 from block import Blockchain, Block
 from client import Client
-from binascii import unhexlify
+from binascii import hexlify, unhexlify
 from transaction import Transaction
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-# enum for tcp connection type
-class Con(Enum):
-    response = 0
-    transaction = 1
-    bftstart = 2
-    bftverify = 3
-    balancerequest = 4
-    balance = 5
-    chainrequest = 6
-    chain = 7
-    peer = 8
-    leader = 9
-    unknown = 10
+# message type
+RESPONSE = 0
+TRANSACTION = 1
+BFTSTART = 2
+BFTVERIFY = 3
+BALANCEREQUEST = 4
+BALANCE = 5
+CHAINREQUEST = 6
+CHAIN = 7
+PEER = 8
+LEADER = 9
+UNKNOWN = 10
 
-# class for peerlist
+# object for organising connected peers
 class Peer():
-    def __init__(self, address, identity):
-        self.address = address
+    def __init__(self, sock, addr, identity):
+        self.socket = sock
+        self.address = addr
         self.identity = identity
 
+# object for connecting to peers and listening for messages from them
 class Node(threading.Thread):
-    def __init__(self, filename):
-        self.listening = False
-        self.address = (socket.gethostbyname(socket.getfqdn()), 0)
+    def __init__(self, filename, debug=False):
+        if (os.path.isfile('./blockchain.json')):
+            self.chain = Blockchain()
+            self.chain.rebuild(open('./blockchain.json', 'r').read())
+        self.client = Client(filename=filename)
+        self.active = False
+        self.address = None
         self.peers = set()
+        self.leader = None
         self.pending_block = None
         self.pending_transactions = []
         self.hashes = []
         self.chain = Blockchain()
-        logging.basicConfig(format='[%(asctime)s] %(message)s', level=logging.INFO)
         if(os.path.isfile('./blockchain.json')):
             self.chain.rebuild(open('./blockchain.json', 'r').read())
-        self.client = Client(filename=filename)
-        self.leader = None
-        self.lock = threading.Lock()
-        # self.start()
+        root = logging.getLogger()
+        handler = logging.StreamHandler(sys.stdout)
+        if (debug):
+            logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
+        else:
+            logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
+    ######## Networking functions ########
+
+    # tell node to start listening for messages
+    def start(self):
+        if (not self.active):
+            self.active = True
+            threading.Thread(target=self.accept_connections).start()
+            threading.Thread(target=self.listen).start()
+
+    # tell node to stop listening and close existing connections
+    def stop(self):
+        if (self.active):
+            self.active = False
+            for peer in self.peers.copy():
+                if (not peer.socket._closed):
+                    peer.socket.shutdown(socket.SHUT_RDWR)
+            logging.debug("Stopped")
+
+    # wait for a peer to connect and then keep an open connection
+    def accept_connections(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind((socket.gethostbyname(socket.getfqdn()), 0))
+            self.address = sock.getsockname()
+            sock.settimeout(4)
+            while self.active:
+                try:
+                    sock.listen(8)
+                    c, addr = sock.accept()
+                    id = hexlify(c.recv(96)).decode()
+                    if (not [peer for p in self.peers if p.identity == id]):
+                        peer = Peer(c, c.getpeername(), id)
+                        self.peers.add(peer)
+                        c.sendall(unhexlify(self.client.identity))
+                        threading.Thread(target=self.handle_connection, args=(peer,)).start()
+                    else:
+                        c.shutdown(socket.SHUT_RDWR)
+                        c.close()
+                except socket.timeout:
+                    continue
+                except socket.error as e:
+                    logging.error(f"Node.accept_connections(): {e}")
+
+    # connect to a peer
+    def connect(self, addr):
+        if (not self.active):
+            logging.error("call Node.start() first.")
+        elif (addr != self.address):
+            peer = [p for p in self.peers if p.address == addr]
+            if (not peer):
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                try:
+                    sock.bind(self.address)
+                    sock.connect(addr)
+                    sock.settimeout(4)
+                    sock.sendall(unhexlify(self.client.identity))
+                    id = hexlify(sock.recv(96)).decode()
+                    peer = Peer(sock, addr, id)
+                    self.peers.add(peer)
+                    if (self.leader is not None):
+                        if (self.leader.address == self.address):
+                            self.send(sock, LEADER, self.client.identity)
+                    threading.Thread(target=self.handle_connection, args=(peer,)).start()
+                    return True
+                except socket.timeout:
+                    pass
+                except socket.error as e:
+                    logging.error(f"Node.connect(): {e}")
+            else:
+                logging.info("peer already known")
+        else:
+            logging.error("Node.connect(): can't connect to self")
+        return False
+
+    # helper functions for sending and receiving messages
+    def send(self, sock, msg_type, msg):
+        payload = base64.b64encode(zlib.compress(msg.encode(), 9))
+        bmessage = str(len(payload)).zfill(8).encode() + str(msg_type).zfill(2).encode() + payload
+        sock.sendall(bmessage)
+        logging.debug(f"send {len(payload) + 10} bytes to {sock.getpeername()}")
+
+    def receive(self, sock):
+        try:
+            length = int(sock.recv(8))
+        except ValueError:
+            return 0, b''
+        message_type = int(sock.recv(2))
+        bmessage = sock.recv(length)
+        while (length > len(bmessage)):
+            m = sock.recv(length - len(bmessage))
+            bmessage = bmessage + m
+        message = zlib.decompress(base64.b64decode(bmessage)).decode()
+        logging.debug(f"receive {len(bmessage) + 10} bytes from {sock.getpeername()}")
+        return message_type, message
+
+    # listen for messages from a peer
+    # each connected peer has its own thread for this
+    def handle_connection(self, peer):
+        logging.debug(f"opened connection to {peer.identity[:8]}")
+        peer.socket.settimeout(4)
+        while (self.active and peer in self.peers):
+            try:
+                message_type, message = self.receive(peer.socket)
+                if (len(message) == 0):
+                    break
+                elif (message_type == RESPONSE):
+                    logging.info(f"Response from {peer.identity[:8]}: {message}")
+                elif (message_type == TRANSACTION):
+                    logging.info(f"Transaction from {peer.identity[:8]}")
+                    transaction = self.rebuild_transaction(json.loads(message))
+                    if (not self.record_transaction(transaction, peer.identity)):
+                        self.send(peer.socket, RESPONSE, "Invalid transaction")
+                elif (message_type == BFTSTART):
+                    logging.info("Validating new block")
+                    pending = json.loads(message)
+                    pending_transactions = []
+                    for tr in pending:
+                        pending_transactions.append(self.rebuild_transaction(tr))
+                    self.send_hash(pending_transactions)
+                elif (message_type == BFTVERIFY):
+                    logging.info(f"Hash from {peer.identity[:8]}")
+                    self.hashes.append((peer.identity, message))
+                elif (message_type == CHAINREQUEST):
+                    logging.info(f"Sending chain to {peer.identity[:8]}")
+                    while (self.active and self.pending_block):
+                        time.sleep(1)
+                    if (message != helpers.sha256(self.chain.json)):
+                        self.send(peer.socket, CHAIN, self.chain.json)
+                elif (message_type == CHAIN):
+                    if (message != "UP TO DATE"):
+                        logging.info("Rebuiling chain")
+                        self.chain = self.chain.rebuild(message)
+                    logging.info("Chain is up to date")
+                elif (message_type == LEADER):
+                    self.leader = peer
+            except socket.timeout:
+                continue
+            except socket.error as e:
+                break
+        peer.socket.close()
+        self.peers.remove(peer)
+        logging.info(f"Peer {peer.identity[:8]} disconnected")
+
+    # broadcast connect message to network to discover peers
+    # nodes receiving this broadcast that aren't already connected will try to connect
+    def get_peers(self):
+        msg = "62757a7aGP" + str(self.address[1])
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
+            sock.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.address[0]))
+            sock.sendto(msg.encode(), ('224.98.117.122', 60000))
+
+    # listen for broadcasts
+    # will try to connect to an address on a connect message
+    # will remove node on a disconnect message
+    def listen(self):
+        while (self.active and self.address is None):
+            time.sleep(1)
+        logging.debug("Listening for broadcasts")
+        group = socket.inet_aton('224.98.117.122')
+        iface = socket.inet_aton(self.address[0])
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
+            sock.bind(('', 60000))
+            sock.settimeout(4)
+            while (self.active):
+                try:
+                    data, addr = sock.recvfrom(1024)
+                    msg = data.decode()
+                    if (msg.startswith('62757a7aGP')):
+                        port = int(msg[10:])
+                        if ((addr[0], port) != self.address):
+                            self.connect((addr[0], port))
+                except socket.error:
+                    pass
+                except (KeyboardInterrupt, SystemExit):
+                    self.stop()
+
+    ######## Validator functions #########
+
+    # rebuild a transaction object from given JSON data
     def rebuild_transaction(self, transaction_json):
-        transaction = Transaction(transaction_json['sender'], transaction_json['recipient'], transaction_json['amount'])
+        transaction = Transaction(transaction_json['transaction'], transaction_json['sender'], transaction_json['address'], transaction_json['amount'])
         transaction.timestamp = transaction_json['timestamp']
         transaction.signature = transaction_json['signature']
         return transaction
 
-    def validate_transaction(self, transaction):
-        if(transaction.signature):
+    # verify the signature of a transaction
+    def is_valid_transaction(self, transaction, peer_identity):
+        if (transaction.signature):
             try:
-                if (transaction.sender == "add funds"):
-                    identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + self.leader.identity)
-                else:
-                    identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + transaction.recipient)
+                identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + peer_identity)
                 msg = unhexlify(transaction.hash)
                 sig = unhexlify(transaction.signature)
                 key = serialization.load_der_public_key(identity, backend=default_backend())
                 key.verify(sig, msg, ec.ECDSA(hashes.SHA256()))
-                return true
+                return True
             except cryptography.exceptions.InvalidSignature:
-                logging.error("Invalid transaction signature")
-        return false
+                logging.error("Invalid signature")
+        return False
 
-    def record_transaction(self, transaction):
-        if (transaction.sender != transaction.recipient and
-            transaction.recipient != self.leader.identity and
-            self.validate_transaction(transaction)):
+    # add a transaction to own list of pending transactions if it passes several checks
+    def record_transaction(self, transaction, peer_identity):
+        if (transaction.sender != transaction.address and
+            self.is_valid_transaction(transaction, peer_identity)):
             self.pending_transactions.append(transaction)
             return True
         return False
 
-    def send_transaction(self, sender, amount):
-        transaction = Transaction(sender, self.client.identity, amount)
+    # send a transaction to connected peers
+    def send_transaction(self, transaction_type, identity, amount):
+        if (self.pending_block is not None):
+            logging.debug("Waiting until consensus is over before sending transaction")
+        while(self.pending_block is not None):
+            time.sleep(1)
+        if (transaction_type == 1):
+            transaction = Transaction(1, identity, self.client.identity, amount)
+        elif (transaction_type == 2):
+            transaction = Transaction(2, self.client.identity, identity, amount)
         self.client.sign(transaction)
         self.pending_transactions.append(transaction)
-        for peer in self.peers:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect(peer.address)
-                    self.send(sock, Con.transaction, transaction.json)
-            except socket.error:
-                logging.error(f"Peer refused connection")
+        for peer in self.peers.copy():
+            self.send(peer.socket, TRANSACTION, transaction.json)
 
-    def get_balance(self, client):
+    # parse own copy of the blockchain + pending transactions to calculate a client's balance
+    def get_balance(self, identity):
         balance = 0
         transactions = []
         for block in self.chain.blocks:
             for txn in block.transactions:
                 transactions.append(txn)
         transactions = transactions + self.pending_transactions
-        sending = list((t for t in transactions if t.sender == client))
-        receiving = list((t for t in transactions if t.recipient == client))
+        sending = list((t for t in transactions if t.sender == identity))
+        receiving = list((t for t in transactions if t.address == identity and t.transaction == 2))
         if (not sending and not receiving):
             return -1
         for transaction in sending:
@@ -117,219 +307,20 @@ class Node(threading.Thread):
             balance += transaction.amount
         return balance
 
-    def update_chain(self, address=None):
-        if (not address):
-            address = self.leader.address
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.connect(address)
-            self.send(sock, Con.chainrequest, helpers.sha256(self.chain.json))
-            response = self.receive(sock)
-            if (response[0] == Con.chain and response[1] != "UP TO DATE"):
-                logging.info("Rebuilding chain")
-                self.chain = self.chain.rebuild(response[1])
-                return True
-            logging.info("Chain is up to date")
-            return False
+    # ask a node to send its copy of the blockchain
+    # along with the hash of this node's blockchain for comparison
+    def update_chain(self, peer):
+        self.send(peer.socket, CHAINREQUEST, helpers.sha256(self.chain.json))
 
-    def get_peers(self):
-        while (not self.address[1]):
-            time.sleep(1)
-        msg = "62757a7aGP" + str(self.address[1]) + "," + self.client.identity
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-            sock.sendto(msg.encode(), ('224.98.117.122', 60000))
-
-    def get_leader(self):
-        self.leader = None
-        msg = "62757a7aCN" + str(self.address[1])
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-            sock.sendto(msg.encode(), ('224.98.117.122', 60000))
-
-    # tell peers to remove this node as an active node
-    def disconnect(self):
-        msg = "62757a7aDC"
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-            sock.sendto(msg.encode(), ('224.98.117.122', 60000))
-        return True
-
-    def handle_connection(self, c, addr):
-        logging.debug(f"Accepted connection from {addr[0]}")
-        c.settimeout(10)
-        msg = self.receive(c)
-        if (msg[0] == Con.response):
-            logging.info(f"Response from {addr[0]}")
-        # transaction
-        elif (msg[0] == Con.transaction):
-            logging.info(f"Transaction from {addr[0]}")
-            transaction = self.rebuild_transaction(json.loads(msg[1]))
-            if(not self.record_transaction(transaction)):
-                self.send(c, Con.response, "Invalid transaction")
-        # validate block
-        elif (msg[0] == Con.bftstart):
-            logging.info(f"Validating new block")
-            self.get_peers()
-            pending_transactions_json = json.loads(msg[1])
-            pending_transactions = []
-            for tr in pending_transactions_json:
-                transaction = Transaction(tr['sender'], tr['recipient'], tr['amount'])
-                transaction.timestamp = tr['timestamp']
-                transaction.signature = tr['signature']
-                pending_transactions.append(transaction)
-            self.send_hash(pending_transactions)
-        # receive hashes
-        elif (msg[0] == Con.bftverify):
-            # peer = [p.address for p in self.peers if p.address[0] == addr[0]][0]
-            logging.info(f"Hash from {addr[0]}")
-            self.lock.acquire()
-            self.hashes.append((addr, msg[1].decode()))
-            self.lock.release()
-        # block update
-        elif (msg[0] == Con.chainrequest):
-            logging.info(f"Sending chain to {addr[0]}")
-            if (self.pending_block):
-                logging.info("Waiting for new block to be added before responding")
-            while (self.pending_block):
-                time.sleep(1)
-            if (msg[1] != helpers.sha256(self.chain.json)):
-                self.send(c, Con.chain, self.chain.json)
-            else:
-                self.send(c, Con.chain, "UP TO DATE")
-        elif (msg[0] == Con.peer or msg[0] == Con.leader):
-            p = msg[1].decode().split(",")
-            port = int(p[0])
-            identity = p[1]
-            peer = Peer((addr[0], port), identity)
-            self.lock.acquire()
-            if (msg[0] == Con.peer):
-                if (not any(p.identity == identity for p in self.peers)):
-                    logging.info(f"Discovered peer at {addr[0]}:{port}")
-                    self.peers.add(Peer((addr[0], port), identity))
-                    self.get_peers()
-            else:
-                logging.info(f"Leader discovered at {addr[0]}:{port}")
-                t = Peer((addr[0], port), identity)
-                self.leader = t
-                self.peers.add(t)
-            self.lock.release()
-        else:
-            logging.info(f"Unknown message ({msg[0]}, {msg[1]})")
-        logging.debug(f"Closed connection from {addr[0]}")
-
-    def send(self, sock, msg_type, msg):
-        addr = sock.getpeername()
-        payload = base64.b64encode(zlib.compress(str(msg).encode(),9))
-        msg_bytes = str(msg_type.value).zfill(2).encode() + str(len(payload)).zfill(8).encode() + payload
-        logging.debug(f"Sending {len(msg_bytes)} bytes to {addr[0]}:{addr[1]}")
-        sock.sendall(msg_bytes)
-
-    def receive(self, sock):
-        addr = sock.getpeername()
-        msg_type = int(sock.recv(2))
-        msg_len = int(sock.recv(8))
-        msg_bytes = sock.recv(msg_len)
-        while (msg_len > len(msg_bytes)):
-            tmp = sock.recv(msg_len - len(msg_bytes))
-            msg_bytes = msg_bytes + tmp
-        logging.debug(f"Received {9 + len(msg_bytes)} bytes from {addr[0]}:{addr[1]}")
-        msg = zlib.decompress(base64.b64decode(msg_bytes))
-        return (Con(msg_type), msg)
-
-    # handles udp multicasts
-    def listen(self):
-        group = socket.inet_aton('224.98.117.122')
-        iface = socket.inet_aton(self.address[0])
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
-            sock.bind(('', 60000))
-            sock.settimeout(4)
-            while self.listening:
-                try:
-                    data, addr = sock.recvfrom(1024)
-                    msg = data.decode()
-                    while (not self.address[1]):
-                        time.sleep(1)
-                    if (msg.startswith('62757a7aGP')):
-                        p = msg[10:].split(",")
-                        port = int(p[0])
-                        identity = p[1]
-                        if (self.address != (addr[0], port)):
-                            if (not any(p.identity == identity for p in self.peers)):
-                                logging.info(f"New peer at {addr[0]}")
-                                self.peers.add(Peer((addr[0], port), identity))
-                            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as rsock:
-                                rsock.connect((addr[0], port))
-                                msg = str(self.address[1]) + "," + self.client.identity
-                                self.send(rsock, Con.peer, msg)
-                    elif (msg.startswith('62757a7aDC')):
-                        try:
-                            self.peers.remove(list(peer for peer in list(self.peers) if peer.address == addr[0])[0])
-                            logging.info(f"Peer {addr[0]} disconnected")
-                        except IndexError:
-                            pass
-                except socket.error:
-                    pass
-                except (KeyboardInterrupt, SystemExit):
-                    self.stop()
-
-    # handles tcp connections
-    def wait_for_connection(self):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind((self.address[0], 0))
-            self.address = sock.getsockname()
-            sock.settimeout(4)
-            logging.info(f"Listening on {self.address[0]}:{self.address[1]}")
-            while self.listening:
-                try:
-                    sock.listen(8)
-                    c, addr = sock.accept()
-                    threading.Thread(target=self.handle_connection, args=(c, addr)).start()
-                except socket.error:
-                    pass
-                except (KeyboardInterrupt, SystemExit):
-                    self.stop()
-
-    # tells node to start listening for multicasts / accept connections
-    def start(self):
-        try:
-            threading.Thread(target=self.init_server).start()
-        except (KeyboardInterrupt, SystemExit):
-            logging.error("Interrupt received. Stopping threads")
-            self.stop()
-            self.chain.export()
-
-    def init_server(self):
-        if (not self.listening):
-            self.listening = True
-            threading.Thread(target=self.wait_for_connection).start()
-            time.sleep(0.1)
-            threading.Thread(target=self.listen).start()
-            while self.listening:
-                time.sleep(1)
-
-    def stop(self):
-        if (self.listening):
-            self.listening = False
-            self.disconnect()
-
-    # creates a block out of received transactions and sends the computed hash to other nodes
+    # send the hash of the pending block to other nodes for comparison
     def send_hash(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
-        logging.info("Sending own hash to peers")
-        try:
-            for peer in self.peers:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect(peer.address)
-                    self.send(sock, Con.bftverify, self.pending_block.hash)
-        except socket.error:
-            logging.error("Peer refused connection")
-        self.lock.acquire()
-        self.hashes.append((self.address, self.pending_block.hash))
-        self.lock.release()
-        self.pbft()
+        logging.info("Sending hash to peers")
+        for peer in self.peers.copy():
+            logging.debug(f"Sending hash to {peer.identity[:8]}")
+            self.send(peer.socket, BFTVERIFY, self.pending_block.hash)
+        self.hashes.append((self.client.identity, self.pending_block.hash))
+        threading.Thread(target=self.pbft).start()
 
     # practical byzantine fault tolerance algorithm
     # waits until it has all other nodes' hashes, or until a minute has passed
@@ -338,27 +329,28 @@ class Node(threading.Thread):
     # it accepts its generated block as the next official one.
     # the remaining 1/3rd could comprise of wrong hashes, or a lack of one
     def pbft(self):
-        logging.info("Started consensus")
         self.pending_transactions = []
         start = time.time()
-        logging.info("Waiting for all hashes or elapsed time")
         while (time.time() - start < 60 and len(self.hashes) <= len(self.peers)):
-            time.sleep(1)
+            time.sleep(2)
+            print(f"{len(self.hashes)}/{len(self.peers)}")
         hashes = [h[1] for h in self.hashes]
         if (len(hashes) < len(self.peers) + 1):
             hashes += ['0'] * (1 + len(self.peers) - len(hashes))
         mode = max(set(hashes), key=hashes.count)
         if (hashes.count(mode)/len(hashes) >= 2/3 and self.pending_block.hash == mode):
-            logging.info("Own block matches network majority")
             self.chain.new_block(self.pending_block)
             logging.info("New block added to chain")
             self.chain.export()
         else:
-            for addr in [p[0] for p in self.hashes if p[1] == mode and addr != self.address]:
+            current_chain = helpers.sha256(self.chain.json)
+            for peer in [p for p in self.hashes if p[0] in [h[0] for h in self.hashes if h[1] == mode]]:
                 try:
-                    logging.info(f"Requesting current chain from {addr}")
-                    self.update_chain(addr)
-                    break
+                    logging.debug(f"Requesting current chain from {peer.identity[:8]}")
+                    self.update_chain(peer.address)
+                    time.sleep(1)
+                    if (helpers.sha256(self.chain.json) != current_chain):
+                        break
                 except socket.error:
                     pass
         self.hashes = []
