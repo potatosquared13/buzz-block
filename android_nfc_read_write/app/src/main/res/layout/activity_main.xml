@@ -23,7 +23,7 @@
             android:layout_weight="2"
             android:hint="message" />
         <Button
-            android:id="@+id/button"
+            android:id="@+id/btnWrite"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"

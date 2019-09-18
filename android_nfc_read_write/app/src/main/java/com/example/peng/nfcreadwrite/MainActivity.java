@@ -13,7 +13,6 @@ import android.nfc.Tag;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,7 +20,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends Activity {
@@ -48,7 +46,7 @@ public class MainActivity extends Activity {
 
         tvNFCContent = findViewById(R.id.nfc_contents);
         message = findViewById(R.id.edit_message);
-        btnWrite = findViewById(R.id.button);
+        btnWrite = findViewById(R.id.btnWrite);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
