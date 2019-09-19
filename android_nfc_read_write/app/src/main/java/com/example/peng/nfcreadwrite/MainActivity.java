@@ -11,14 +11,14 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Parcelable;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,6 +41,7 @@ public class MainActivity extends Activity {
     Button btnWrite;
     Button btnGetBalance;
     Node node;
+    Client testclient;
 
 
     @Override
@@ -82,6 +83,13 @@ public class MainActivity extends Activity {
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
         writeTagFilters = new IntentFilter[] { tagDetected };
+
+        if (Build.VERSION.SDK_INT > 22)
+            requestPermissions(new String[] {"android.permission.INTERNET", "android.permission.ACCESS_WIFI_STATE", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
+
+        node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
+        testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"));
+        node.execute();
     }
 
 
@@ -113,7 +121,7 @@ public class MainActivity extends Activity {
 //        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
 //        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
         // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
-        text = "NFC Content: " + Helper.bytesToHex(payload);
+        text = "NFC Content: " + node.getBalance("bcd63b310f80a80a54998189884bf3854e7e2f0bce0c8f9bf44f88adb4cb30b23437341fe723da12944f6349c40eb4a3dfccf060d0e08e63792a65b4e2bcec17f3379d81fc5f2e9e76ba8479bdb979d09725f30e00d927376e2caa78958e2dcf");
 
 //        try {
 //            // Get the Text
@@ -128,6 +136,8 @@ public class MainActivity extends Activity {
         tvNFCContent.setText(text);
 
     }
+
+
 
     public void getBalance(View view) {
 

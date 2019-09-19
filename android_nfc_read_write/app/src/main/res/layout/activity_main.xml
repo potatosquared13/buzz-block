@@ -47,4 +47,11 @@
         android:layout_height="87dp"
         android:text="Get Balance"
         android:onClick="getBalance"/>
+
+    <Button
+        android:id="@+id/btnFile"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:onClick="onFile"
+        android:text="Choose File" />
 </LinearLayout>

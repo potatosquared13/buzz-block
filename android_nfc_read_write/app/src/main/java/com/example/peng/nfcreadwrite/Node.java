@@ -13,6 +13,8 @@ import java.io.FileNotFoundException;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.DatagramPacket;
 import java.net.Inet4Address;
@@ -22,11 +24,17 @@ import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.nio.ByteOrder;
+import java.util.Formatter;
 import java.util.Locale;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.ArrayList;
+
+import android.content.Context;
+import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.util.Base64;
 import java.util.Collections;
 import java.util.zip.Deflater;
@@ -38,7 +46,9 @@ import java.security.PublicKey;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
 
-public class Node{
+import static android.content.Context.WIFI_SERVICE;
+
+public class Node extends AsyncTask<Void, Void, Void>{
     private static final int RESPONSE = 0;
     private static final int TRANSACTION = 1;
     private static final int BFTSTART = 2;
@@ -50,6 +60,26 @@ public class Node{
     private static final int PEER = 8;
     private static final int LEADER = 9;
     private static final int UNKNOWN = 10;
+
+    String response = "";
+
+    protected Void doInBackground(Void... arg0) {
+        System.out.println("Starting node");
+        start();
+        try {
+            getPeers();
+            while (control.leader == null)
+                Thread.sleep(1000);
+            if (control.chain.blocks.size() == 0)
+                updateChain(control.leader.socket);
+            while (control.active)
+                Thread.sleep(1000);
+            stop();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     private class Peer {
         Socket socket;
@@ -93,22 +123,28 @@ public class Node{
         @Override
         public void run() { // listen
             try {
-                while (control.active && control.ip.isEmpty())
+                while (control.active && control.ip == null)
                     Thread.sleep(1000);
-                byte[] buf = new byte[1024];
+                byte[] buf = new byte[256];
                 MulticastSocket ms = new MulticastSocket(60000);
                 InetAddress group = InetAddress.getByName("224.98.117.122");
                 ms.joinGroup(group);
                 isActive = true;
+                System.out.println("Listening for broadcasts");
                 while (control.active && isActive) {
                     DatagramPacket dp = new DatagramPacket(buf, buf.length);
                     ms.receive(dp);
                     String msg = new String(dp.getData());
-                    String ip = dp.getAddress().getHostAddress();
+                    String ip = ((InetSocketAddress)dp.getSocketAddress()).getAddress().getHostAddress();
                     if (msg.startsWith("62757a7aGP")){
-                        int port = Integer.parseInt(msg.substring(10));
-                        if (!control.ip.equals(ip) && control.port != port)
+                        int port = Integer.parseInt(msg.substring(10).replaceAll("[^\\d]", ""));
+                        System.out.println("Received broadcast from "+dp.getAddress().getHostAddress()+":"+port);
+                        if (!ip.equals(control.ip) ^ port != control.port) {
+                            while (!tcp.isActive)
+                                Thread.sleep(1000);
+                            System.out.println("Trying to connect to "+ip+":"+port);
                             tcp.connect(ip, port);
+                        }
                     }
                 }
             } catch (Exception e){
@@ -125,16 +161,31 @@ public class Node{
     private class TCPListener implements Runnable {
         boolean isActive = false;
         private Thread t;
+        TCPListener(Context mContext){
+            int iip = ((WifiManager) mContext.getApplicationContext().getSystemService(WIFI_SERVICE)).getConnectionInfo().getIpAddress();
+            iip = (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) ? Integer.reverseBytes(iip) : iip;
+            byte[] ip = BigInteger.valueOf(iip).toByteArray();
+            try {
+                InetAddress addr = InetAddress.getByAddress(ip);
+                control.ip = addr.getHostAddress();
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+
+        }
         @Override
         public void run() { // acceptConnections
             ServerSocket sock;
             Socket c;
             try {
-                control.ip = Inet4Address.getLocalHost().getHostAddress();
                 sock = new ServerSocket(0, 8, Inet4Address.getByName(control.ip));
-                control.port = sock.getLocalPort();
+                while (control.port == 0) {
+                    control.port = sock.getLocalPort();
+                    Thread.sleep(1000);
+                }
                 sock.setSoTimeout(4000);
                 isActive = true;
+                System.out.println("Listening for connections");
                 while (control.active && isActive) {
                     byte[] buf = new byte[96];
                     c = sock.accept();
@@ -169,9 +220,10 @@ public class Node{
                 t = new Thread(this);
             t.start();
         }
-        void connect(String i, int p) {
+        void connect(String i, int p) throws Exception{
             if (!control.ip.equals(i) && control.port != p){
                 boolean newPeer = true;
+                System.out.println("Checking if peer is new");
                 for (Peer peer : control.peers)
                     if (peer.ip.equals(i) && peer.port == p) {
                         newPeer = false;
@@ -179,6 +231,7 @@ public class Node{
                     }
                 if (newPeer) {
                     try {
+                        System.out.println("Trying to connect to "+i+":"+p);
                         Socket sock = new Socket(i, p);
                         sock.setSoTimeout(4000);
                         OutputStream os = sock.getOutputStream();
@@ -191,8 +244,6 @@ public class Node{
                         Peer peer = new Peer(sock, i, p, id);
                         new Thread(new ManageConnection(peer)).start();
                     } catch (SocketTimeoutException e){
-                    } catch (Exception e) {
-                        e.printStackTrace();
                     }
                 }
             }
@@ -206,6 +257,7 @@ public class Node{
         }
         @Override
         public void run() { // handleConnection
+            System.out.println("Opened connection to "+peer.identity.substring(10)+"("+peer.ip+":"+peer.port+")");
             try {
                 peer.socket.setSoTimeout(4000);
             } catch (Exception e) {
@@ -251,6 +303,8 @@ public class Node{
                         default:
                             System.out.println("Unknown message (" + m.type + ", " + m.data + ")");
                     }
+                } catch (SocketTimeoutException e){
+                    continue;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -298,17 +352,21 @@ public class Node{
                 control.chain.newBlock(control.pending_block);
                 control.chain.export();
             } else {
-                updateChain(control.leader.socket);
+                try {
+                    updateChain(control.leader.socket);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
             }
             control.hashes = new ArrayList<IdentityHashPair>();
             control.pending_block = null;
         }
     }
 
-    TCPListener tcp = new TCPListener();
-    UDPListener udp = new UDPListener();
+    TCPListener tcp;
+    UDPListener udp;
 
-    public Node(File clientFile){
+    Node(File clientFile, Context mContext) {
         control.client = new Client(clientFile);
         control.active = false;
         control.ip = null;
@@ -330,64 +388,54 @@ public class Node{
                 e.printStackTrace();
             }
         }
+        tcp = new TCPListener(mContext);
+        udp = new UDPListener();
     }
-    public void start() {
+    private void start() {
         if (!control.active){
-            control.active = true;
-            if (tcp == null)
-                tcp = new TCPListener();
-            if (udp == null)
-                udp = new UDPListener();
-            tcp.start();
             udp.start();
+            tcp.start();
+            control.active = true;
         }
     }
-    public void stop() {
+    void stop() throws Exception{
         if (control.active)
             control.active = false;
             tcp.isActive = false;
             udp.isActive = false;
             for (Peer p : control.peers)
                 if (!p.socket.isClosed()) {
-                    try {
-                        p.socket.shutdownInput();
-                        p.socket.shutdownOutput();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    p.socket.shutdownInput();
+                    p.socket.shutdownOutput();
                 }
     }
-    public void send(Socket s, int t, String m) {
+    public void send(Socket s, int t, String m) throws Exception{
         byte[] input = m.getBytes();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DeflaterOutputStream od = new DeflaterOutputStream(baos, new Deflater(9));
-        try {
-            od.write(input);
-            od.flush();
-            od.close();
-            byte[] payload = android.util.Base64.encode(baos.toByteArray(), Base64.DEFAULT);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            out.write(String.format(Locale.getDefault(), "%02d", t).getBytes());
-            out.write(String.format(Locale.getDefault(), "%08d", payload.length).getBytes());
-            out.write(payload);
-            DataOutputStream output = new DataOutputStream(s.getOutputStream());
-            output.write(out.toByteArray());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        od.write(input);
+        od.flush();
+        od.close();
+        byte[] payload = android.util.Base64.encode(baos.toByteArray(), Base64.DEFAULT);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(String.format(Locale.getDefault(), "%02d", t).getBytes());
+        out.write(String.format(Locale.getDefault(), "%08d", payload.length).getBytes());
+        out.write(payload);
+        DataOutputStream output = new DataOutputStream(s.getOutputStream());
+        output.write(out.toByteArray());
     }
     public Message receive(Socket s) {
         try {
             DataInputStream input = new DataInputStream(s.getInputStream());
             byte[] blength = new byte[8];
-            input .read(blength, 0, 8);
+            input.read(blength, 0, 8);
             int length = Integer.parseInt(new String(blength));
             byte[] btype = new byte[2];
-            input.read(btype, 2, 2);
+            input.read(btype, 0, 2);
             int type = Integer.parseInt(new String(btype));
 
             byte[] ecdata =  new byte[length];
-            input.readFully(ecdata, 10, length);
+            input.readFully(ecdata, 0, length);
             byte[] compressed_data = android.util.Base64.decode(ecdata, Base64.DEFAULT);
             InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data), new Inflater());
             s.close();
@@ -399,27 +447,20 @@ public class Node{
         }
         return null;
     }
-    public void getPeers() {
-        try {
-            while (control.ip == null)
-                Thread.sleep(1000);
-            byte[] msg = ("62757a7aGP" + control.port + "," + control.client.getIdentity()).getBytes();
-            MulticastSocket ms = new MulticastSocket();
-            InetAddress group = InetAddress.getByName("224.98.117.122");
-            DatagramPacket dp = new DatagramPacket(msg, msg.length, group, 60000);
-            ms.send(dp);
-            ms.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void getPeers() throws Exception {
+        while (control.ip == null || control.port == 0)
+            Thread.sleep(1000);
+        byte[] msg = ("62757a7aGP" + control.port).getBytes();
+        MulticastSocket ms = new MulticastSocket();
+        InetAddress group = InetAddress.getByName("224.98.117.122");
+        DatagramPacket dp = new DatagramPacket(msg, msg.length, group, 60000);
+        System.out.println("Sending broadcast message ("+new String(msg)+")");
+        ms.send(dp);
+        ms.close();
     }
-    public void sendTransaction(int t, String i, double a) {
+    public void sendTransaction(int t, String i, double a) throws Exception {
         while (control.active && control.pending_block != null)
-            try {
-                Thread.sleep(1000);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            Thread.sleep(1000);
         Transaction txn = null;
         if (t == 1)
             txn = new Transaction(1, i, control.client.getIdentity(), a);
@@ -445,32 +486,28 @@ public class Node{
                  balance += t.amount;
         return balance;
     }
-    private boolean isValidTransaction(Transaction t, String i) {
+    private boolean isValidTransaction(Transaction t, String i) throws Exception {
         if (!t.signature.isEmpty()) {
-            try {
-                byte[] identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + i);
-                Signature sig = Signature.getInstance("SHA256withECDSA");
-                PublicKey pk = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(identity));
-                sig.initVerify(pk);
-                sig.update(Helper.hexToBytes(t.getHash()));
-                return sig.verify(Helper.hexToBytes(t.signature));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            byte[] identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + i);
+            Signature sig = Signature.getInstance("SHA256withECDSA");
+            PublicKey pk = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(identity));
+            sig.initVerify(pk);
+            sig.update(Helper.hexToBytes(t.getHash()));
+            return sig.verify(Helper.hexToBytes(t.signature));
         }
         return false;
     }
-    private boolean recordTransaction(Transaction t, String i) {
-        if (t.sender != t.address && isValidTransaction(t, i)) {
+    private boolean recordTransaction(Transaction t, String i) throws Exception {
+        if (!t.sender.equals(t.address) && isValidTransaction(t, i)) {
             control.pending_transactions.add(t);
             return true;
         }
         return false;
     }
-    private void updateChain(Socket sock) {
+    private void updateChain(Socket sock) throws Exception {
         send(sock, CHAINREQUEST, control.chain.getHash());
     }
-    private void sendHash(ArrayList<Transaction> t) {
+    private void sendHash(ArrayList<Transaction> t) throws Exception {
         if (control.pending_block == null) {
             control.pending_block = new Block(control.chain.getLastBlock().getHash(), t);
             control.pending_transactions = new ArrayList<>();
