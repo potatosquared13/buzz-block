@@ -121,7 +121,7 @@ public class MainActivity extends Activity {
 //        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
 //        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
         // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
-        text = "NFC Content: " + node.getBalance("bcd63b310f80a80a54998189884bf3854e7e2f0bce0c8f9bf44f88adb4cb30b23437341fe723da12944f6349c40eb4a3dfccf060d0e08e63792a65b4e2bcec17f3379d81fc5f2e9e76ba8479bdb979d09725f30e00d927376e2caa78958e2dcf");
+        text = "NFC Content: " + node.getBalance("");
 
 //        try {
 //            // Get the Text
@@ -147,7 +147,7 @@ public class MainActivity extends Activity {
      **********************************Write to NFC Tag****************************
      ******************************************************************************/
     private void write(String text, Tag tag) throws IOException, FormatException {
-        NdefRecord[] records = { createRecord(text) };
+        NdefRecord[] records = { createRecord(text) }; // chaange to be
         NdefMessage message = new NdefMessage(records);
         // Get an instance of Ndef for the tag.
         Ndef ndef = Ndef.get(tag);
@@ -155,6 +155,7 @@ public class MainActivity extends Activity {
         ndef.connect();
         // Write the message
         ndef.writeNdefMessage(message);
+        System.out.println("wrote shit ("+new String(Helper.hexToBytes(text))+")");
         // Close the connection
         ndef.close();
     }
@@ -165,11 +166,7 @@ public class MainActivity extends Activity {
         int    langLength = langBytes.length;
         int    textLength = textBytes.length;
         byte[] payload    = new byte[1 + langLength + textLength];
-        /* TODO
-            read client.key from a default location
-         */
-        Client c          = new Client(new File("Insert File"));
-        byte[] stuffToWriteToNfc = Helper.hexToBytes(c.getIdentity());
+        byte[] stuffToWriteToNfc = Helper.hexToBytes(testclient.getIdentity());
 
         // set status byte (see NDEF spec for actual bits)
         payload[0] = (byte) langLength;

@@ -138,7 +138,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     String ip = ((InetSocketAddress)dp.getSocketAddress()).getAddress().getHostAddress();
                     if (msg.startsWith("62757a7aGP")){
                         int port = Integer.parseInt(msg.substring(10).replaceAll("[^\\d]", ""));
-                        System.out.println("Received broadcast from "+dp.getAddress().getHostAddress()+":"+port);
                         if (!ip.equals(control.ip) ^ port != control.port) {
                             while (!tcp.isActive)
                                 Thread.sleep(1000);
@@ -232,6 +231,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 if (newPeer) {
                     try {
                         System.out.println("Trying to connect to "+i+":"+p);
+                        System.out.println(control.ip+":"+control.port);
                         Socket sock = new Socket(i, p);
                         sock.setSoTimeout(4000);
                         OutputStream os = sock.getOutputStream();
@@ -257,20 +257,21 @@ public class Node extends AsyncTask<Void, Void, Void>{
         }
         @Override
         public void run() { // handleConnection
-            System.out.println("Opened connection to "+peer.identity.substring(10)+"("+peer.ip+":"+peer.port+")");
+            System.out.println("Opened connection to "+peer.identity.substring(0,8)+"("+peer.ip+":"+peer.port+")");
             try {
                 peer.socket.setSoTimeout(4000);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            while (control.active && tcp.isActive){
+            while (control.active && tcp.isActive && !peer.socket.isClosed()){
                 try {
                     Message m = receive(peer.socket);
-                    if (m == null)
+                    if (m.data.isEmpty())
                         break;
+                    System.out.println(control.active && tcp.isActive && !peer.socket.isClosed());
                     switch (m.type) {
                         case RESPONSE:
-                            System.out.println("Response from " + peer.identity.substring(10) + ": " + m.data
+                            System.out.println("Response from " + peer.identity.substring(0,8) + ": " + m.data
                             );
                             break;
                         case TRANSACTION:
@@ -308,8 +309,10 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                System.out.println(control.active && tcp.isActive && !peer.socket.isClosed());
             }
             try {
+                System.out.println("Peer "+peer.identity.substring(0,8)+" disconnected");
                 peer.socket.close();
                 control.peers.remove(peer);
             } catch (Exception e) {
@@ -393,8 +396,8 @@ public class Node extends AsyncTask<Void, Void, Void>{
     }
     private void start() {
         if (!control.active){
-            udp.start();
             tcp.start();
+            udp.start();
             control.active = true;
         }
     }
@@ -424,28 +427,22 @@ public class Node extends AsyncTask<Void, Void, Void>{
         DataOutputStream output = new DataOutputStream(s.getOutputStream());
         output.write(out.toByteArray());
     }
-    public Message receive(Socket s) {
-        try {
-            DataInputStream input = new DataInputStream(s.getInputStream());
-            byte[] blength = new byte[8];
-            input.read(blength, 0, 8);
-            int length = Integer.parseInt(new String(blength));
-            byte[] btype = new byte[2];
-            input.read(btype, 0, 2);
-            int type = Integer.parseInt(new String(btype));
+    public Message receive(Socket s) throws IOException {
+        DataInputStream input = new DataInputStream(s.getInputStream());
+        byte[] blength = new byte[8];
+        input.read(blength, 0, 8);
+        int length = Integer.parseInt(new String(blength));
+        byte[] btype = new byte[2];
+        input.read(btype, 0, 2);
+        int type = Integer.parseInt(new String(btype));
 
-            byte[] ecdata =  new byte[length];
-            input.readFully(ecdata, 0, length);
-            byte[] compressed_data = android.util.Base64.decode(ecdata, Base64.DEFAULT);
-            InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data), new Inflater());
-            s.close();
-            byte[] msg = new byte[length];
-            iis.read(msg, 0, length);
-            return new Message(type, new String(msg));
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-        return null;
+        byte[] ecdata = new byte[length];
+        input.readFully(ecdata, 0, length);
+        byte[] compressed_data = android.util.Base64.decode(ecdata, Base64.DEFAULT);
+        InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data), new Inflater());
+        byte[] msg = new byte[length];
+        iis.read(msg, 0, length);
+        return new Message(type, new String(msg));
     }
     public void getPeers() throws Exception {
         while (control.ip == null || control.port == 0)
