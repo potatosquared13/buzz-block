@@ -138,7 +138,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     String ip = ((InetSocketAddress)dp.getSocketAddress()).getAddress().getHostAddress();
                     if (msg.startsWith("62757a7aGP")){
                         int port = Integer.parseInt(msg.substring(10).replaceAll("[^\\d]", ""));
-                        if (!ip.equals(control.ip) ^ port != control.port) {
+                        if (!ip.equals(control.ip) || port != control.port) {
                             while (!tcp.isActive)
                                 Thread.sleep(1000);
                             System.out.println("Trying to connect to "+ip+":"+port);
