@@ -28,7 +28,7 @@ class Blockchain:
         if (self.blocks):
             raise Exception("blockchain already exists")
         else:
-            self.blocks.append(Block("0".zfill(64), transactions))
+            self.blocks.append(Block("0", transactions))
 
     def new_block(self, block):
         self.blocks.append(block)

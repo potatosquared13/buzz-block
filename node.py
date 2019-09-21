@@ -57,8 +57,8 @@ class Node(threading.Thread):
         self.chain = Blockchain()
         if(os.path.isfile('./blockchain.json')):
             self.chain.rebuild(open('./blockchain.json', 'r').read())
-        root = logging.getLogger()
-        handler = logging.StreamHandler(sys.stdout)
+        # root = logging.getLogger()
+        # handler = logging.StreamHandler(sys.stdout)
         if (debug):
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
         else:
@@ -86,9 +86,11 @@ class Node(threading.Thread):
     def accept_connections(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind((socket.gethostbyname(socket.getfqdn()), 0))
+            sock.bind(([ip for ip in socket.gethostbyname_ex(socket.getfqdn())[2] if not ip.startswith('169')][0], 0))
             self.address = sock.getsockname()
+            logging.debug(self.address)
             sock.settimeout(4)
+            logging.debug(f"Listening for connections")
             while self.active:
                 try:
                     sock.listen(8)
@@ -134,7 +136,7 @@ class Node(threading.Thread):
                 except socket.error as e:
                     logging.error(f"Node.connect(): {e}")
             else:
-                logging.info("peer already known")
+                logging.debug("peer already known")
         else:
             logging.error("Node.connect(): can't connect to self")
         return False
@@ -163,7 +165,7 @@ class Node(threading.Thread):
     # listen for messages from a peer
     # each connected peer has its own thread for this
     def handle_connection(self, peer):
-        logging.debug(f"opened connection to {peer.identity[:8]}")
+        logging.info(f"connected to {peer.identity[:8]}")
         peer.socket.settimeout(4)
         while (self.active and peer in self.peers):
             try:
@@ -206,7 +208,7 @@ class Node(threading.Thread):
                 break
         peer.socket.close()
         self.peers.remove(peer)
-        logging.info(f"Peer {peer.identity[:8]} disconnected")
+        logging.info(f"Closed connection to {peer.identity[:8]}")
 
     # broadcast connect message to network to discover peers
     # nodes receiving this broadcast that aren't already connected will try to connect
@@ -229,13 +231,14 @@ class Node(threading.Thread):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
             sock.bind(('', 60000))
-            sock.settimeout(4)
+            sock.settimeout(30)
             while (self.active):
                 try:
-                    data, addr = sock.recvfrom(1024)
+                    data, addr = sock.recvfrom(256)
                     msg = data.decode()
                     if (msg.startswith('62757a7aGP')):
                         port = int(msg[10:])
+                        logging.debug(f"Attempting to connect to {addr[0]}:{port}")
                         if ((addr[0], port) != self.address):
                             self.connect((addr[0], port))
                 except socket.error:

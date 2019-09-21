@@ -18,7 +18,10 @@ with conn:
 
 def insert(client, contact, amount, is_vendor=0):
     with conn:
-        c.execute("insert into clients values(?, ?, ?, ?, ?, ?)", (client.name, client.identity, contact, is_vendor, amount, amount,))
+        if is_vendor:
+            c.execute("insert into clients values(?, ?, ?, ?, ?, ?)", (client.name, client.identity, contact, is_vendor, amount, amount,))
+        else:
+            c.execute("insert into clients values(?, ?, ?, ?, ?, ?)", (client.name, client.identity[:96], contact, is_vendor, amount, amount,))
 
 def update_balance(identity):
     # change balance to pending_balance
