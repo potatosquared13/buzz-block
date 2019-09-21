@@ -22,7 +22,7 @@ l.start()
 def create_client(name, contact, amount, is_vendor):
     c = Client(name)
     clients.append((c, contact, amount, is_vendor))
-    transaction = Transaction("add funds", c.identity, amount)
+    transaction = Transaction(2, "add funds", c.identity, amount)
     l.client.sign(transaction)
     transactions.append(transaction)
 
@@ -36,7 +36,8 @@ def save_client(client_id, name, contact, amount, is_vendor):
     storage.write(jsonify(clients))
 
 def add_funds(client_id, amount):
-    pass
+    l.add_funds(client_id, amount)
+    return ''
 
 # create the genesis block, which introduces the initial balance for all clients to the blockchain
 # so that the balance can be determined by reading through the blockchain in the future
