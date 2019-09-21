@@ -49,8 +49,7 @@ public class Client {
     public void sign(Transaction t) {
         try {
             byte[] msg = Helper.hexToBytes(t.getHash());
-            Signature signer;
-            signer = Signature.getInstance("SHA256withECDSA");
+            Signature signer = Signature.getInstance("SHA256withECDSA");
             signer.initSign(this.private_key);
             signer.update(msg);
             byte[] signature = signer.sign();

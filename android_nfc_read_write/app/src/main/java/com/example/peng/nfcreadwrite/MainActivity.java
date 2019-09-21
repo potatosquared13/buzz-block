@@ -37,7 +37,6 @@ public class MainActivity extends Activity {
     Context context;
 
     TextView tvNFCContent;
-    TextView message;
     Button btnWrite;
     Button btnGetBalance;
     Node node;
@@ -51,7 +50,6 @@ public class MainActivity extends Activity {
         context = this;
 
         tvNFCContent = (TextView) findViewById(R.id.nfc_contents);
-        message = (TextView) findViewById(R.id.edit_message);
         btnWrite = (Button) findViewById(R.id.btnWrite);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
@@ -61,7 +59,7 @@ public class MainActivity extends Activity {
                     if (myTag == null) {
                         Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
                     } else {
-                        write(message.getText().toString(), myTag);
+                        write(testclient.getIdentity().substring(0, 96), myTag);
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                     }
                 } catch (IOException | FormatException e) {
@@ -88,7 +86,7 @@ public class MainActivity extends Activity {
             requestPermissions(new String[] {"android.permission.INTERNET", "android.permission.ACCESS_WIFI_STATE", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
 
         node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
-        testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"));
+        testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
         node.execute();
     }
 
@@ -115,26 +113,17 @@ public class MainActivity extends Activity {
     private void buildTagViews(NdefMessage[] msgs) {
         if (msgs == null || msgs.length == 0) return;
 
-        String text;
+        String text = "";
 //        String tagId = new String(msgs[0].getRecords()[0].getType());
         byte[] payload = msgs[0].getRecords()[0].getPayload();
-//        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
-//        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
+        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
+        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
         // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
-        text = "NFC Content: " + node.getBalance("");
 
-//        try {
-//            // Get the Text
-//            text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, textEncoding);
-//        } catch (UnsupportedEncodingException e) {
-//            Log.e("UnsupportedEncoding", e.toString());
-//        }
+            // Get the Text
+            text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
 
-        /* TODO
-            - add button click event. so confusing
-         */
-        tvNFCContent.setText(text);
-
+        tvNFCContent.setText("NFC Content: " + text + ", Balance: " + node.getBalance(text));
     }
 
 
@@ -147,7 +136,7 @@ public class MainActivity extends Activity {
      **********************************Write to NFC Tag****************************
      ******************************************************************************/
     private void write(String text, Tag tag) throws IOException, FormatException {
-        NdefRecord[] records = { createRecord(text) }; // chaange to be
+        NdefRecord[] records = { createRecord(text) };
         NdefMessage message = new NdefMessage(records);
         // Get an instance of Ndef for the tag.
         Ndef ndef = Ndef.get(tag);
@@ -155,7 +144,6 @@ public class MainActivity extends Activity {
         ndef.connect();
         // Write the message
         ndef.writeNdefMessage(message);
-        System.out.println("wrote shit ("+new String(Helper.hexToBytes(text))+")");
         // Close the connection
         ndef.close();
     }
@@ -166,7 +154,6 @@ public class MainActivity extends Activity {
         int    langLength = langBytes.length;
         int    textLength = textBytes.length;
         byte[] payload    = new byte[1 + langLength + textLength];
-        byte[] stuffToWriteToNfc = Helper.hexToBytes(testclient.getIdentity());
 
         // set status byte (see NDEF spec for actual bits)
         payload[0] = (byte) langLength;
@@ -175,8 +162,9 @@ public class MainActivity extends Activity {
         System.arraycopy(langBytes, 0, payload, 1,              langLength);
         System.arraycopy(textBytes, 0, payload, 1 + langLength, textLength);
 
-//        NdefRecord recordNFC = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,  NdefRecord.RTD_TEXT,  new byte[0], payload);
-        return new NdefRecord(NdefRecord.TNF_WELL_KNOWN, NdefRecord.RTD_TEXT, stuffToWriteToNfc, payload);
+        NdefRecord recordNFC = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,  NdefRecord.RTD_TEXT,  new byte[0], payload);
+
+        return recordNFC;
     }
 
 

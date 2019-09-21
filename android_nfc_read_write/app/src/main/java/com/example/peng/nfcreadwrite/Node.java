@@ -3,6 +3,7 @@ package com.example.peng.nfcreadwrite;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
@@ -25,6 +26,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.Formatter;
 import java.util.Locale;
 import java.util.Set;
@@ -37,6 +39,7 @@ import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.util.Base64;
 import java.util.Collections;
+import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
@@ -61,17 +64,20 @@ public class Node extends AsyncTask<Void, Void, Void>{
     private static final int LEADER = 9;
     private static final int UNKNOWN = 10;
 
-    String response = "";
-
     protected Void doInBackground(Void... arg0) {
         System.out.println("Starting node");
         start();
         try {
             getPeers();
-            while (control.leader == null)
-                Thread.sleep(1000);
-            if (control.chain.blocks.size() == 0)
+            Thread.sleep(4000);
+            System.out.println(control.ip + ":" + control.port);
+            while (control.leader == null) {
+                getPeers();
+                Thread.sleep(4000);
+            }
+            if (control.chain.blocks.size() == 0) {
                 updateChain(control.leader.socket);
+            }
             while (control.active)
                 Thread.sleep(1000);
             stop();
@@ -130,7 +136,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 InetAddress group = InetAddress.getByName("224.98.117.122");
                 ms.joinGroup(group);
                 isActive = true;
-                System.out.println("Listening for broadcasts");
+//                System.out.println("Listening for broadcasts");
                 while (control.active && isActive) {
                     DatagramPacket dp = new DatagramPacket(buf, buf.length);
                     ms.receive(dp);
@@ -141,7 +147,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         if (!ip.equals(control.ip) || port != control.port) {
                             while (!tcp.isActive)
                                 Thread.sleep(1000);
-                            System.out.println("Trying to connect to "+ip+":"+port);
+//                            System.out.println("Connecting to "+ip+":"+port);
                             tcp.connect(ip, port);
                         }
                     }
@@ -184,7 +190,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 }
                 sock.setSoTimeout(4000);
                 isActive = true;
-                System.out.println("Listening for connections");
+//                System.out.println("Listening for connections");
                 while (control.active && isActive) {
                     byte[] buf = new byte[96];
                     c = sock.accept();
@@ -202,6 +208,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         OutputStream os = c.getOutputStream();
                         os.write(Helper.hexToBytes(control.client.getIdentity()));
                         os.flush();
+                        control.peers.add(peer);
                         new Thread(new ManageConnection(peer)).start();
                     } else {
                         c.shutdownOutput();
@@ -222,7 +229,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         void connect(String i, int p) throws Exception{
             if (!control.ip.equals(i) && control.port != p){
                 boolean newPeer = true;
-                System.out.println("Checking if peer is new");
+//                System.out.println("Checking if peer is new");
                 for (Peer peer : control.peers)
                     if (peer.ip.equals(i) && peer.port == p) {
                         newPeer = false;
@@ -230,8 +237,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     }
                 if (newPeer) {
                     try {
-                        System.out.println("Trying to connect to "+i+":"+p);
-                        System.out.println(control.ip+":"+control.port);
+                        System.out.println("Connecting to "+i+":"+p);
                         Socket sock = new Socket(i, p);
                         sock.setSoTimeout(4000);
                         OutputStream os = sock.getOutputStream();
@@ -242,6 +248,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         is.read(buf, 0, 96);
                         String id = Helper.bytesToHex(buf);
                         Peer peer = new Peer(sock, i, p, id);
+                        control.peers.add(peer);
                         new Thread(new ManageConnection(peer)).start();
                     } catch (SocketTimeoutException e){
                     }
@@ -265,30 +272,33 @@ public class Node extends AsyncTask<Void, Void, Void>{
             }
             while (control.active && tcp.isActive && !peer.socket.isClosed()){
                 try {
-                    Message m = receive(peer.socket);
+                    Message m = receive(peer);
                     if (m.data.isEmpty())
                         break;
-                    System.out.println(control.active && tcp.isActive && !peer.socket.isClosed());
                     switch (m.type) {
                         case RESPONSE:
                             System.out.println("Response from " + peer.identity.substring(0,8) + ": " + m.data
                             );
                             break;
                         case TRANSACTION:
+                            System.out.println("Transaction from " + peer.identity.substring(0,8));
                             Transaction t = Transaction.fromJson(m.data);
                             if (!recordTransaction(t, peer.identity))
                                 send(peer.socket, RESPONSE, "Invalid transaction");
                             break;
                         case BFTSTART:
+                            System.out.println("Verifying new block");
                             ArrayList<Transaction> ts = new Gson().fromJson(m.data, new TypeToken<ArrayList<Transaction>>() {
                             }.getType());
                             sendHash(ts);
                             break;
                         case BFTVERIFY:
+                            System.out.println("Hash from "+peer.identity.substring(0,8));
                             IdentityHashPair h = new IdentityHashPair(peer.identity, m.data);
                             control.hashes.add(h);
                             break;
                         case CHAINREQUEST:
+                            System.out.println("Sending blockchain to "+peer.identity.substring(0,8));
                             while (control.active && control.pending_block != null)
                                 Thread.sleep(2000);
                             if (!m.data.equals(control.chain.getHash()))
@@ -297,19 +307,22 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         case CHAIN:
                             if (!m.data.equals("UP TO DATE"))
                                 control.chain.rebuild(m.data);
+                            System.out.println("Chain is up to date");
                             break;
                         case LEADER:
+                            System.out.println("Found leader node at "+peer.ip+":"+peer.port);
                             control.leader = peer;
                             break;
                         default:
                             System.out.println("Unknown message (" + m.type + ", " + m.data + ")");
                     }
-                } catch (SocketTimeoutException e){
+                } catch (SocketTimeoutException e) {
                     continue;
+                } catch (SocketException e){
+                    break;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                System.out.println(control.active && tcp.isActive && !peer.socket.isClosed());
             }
             try {
                 System.out.println("Peer "+peer.identity.substring(0,8)+" disconnected");
@@ -320,6 +333,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             }
         }
     }
+
 
     private class ConsensusHandler implements Runnable {
         @Override
@@ -412,37 +426,81 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     p.socket.shutdownOutput();
                 }
     }
-    public void send(Socket s, int t, String m) throws Exception{
-        byte[] input = m.getBytes();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DeflaterOutputStream od = new DeflaterOutputStream(baos, new Deflater(9));
-        od.write(input);
-        od.flush();
-        od.close();
-        byte[] payload = android.util.Base64.encode(baos.toByteArray(), Base64.DEFAULT);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(String.format(Locale.getDefault(), "%02d", t).getBytes());
-        out.write(String.format(Locale.getDefault(), "%08d", payload.length).getBytes());
-        out.write(payload);
-        DataOutputStream output = new DataOutputStream(s.getOutputStream());
-        output.write(out.toByteArray());
+    public void send(final Socket s, final int t, final String m) {
+        new Thread((new Runnable(){
+            public void run(){
+                try {
+                    // compress message
+                    byte[] input = m.getBytes();
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    DeflaterOutputStream od = new DeflaterOutputStream(baos, new Deflater(9));
+                    for (byte b : input)
+                        od.write(b);
+                    od.close();
+
+                    // encode to base64
+                    byte[] payload = android.util.Base64.encode(baos.toByteArray(), Base64.DEFAULT);
+
+                    // send data to peer (data = LLLLLLLLLLTTN... where T = message type, L = message length, N... = compressed message encoded in base64)
+                    DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+                    dos.write(String.format(Locale.getDefault(), "%08d", payload.length).getBytes());
+                    dos.write(String.format(Locale.getDefault(), "%02d", t).getBytes());
+                    dos.write(payload);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        })).start();
     }
-    public Message receive(Socket s) throws IOException {
-        DataInputStream input = new DataInputStream(s.getInputStream());
+    public Message receive(Peer p) throws IOException {
+        DataInputStream input = new DataInputStream(p.socket.getInputStream());
+
+        // read message length
         byte[] blength = new byte[8];
-        input.read(blength, 0, 8);
-        int length = Integer.parseInt(new String(blength));
+        int length;
+        try {
+            input.read(blength, 0, 8);
+            length = Integer.parseInt(new String(blength));
+        } catch (NumberFormatException e){
+            return new Message(0, "");
+        }
+
+        // read message type
         byte[] btype = new byte[2];
         input.read(btype, 0, 2);
         int type = Integer.parseInt(new String(btype));
 
+        //read message
         byte[] ecdata = new byte[length];
         input.readFully(ecdata, 0, length);
+
+        // decode from base64
         byte[] compressed_data = android.util.Base64.decode(ecdata, Base64.DEFAULT);
-        InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data), new Inflater());
-        byte[] msg = new byte[length];
-        iis.read(msg, 0, length);
-        return new Message(type, new String(msg));
+
+        // decompress
+        InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data));
+//        byte[] data = new byte[length];
+//        int len = iis.read(data);
+//        Inflater i = new Inflater();
+//        i.setInput(compressed_data, 0, compressed_data.length);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(compressed_data.length);
+//        byte[] data = new byte[compressed_data.length * 3];
+        int b;
+        while ((b = iis.read()) != -1){
+            baos.write(b);
+        }
+        String msg = new String(baos.toByteArray());
+//        iis.close();
+//        baos.close();
+//        try {
+//            len = i.inflate(baos);
+//            msg = new String(baos, 0, len, StandardCharsets.UTF_8);
+//            System.out.println("Received "+(10+length)+" bytes from "+p.identity.substring(0, 8));
+//            System.out.println(len);
+//        } catch (DataFormatException e){
+//            e.printStackTrace();
+//        }
+        return new Message(type, msg);
     }
     public void getPeers() throws Exception {
         while (control.ip == null || control.port == 0)
@@ -455,9 +513,13 @@ public class Node extends AsyncTask<Void, Void, Void>{
         ms.send(dp);
         ms.close();
     }
-    public void sendTransaction(int t, String i, double a) throws Exception {
+    public void sendTransaction(int t, String i, double a) {
         while (control.active && control.pending_block != null)
-            Thread.sleep(1000);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e){
+                e.printStackTrace();
+            }
         Transaction txn = null;
         if (t == 1)
             txn = new Transaction(1, i, control.client.getIdentity(), a);
@@ -465,22 +527,30 @@ public class Node extends AsyncTask<Void, Void, Void>{
             txn = new Transaction(2, control.client.getIdentity(), i, a);
         control.client.sign(txn);
         control.pending_transactions.add(txn);
-        for (Peer p : control.peers)
+        for (Peer p : control.peers) {
             send(p.socket, TRANSACTION, txn.toJson());
+        }
     }
     public double getBalance(String i){
         double balance = 0;
-        for (Block b : control.chain.blocks)
-            for (Transaction t : b.transactions)
-                if (t.sender.equals(i))
+        for (Block b : control.chain.blocks){
+            for (Transaction t : b.transactions){
+                if (t.sender.startsWith(i)){
                     balance -= t.amount;
-                else if (t.address.equals(i) && t.type == 2)
+                }
+                else if (t.address.startsWith(i) && t.transaction == 2) {
                     balance += t.amount;
-         for (Transaction t : control.pending_transactions)
-             if (t.sender.equals(i))
-                 balance -= t.amount;
-             else if (t.address.equals(i) && t.type == 2)
-                 balance += t.amount;
+                }
+            }
+        }
+        for (Transaction t : control.pending_transactions){
+            if (t.sender.startsWith(i)) {
+                balance -= t.amount;
+            }
+            else if (t.address.startsWith(i) && t.transaction == 2) {
+                balance += t.amount;
+            }
+        }
         return balance;
     }
     private boolean isValidTransaction(Transaction t, String i) throws Exception {

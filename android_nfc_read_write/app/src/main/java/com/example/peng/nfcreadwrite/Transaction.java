@@ -6,14 +6,15 @@ import java.util.Date;
 import java.text.SimpleDateFormat;
 
 public class Transaction extends HashableObject{
-    int type;
+    int transaction;
     public String sender;
     public String address;
     public double amount;
     public String timestamp;
     public String signature;
 
-    public Transaction(int type, String s, String r, double a){
+    public Transaction(int t, String s, String r, double a){
+        transaction = t;
         sender = s;
         address = r;
         amount = a;
@@ -22,7 +23,7 @@ public class Transaction extends HashableObject{
     }
 
     public String getHash(){
-        Transaction tmp = new Transaction(this.type, this.sender, this.address, this.amount);
+        Transaction tmp = new Transaction(this.transaction, this.sender, this.address, this.amount);
         tmp.timestamp = this.timestamp;
         return Helper.getSHA256Hash(tmp.toJson());
     }
