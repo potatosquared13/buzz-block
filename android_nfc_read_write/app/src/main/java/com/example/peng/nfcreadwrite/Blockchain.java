@@ -1,5 +1,7 @@
 package com.example.peng.nfcreadwrite;
 
+import android.os.Environment;
+
 import com.google.gson.*;
 
 import java.io.File;
@@ -32,7 +34,7 @@ public class Blockchain extends HashableObject {
     }
 
     public void export() {
-        File f = new File("blockchain.json");
+        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "blockchain.json");
         try {
             f.createNewFile();
             FileWriter w = new FileWriter(f, false);

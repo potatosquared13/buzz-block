@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.util.Base64;
 import java.util.Collections;
 import java.util.zip.DataFormatException;
@@ -305,9 +306,10 @@ public class Node extends AsyncTask<Void, Void, Void>{
                                 send(peer.socket, CHAIN, control.chain.toJson());
                             break;
                         case CHAIN:
-                            if (!m.data.equals("UP TO DATE"))
+                            if (!m.data.equals("UP TO DATE")) {
+                                System.out.println("Chain is now up to date");
                                 control.chain.rebuild(m.data);
-                            System.out.println("Chain is up to date");
+                            } else System.out.println("Chain is already up to date");
                             break;
                         case LEADER:
                             System.out.println("Found leader node at "+peer.ip+":"+peer.port);
@@ -394,7 +396,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         control.pending_transactions = new ArrayList<Transaction>();
         control.hashes = new ArrayList<IdentityHashPair>();
         control.chain = new Blockchain();
-        File f = new File("blockchain.json");
+        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "blockchain.json");
         if (f.exists() && !f.isDirectory()){
             try{
                 Scanner s = new Scanner(f);
@@ -527,6 +529,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             txn = new Transaction(2, control.client.getIdentity(), i, a);
         control.client.sign(txn);
         control.pending_transactions.add(txn);
+        System.out.println(txn.toJson());
         for (Peer p : control.peers) {
             send(p.socket, TRANSACTION, txn.toJson());
         }
@@ -572,6 +575,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         return false;
     }
     private void updateChain(Socket sock) throws Exception {
+        System.out.println("Requesting up to date chain");
         send(sock, CHAINREQUEST, control.chain.getHash());
     }
     private void sendHash(ArrayList<Transaction> t) throws Exception {
