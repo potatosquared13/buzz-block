@@ -35,35 +35,37 @@ v4.get_peers()
 
 time.sleep(2)
 
-input("Press enter to start sending transactions ")
-v2.send_transaction(1, c9.identity, 59)
-v1.send_transaction(1, c1.identity, 59)
-v1.send_transaction(1, c2.identity, 59)
-v1.send_transaction(1, c3.identity, 79)
-v1.send_transaction(1, c4.identity, 59)
-v1.send_transaction(1, c5.identity, 59)
+# if (input("Press enter to start sending transactions ") == 'q'):
+#     stop()
+#     exit()
+# v2.send_transaction(1, c9.identity, 59)
+# v1.send_transaction(1, c1.identity, 59)
+# v1.send_transaction(1, c2.identity, 59)
+# v1.send_transaction(1, c3.identity, 79)
+# v1.send_transaction(1, c4.identity, 59)
+# v1.send_transaction(1, c5.identity, 59)
 
-time.sleep(2)
+# time.sleep(2)
 
-v2.send_transaction(1, c9.identity, 149)
-v2.send_transaction(1, c0.identity, 149)
-v2.send_transaction(1, c9.identity, 59)
+# v2.send_transaction(1, c9.identity, 149)
+# v2.send_transaction(1, c0.identity, 149)
+# v2.send_transaction(1, c9.identity, 59)
 
-time.sleep(2)
+# time.sleep(2)
 
-v3.send_transaction(1, c7.identity, 49)
-v3.send_transaction(1, c8.identity, 49)
-v3.send_transaction(1, c0.identity, 49)
-v2.send_transaction(1, c9.identity, 59)
-v3.send_transaction(1, c9.identity, 59)
+# v3.send_transaction(1, c7.identity, 49)
+# v3.send_transaction(1, c8.identity, 49)
+# v3.send_transaction(1, c0.identity, 49)
+# v2.send_transaction(1, c9.identity, 59)
+# v3.send_transaction(1, c9.identity, 59)
 
-time.sleep(2)
+# time.sleep(2)
 
-v4.send_transaction(1, c3.identity, 79)
-v4.send_transaction(1, c4.identity, 29)
-v2.send_transaction(1, c9.identity, 59)
+# v4.send_transaction(1, c3.identity, 79)
+# v4.send_transaction(1, c4.identity, 29)
+# v2.send_transaction(1, c9.identity, 59)
 
-print("done")
+# print("done")
 
 def stop(): # hammer time
     v1.stop()
