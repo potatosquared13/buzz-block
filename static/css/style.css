@@ -1,0 +1,85 @@
+body {
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  position: relative;
+}
+
+#header {
+  background-color: darkslategray;
+  color: white;
+  text-align: center;
+  font-size: 3vw;
+  margin-top: 0;
+}
+
+.form-container {
+  float: left;
+  width: 25%;
+}
+
+.scrolling {
+  margin-top: 2.65vw;
+  overflow: scroll;
+  height: 30vw;
+}
+
+h4 {
+  background-color: darkblue;
+  color: white;
+}
+
+form {
+  border-radius: 2vw;
+  padding-top: 0vw;
+  text-align: center;
+  font-size: 2vw;
+  margin: 0 auto;
+  width: 20vw;
+  background-color: cornflowerblue;
+  height: 30vw;
+}
+
+input {
+  font-size: 1.3vw;
+  text-align: center;
+  margin-bottom: 2vw;
+}
+
+#finalize {
+  font-size: 5vw;
+  text-align: center;
+}
+
+.submit {
+  font-size: 1.5vw;
+  text-align: center;
+}
+
+#closed-notification {
+  position: absolute;
+  font-size: 3vw;
+  left: 15%; 
+  top: 33%;
+}
+
+#transactions-container {
+  width: 80%;
+  margin: 0 auto;
+  overflow: scroll;
+  height: 45vw;
+  border: black solid 1px;
+}
+
+table, thead, th, tbody, td, tr {
+  border: black solid 1px;
+  border-collapse: collapse;
+}
+
+table {
+  text-align: center;
+  width: 100%;
+}
+
+thead {
+  background-color: darkblue;
+  color: white;
+}

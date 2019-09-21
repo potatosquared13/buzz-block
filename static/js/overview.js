@@ -2,7 +2,7 @@ window.onload = () => {
 
   setTimeout(() => {
     update();
-  }, 5000);
+  }, 3000);
 
 }
 
