@@ -13,31 +13,8 @@ app = Flask(__name__)
 # for registration
 clients = []
 vendors = []
-transactions = []
 
-# create a client and a transaction to add balance into the blockchain
-# name should be a string, amount should be a float or int
-def create_client(name, contact, amount, is_vendor):
-    c = Client(name)
-    clients.append((c, contact, amount, is_vendor))
-    transaction = Transaction(2, "add funds", c.identity, amount)
-    l.client.sign(transaction)
-    transactions.append(transaction)
-    db.insert(c, contact, amount, is_vendor)
-    c.export()
-
-def save_client(client_id, name, contact, amount, is_vendor):
-    c = Client(name)
-    client = {'id': client_id, 'name': name, 'contact': contact, 'amount': amount, 'is_vendor': is_vendor}
-    create_client(name, contact, amount, int(is_vendor))
-    clients = json.load(open('clients.json', 'r'))
-    clients['clients'].append(client)
-    storage = open('clients.json', 'w+')
-    storage.write(jsonify(clients))
-
-# create the genesis block, which introduces the initial balance for all clients to the blockchain
-# so that the balance can be determined by reading through the blockchain in the future
-# def finalize_for_real():
+node = Leader()
 
 @app.route('/')
 def home():
@@ -65,13 +42,24 @@ def register_vendor():
     name = request.args.get('name')
     contact = request.args.get('contact')
     vendors.append((name, contact))
-    print('helo')
     print(vendors)
     return ''
 
 @app.route('/finalize', methods=['POST'])
 def finalize():
-    pass
+    transactions = []
+    for client in clients:
+        c = Client(client[0])
+        c.export()
+        db.insert(c, client[1], client[2])
+        transactions.append(Transaction(1, node.client.identity, c.identity[:96], client[2]))
+    for vendor in vendors:
+        c = Client(vendor[0])
+        c.export()
+        db.insert(v, vendor[1], 0, 1)
+    node.chain.genesis(transactions)
+    node.chain.export()
+    return ''
 
 # for toggling the leader
 @app.route('/toggle')
