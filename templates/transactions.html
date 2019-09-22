@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Transactions</title>
   <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
+  <script src="../static/js/transactions.js"></script>
 </head>
 
 <body>
@@ -33,13 +34,22 @@
             <th scope="col">amount</th>
             <th scope="col">timestamp</th>
           </tr>
-          {% for transaction in transactions%}
-            <tr>
-              <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
-              <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
-              <td style="width: 15%; text-align: center">{{transaction.amount}}</td>
-              <td style="width: 25%; text-align: center">{{transaction.timestamp}}</td>
-            </tr>
+
+          {% set ns = namespace(t_index = 0) %}
+
+          {% for block in blocks %}
+
+            {% for transaction in block.transactions %}
+              <tr>
+                <td style="width: 30%; text-align: center">{{t_senders[ns.t_index].name}} ({{(transaction.sender[:8])}})</td>
+                <td style="width: 30%; text-align: center">{{t_recipients[ns.t_index].name}} ({{(transaction.address[:8])}})</td>
+                <td style="width: 15%; text-align: center">{{transaction.amount}}</td>
+                <td style="width: 25%; text-align: center">{{transaction.timestamp}}</td>
+              </tr>
+            {% set ns.t_index = ns.t_index + 1%}
+
+            {% endfor %}
+
           {% endfor %}
         </table>
         <br/><br/><br/>pending<br/><br/>
@@ -50,14 +60,22 @@
               <th scope="col">amount</th>
               <th scope="col">timestamp</th>
             </tr>
-            {% for transaction in transactions%}
-              <tr>
-                <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
-                <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
-                <td style="width: 15%; text-align: center">{{transaction.amount}}</td>
-                <td style="width: 25%; text-align: center">{{transaction.timestamp}}</td>
-              </tr>
+
+            {% set ns = namespace(pt_index=0) %}
+
+            {% for pending_transaction in pending_transactions %}
+
+            <tr>
+              <td style="width: 30%; text-align: center">{{pt_senders[ns.t_index].name}} ({{(pending_transaction.sender[:8])}})</td>
+              <td style="width: 30%; text-align: center">{{pt_recipients[ns.t_index].name}} ({{(pending_transaction.address[:8])}})</td>
+              <td style="width: 15%; text-align: center">{{pending_transaction.amount}}</td>
+              <td style="width: 25%; text-align: center">{{pending_transaction.timestamp}}</td>
+            </tr>
+
+            {% set ns.pt_index = ns.pt_index + 1%}
+
             {% endfor %}
+
           </table>
 
     </div>

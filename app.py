@@ -13,8 +13,42 @@ app = Flask(__name__)
 # for registration
 clients = []
 vendors = []
+saved_state_initialized = False
+pending_transactions_saved_state = None
 
 node = Leader()
+
+def get_transactions():
+    t_senders = []
+    t_recipients = []
+    pt_senders = []
+    pt_recipients = []
+    if pending_transactions_saved_state != node.pending_transactions:
+        pending_transactions_saved_state = node.pending_transactions
+    for block in node.chain.blocks:
+        for t in block.transactions:
+            t_sender = db.search(t.sender)
+            if t_sender is not None:
+                t_senders.append(t_sender)
+            else:
+                t_senders.append('unnamed')
+            t_recipient = db.search(t.address)
+            if t_recipient is not None:
+                t_recipients.append(t_recipient)
+            else:
+                t_recipients.append('unnamed')
+    for pt in node.pending_transactions:
+        pt_sender = db.search(pt.sender)
+        if pt_sender is not None:
+            pt_senders.append(pt_sender)
+        else:
+            pt_senders.append('unnamed')
+        pt_recipient = db.search(pt.address)
+        if pt_recipient is not None:
+            pt_recipients.append(pt_recipient)
+        else:
+            pt_recipients.append('unnamed')
+    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=node.pending_transactions, pt_senders=pt_senders, pt_recipients=pt_recipients)
 
 @app.route('/')
 def home():
@@ -24,9 +58,12 @@ def home():
 
 @app.route('/transactions')
 def overview():
+    if not saved_state_initialized:
+        pending_transactions_saved_state = node.pending_transactions
+        saved_state_initialized = True
     url_for('static', filename='js/transactions.js')
     url_for('static', filename='css/style.css')
-    return render_template('transactions.html')
+    return get_transactions()
 
 @app.route('/register_client', methods=['POST'])
 def register_client():
@@ -45,7 +82,7 @@ def register_vendor():
     print(vendors)
     return ''
 
-@app.route('/finalize', methods=['POST'])
+@app.route('/finalize')
 def finalize():
     transactions = []
     for client in clients:
@@ -54,15 +91,24 @@ def finalize():
         db.insert(c, client[1], client[2])
         transactions.append(Transaction(1, node.client.identity, c.identity[:96], client[2]))
     for vendor in vendors:
-        c = Client(vendor[0])
-        c.export()
+        v = Client(vendor[0])
+        v.export()
         db.insert(v, vendor[1], 0, 1)
     node.chain.genesis(transactions)
     node.chain.export()
-    return ''
+    return get_transactions()
 
 # for toggling the leader
 @app.route('/toggle')
 def toggle():
-    l = Leader(10)
-    l.start() # change here if needed
+    if node.active:
+        node.stop()
+    else:
+        node.start()
+
+@app.route('/check_transactions_changed')
+def check_transactions_changed():
+    if pending_transactions_saved_state != node.pending_transactions:
+        return get_transactions()
+    else:
+        return ''

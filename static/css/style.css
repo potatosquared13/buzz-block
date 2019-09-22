@@ -13,6 +13,9 @@
   color: #aaa;
   text-align: center;
   padding-top: 4vh;
+  position: fixed;
+  width: 15%;
+  height: 100%;
 }
 
 .sidebar a {
@@ -58,9 +61,11 @@ button:hover {
 
 .main {
   flex: 0 0 75%;
-  background: #eee;
   color: #2a2a2a;
   padding: 4vh;
+  float: right;
+  width: 85%;
+  margin-left: 15%;
 }
 
 form {
