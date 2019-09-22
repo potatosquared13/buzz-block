@@ -33,12 +33,14 @@
             <th scope="col">amount</th>
             <th scope="col">timestamp</th>
           </tr>
-          <tr>
-            <td style="width: 30%; text-align: center">name (transaction.sender[:8])</td>
-            <td style="width: 30%; text-align: center">name (transaction.sender[:8])</td>
-            <td style="width: 15%; text-align: center">transaction.amount</td>
-            <td style="width: 25%; text-align: center">transaction.timestamp</td>
-          </tr>
+          {% for transaction in transactions%}
+            <tr>
+              <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
+              <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
+              <td style="width: 15%; text-align: center">{{transaction.amount}}</td>
+              <td style="width: 25%; text-align: center">{{transaction.timestamp}}</td>
+            </tr>
+          {% endfor %}
         </table>
         <br/><br/><br/>pending<br/><br/>
         <table>
@@ -48,12 +50,14 @@
               <th scope="col">amount</th>
               <th scope="col">timestamp</th>
             </tr>
-            <tr>
-                <td style="width: 30%; text-align: center">name (transaction.sender[:8])</td>
-                <td style="width: 30%; text-align: center">name (transaction.sender[:8])</td>
-                <td style="width: 15%; text-align: center">transaction.amount</td>
-                <td style="width: 25%; text-align: center">transaction.timestamp</td>
-            </tr>
+            {% for transaction in transactions%}
+              <tr>
+                <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
+                <td style="width: 30%; text-align: center">{{name}} {{(transaction.sender[:8])}}</td>
+                <td style="width: 15%; text-align: center">{{transaction.amount}}</td>
+                <td style="width: 25%; text-align: center">{{transaction.timestamp}}</td>
+              </tr>
+            {% endfor %}
           </table>
 
     </div>
