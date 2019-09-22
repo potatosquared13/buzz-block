@@ -1,85 +1,88 @@
-body {
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  position: relative;
+*{
+    margin: 0;
+    font-family: sans-serif;
+}
+#container {
+  display: flex;
+  height: 100vh;
 }
 
-.header {
-  background-color: darkslategray;
-  color: white;
+.sidebar {
+  flex: 1;
+  background: #2a2a2a;
+  color: #aaa;
   text-align: center;
-  font-size: 3vw;
-  margin-top: 0;
+  padding-top: 4vh;
 }
 
-.form-container {
-  float: left;
-  width: 25%;
+.sidebar a {
+    display: block;
+    color: #eee;
+    background: #333;
+    border: 1px solid #2b2b2b;
+    text-decoration: none;
+    width: 100%;
+    height: 10vh;
+    line-height: 10vh;
 }
 
-.scrolling {
-  margin-top: 2.65vw;
-  overflow: scroll;
-  height: 30vw;
+.sidebar a:hover {
+    color: #aaa;
+    background: #3a3a40;
 }
 
-h4 {
-  background-color: darkblue;
-  color: white;
+.main {
+  flex: 0 0 75%;
+  background: #eee;
+  color: #2a2a2a;
+  padding: 4vh;
 }
 
 form {
-  border-radius: 2vw;
-  padding-top: 0vw;
-  text-align: center;
-  font-size: 2vw;
-  margin: 0 auto;
-  width: 20vw;
-  background-color: cornflowerblue;
-  height: 30vw;
+    height: 40vh;
 }
 
-input {
-  font-size: 1.3vw;
-  text-align: center;
-  margin-bottom: 2vw;
+form input {
+    height: 4vh;
+    min-height: 24px;
+    width: 90%;
+    margin: 4px;
 }
 
-#finalize {
-  font-size: 5vw;
-  text-align: center;
-}
-
-.submit {
-  font-size: 1.5vw;
-  text-align: center;
-}
-
-#closed-notification {
-  position: absolute;
-  font-size: 3vw;
-  left: 15%; 
-  top: 33%;
-}
-
-.transactions-container {
-  width: 80%;
-  margin: 0 auto;
-  overflow: scroll;
-  height: 15vw;
-  border: black solid 1px;
-}
-
-table, thead, th, tbody, td, tr {
-  border: black solid 1px;
-  border-collapse: collapse;
+form button {
+    padding: 8px 24px;
+    margin-left: 3px;
 }
 
 table {
-  text-align: center;
-  width: 100%;
+    width: 90%;
+    outline: 1px solid #ddd;
 }
 
-thead {
-  background-color: darkblue;
-  color: white;
+tr, td {
+    /* outline: 1px solid red; */
 }
+
+th {
+    background: #ddd;
+    outline: 1px solid #ddd;
+}
+
+table {
+    border-collapse: collapse;
+  }
+  table td {
+    border: 2px solid #ddd; 
+  }
+  table tr:first-child td {
+    border-top: 0;
+  }
+  table tr td:first-child {
+    border-left: 0;
+  }
+  table tr:last-child td {
+    border-bottom: 0;
+  }
+  table tr td:last-child {
+    border-right: 0;
+  }

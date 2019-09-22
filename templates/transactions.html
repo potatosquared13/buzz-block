@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+
+  <section id="container">
+
+    <div class="sidebar">
+
+      <br/><br/>
+      status: Running/Stopped
+      <br/><br/>
+      <a href="#">REGISTRATION</a>
+      <a href="#">TRANSACTIONS</a>
+
+    </div>
+
+    <div class="main">
+
+      confirmed<br/><br/>
+        <table>
+          <tr>
+            <th scope="col">sender</th>
+            <th scope="col">recipient</th>
+            <th scope="col">amount</th>
+            <th scope="col">timestamp</th>
+          </tr>
+          <tr>
+            <td align="center" style="width: 30%">name (transaction.sender[:8])</td>
+            <td align="center" style="width: 30%">name (transaction.sender[:8])</td>
+            <td align="center" style="width: 15%">transaction.amount</td>
+            <td align="right" style="width: 25%">transaction.timestamp</td>
+          </tr>
+        </table>
+        <br/><br/><br/>pending<br/><br/>
+        <table>
+            <tr>
+              <th scope="col">sender</th>
+              <th scope="col">recipient</th>
+              <th scope="col">amount</th>
+              <th scope="col">timestamp</th>
+            </tr>
+            <tr>
+                <td align="center" style="width: 30%">name (transaction.sender[:8])</td>
+                <td align="center" style="width: 30%">name (transaction.sender[:8])</td>
+                <td align="center" style="width: 15%">transaction.amount</td>
+                <td align="right" style="width: 25%">transaction.timestamp</td>
+            </tr>
+          </table>
+
+    </div>
+
+  </section>
+
+</body>
+
+</html>

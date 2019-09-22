@@ -2,138 +2,49 @@
 
 <html lang="en-us">
 
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Registration Page</title>
-    <script src="../static/js/register.js"></script>
-    <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
-  </head>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
+</head>
 
-  <body>
+<body>
 
-    {% if can_register == True %}
+  <section id="container">
 
-      <h2 id="header">BUZZ BLOCK CLIENT REGISTRATION</h2>
+    <div class="sidebar">
 
-      <div id="registration">
+      <br/><br/>
+      status: Running/Stopped
+      <br/><br/>
+      <a href="#">REGISTRATION</a>
+      <a href="#">TRANSACTIONS</a>
 
-        <div id="forms" class="forms">
+    </div>
 
-          <div id="non-vendor" class="form-container">
+    <div class="main">
 
-            <form id="non-vendor-form">
-    
-              <h4>NON VENDOR</h4>
+      <form id="client-form">
+        CLIENT REGISTRATION<br/><br/>
+        <input placeholder="Client name" id="client-name" type="text" class="text-input" name="client-name" /><br />
+        <input placeholder="Contact number" id="client-contact" type="text" class="text-input" name="client-contact" /><br />
+        <input placeholder="Amount" id="client-amount" type="text" class="text-input" name="client-amount" /><br />
+        <button id="client-add" type="button">add</button>
+      </form>
 
-              NAME <br /> <input id="non-vendor-name" type="text" class="text-input" name="non-vendor-name" />
-              <br />
-              AMOUNT <br /> <input id="amount" type="text" class="text-input" name="amount" />
-              <br />
-              CONTACT NUMBER <br /> <input id="non-vendor-contact-number" type="text" class="text-input" name="non-vendor-contact-number" />
-              <br />
-              <button id="non-vendor-register" type="button" class="submit" onclick="addNonVendor()">REGISTER</button>
-    
-            </form>
+      <hr/><br/><br/>
 
-          </div>
-  
-          <div id="vendor" class="form-container">
+      <form id="vendor-form">
+        VENDOR REGISTRATION<br/><br/>
+        <input placeholder="Business name" id="vendor-name" type="text" class="text-input" name="vendor-name" /><br />
+        <input placeholder="Contact number" id="vendor-contact" type="text" class="text-input" name="vendor-contact" /><br />
+        <button id="vendor-add" type="button">add</button>
+      </form>
 
-            <form id="vendor-form">
-  
-              <h4>VENDOR</h4>
+    </div>
 
-                BUSINESS NAME <br /> <input id="vendor-name" type="text" class="text-input" name="vendor-name" />
-                <br />
-                CONTACT NUMBER <br /> <input id="vendor-contact-number" type="text" class="text-input" name="vendor-contact-number" />
-                <br />
-                <button id="vendor-register" type="button" class="submit" onclick="addVendor()">REGISTER</button>
-        
-              </form>
+  </section>
 
-          </div>
-
-          <div id="client" class="form-container scrolling">
-
-            <table id="client-table">
-
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>TYPE</th>
-                  <th>NAME</th>
-                  <th>CONTACT</th>
-                  <th>AMOUNT</th>
-                </tr>
-              </thead>
-              <tbody id="client-data">
-                
-                {% for client in clients: %}
-
-                  <tr>
-                    <td>{{client.client_id}}</td>
-                    <td>
-
-                      {% if client.is_vendor == 0 %}
-                        NV
-                      {% else %}
-                        V
-                      {% endif %}
-
-                    </td>
-                    <td>{{client.name}}</td>
-                    <td>{{client.contact}}</td>
-                    <td>{{client.amount}}</td>
-                  </tr>
-
-                {% endfor %}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-          <div id="edit" class="form-container">
-
-            <form id="edit-form">
-
-              <h4>EDIT CLIENT</h4>
-
-              NAME <br /> <input id="non-vendor-name" type="text" class="text-input" name="non-vendor-name" />
-              <br />
-              AMOUNT <br /> <input id="amount" type="text" class="text-input" name="amount" />
-              <br />
-              CONTACT NUMBER <br /> <input id="non-vendor-contact-number" type="text" class="text-input" name="non-vendor-contact-number" />
-              <br />
-              <button id="non-vendor-register" type="button" class="submit" onclick="addNonVendor()">REGISTER</button>
-
-            </form>
-
-          </div>
-  
-        </div>
-
-        <br />
-
-        <div id="finalize">
-          <br />
-          <button id="finalize-button" type="button" class="submit" onclick="finalize()">FINALIZE</button>
-        </div>
-
-      </div>
-      
-    {% else %}
-
-      <div id="closed-notification">
-
-        <h1 id="closed">REGISTRATION IS CLOSED</h1>
-
-      </div>
-
-    {% endif %}
-
-  </body>
+</body>
 
 </html>
