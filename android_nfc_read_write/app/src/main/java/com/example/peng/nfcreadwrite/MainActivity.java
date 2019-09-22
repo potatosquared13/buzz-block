@@ -1,8 +1,10 @@
 package com.example.peng.nfcreadwrite;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.FormatException;
@@ -15,15 +17,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
-import android.view.Gravity;
+import android.text.InputType;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.view.LayoutInflater;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,15 +40,13 @@ public class MainActivity extends Activity {
     boolean writeMode;
     Tag myTag;
     Context context;
-    PopupWindow popupWindow;
-    LinearLayout linearLayout1;
 
     TextView tvNFCContent, tvBalance;
     Button btnWrite, btnGetBalance, btnStartNode, btnStopNode, btnAddFunds;
-    Button closePopupBtn;
+    EditText etAmount;
     Node node;
     Client testclient;
-    Intent intent1;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,8 +60,8 @@ public class MainActivity extends Activity {
         btnStartNode    = (Button) findViewById(R.id.btnStartNode);
         btnStopNode     = (Button) findViewById(R.id.btnStopNode);
         btnAddFunds     = (Button) findViewById(R.id.btnAddFunds);
-        linearLayout1   = (LinearLayout) findViewById(R.id.linearLayout1);
         tvBalance       = (TextView) findViewById(R.id.tvBalance);
+        etAmount        = (EditText) findViewById(R.id.etAmount);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -101,51 +99,43 @@ public class MainActivity extends Activity {
             }
         });
 
+        /**GET BALANCE**/
         btnGetBalance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
-                //instantiate the popup.xml layout file
-//                LayoutInflater layoutInflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//                View customView = layoutInflater.inflate(R.layout.popup,null);
-//
-//                closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);
-//
-//                //instantiate popup window
-//                popupWindow = new PopupWindow(customView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-//
-//                //display the popup window
-//                popupWindow.showAtLocation(linearLayout1, Gravity.CENTER, 0, 0);
-//
-//                /* GET BALANCE */
-////                System.out.println(node.control.chain.blocks.size());
-////                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
-//
-//                if(myTag == null) {
-                    tvBalance.setText(String.valueOf(node.getBalance(tvNFCContent.getText().toString())));
-//                    popupWindow.dismiss();
-//                } else {
-//                    Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
-//                    popupWindow.dismiss();
-//                }
+                String balance = "Balance: P" + node.getBalance(tvNFCContent.getText().toString());
+                tvBalance.setText(balance);
+            }
+        });
 
-//                if(myTag == null) {
-//
-//                } else {
-////                    Double balance = node.getBalance(testclient.getIdentity().substring(0,96));
-//                    tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
-//                    popupWindow.dismiss();
-//                }
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add Funds");
+        final EditText input = new EditText(this);
+        /**ADD FUNDS**/
+        btnAddFunds.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Set up the input
+                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                builder.setView(input);
 
-                //close the popup window on button click
-//                closePopupBtn.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View v) {
-//                        popupWindow.dismiss();
-//                    }
-//                });
-//
-//                popupWindow.dismiss();
+                // Set up the buttons
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        double amount = Double.parseDouble(input.getText().toString());
+                        node.sendTransaction(2, tvNFCContent.getText().toString(), amount);
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
             }
         });
 

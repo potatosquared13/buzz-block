@@ -21,15 +21,19 @@
     <TextView
         android:id="@+id/nfc_contents"
         android:layout_width="424dp"
-        android:layout_height="57dp"
+        android:layout_height="28dp"
+        android:text="ID"
         android:textAlignment="center"
-        android:textSize="60sp" />
+        android:textSize="10sp" />
 
     <TextView
         android:id="@+id/tvBalance"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="Balance" />
+        android:layout_height="78dp"
+        android:text="Balance"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textSize="45sp" />
 
     <Button
         android:id="@+id/btnStartNode"
@@ -44,17 +48,24 @@
         android:text="Stop Node" />
 
     <Button
-        android:id="@+id/btnSendTransaction"
-        android:layout_width="match_parent"
-        android:layout_height="86dp"
-        android:text="Send Transactions" />
-
-    <Button
         android:id="@+id/btnGetBalance"
         android:layout_width="match_parent"
         android:layout_height="87dp"
         android:onClick="getBalance"
         android:text="Get Balance" />
+
+    <EditText
+        android:id="@+id/etAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="number" />
+
+    <Button
+        android:id="@+id/btnSendTransaction"
+        android:layout_width="match_parent"
+        android:layout_height="86dp"
+        android:text="Send Transactions" />
 
     <Button
         android:id="@+id/btnAddFunds"
