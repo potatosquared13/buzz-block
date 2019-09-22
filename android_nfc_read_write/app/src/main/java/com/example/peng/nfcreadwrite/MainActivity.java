@@ -83,7 +83,10 @@ public class MainActivity extends Activity {
         writeTagFilters = new IntentFilter[] { tagDetected };
 
         if (Build.VERSION.SDK_INT > 22)
-            requestPermissions(new String[] {"android.permission.INTERNET", "android.permission.ACCESS_WIFI_STATE", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
+            requestPermissions(new String[] {"android.permission.INTERNET",
+                    "android.permission.ACCESS_WIFI_STATE",
+                    "android.permission.READ_EXTERNAL_STORAGE",
+                    "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
 
         node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
         testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
@@ -123,10 +126,7 @@ public class MainActivity extends Activity {
             // Get the Text
             text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
 
-        tvNFCContent.setText("NFC Content: " + text + ", Balance: " + node.getBalance(text));
-        System.out.println(testclient.name+" : "+testclient.getIdentity());
-        System.out.println(node.control.client.name+" : "+node.control.client.getIdentity());
-        node.sendTransaction(2, text, 20);
+        tvNFCContent.setText(text);
     }
 
 

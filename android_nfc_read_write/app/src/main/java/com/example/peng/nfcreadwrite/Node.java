@@ -50,6 +50,7 @@ import java.security.PublicKey;
 import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
 
+import static android.content.ContentValues.TAG;
 import static android.content.Context.WIFI_SERVICE;
 
 public class Node extends AsyncTask<Void, Void, Void>{
@@ -69,16 +70,16 @@ public class Node extends AsyncTask<Void, Void, Void>{
         System.out.println("Starting node");
         start();
         try {
-            getPeers();
-            Thread.sleep(4000);
-            System.out.println(control.ip + ":" + control.port);
-            while (control.leader == null) {
-                getPeers();
-                Thread.sleep(4000);
-            }
-            if (control.chain.blocks.size() == 0) {
-                updateChain(control.leader.socket);
-            }
+//            getPeers();
+//            Thread.sleep(4000);
+//            System.out.println(control.ip + ":" + control.port);
+//            while (control.leader == null) {
+//                getPeers();
+//                Thread.sleep(4000);
+//            }
+//            if (control.chain.blocks.size() == 0) {
+//                updateChain(control.leader.socket);
+//            }
             while (control.active)
                 Thread.sleep(1000);
             stop();
@@ -110,6 +111,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         }
     }
 
+    private Context mContext;
     public class Control {
         volatile Boolean active;
         volatile String ip;
@@ -167,7 +169,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
     private class TCPListener implements Runnable {
         boolean isActive = false;
         private Thread t;
-        TCPListener(Context mContext){
+        TCPListener(){
             int iip = ((WifiManager) mContext.getApplicationContext().getSystemService(WIFI_SERVICE)).getConnectionInfo().getIpAddress();
             iip = (ByteOrder.nativeOrder().equals(ByteOrder.LITTLE_ENDIAN)) ? Integer.reverseBytes(iip) : iip;
             byte[] ip = BigInteger.valueOf(iip).toByteArray();
@@ -184,7 +186,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             ServerSocket sock;
             Socket c;
             try {
-                sock = new ServerSocket(0, 8, Inet4Address.getByName(control.ip));
+                sock = new ServerSocket(62757, 8, Inet4Address.getByName(control.ip));
                 while (control.port == 0) {
                     control.port = sock.getLocalPort();
                     Thread.sleep(1000);
@@ -382,10 +384,11 @@ public class Node extends AsyncTask<Void, Void, Void>{
         }
     }
 
-    TCPListener tcp;
-    UDPListener udp;
+    private TCPListener tcp;
+    private UDPListener udp;
 
-    Node(File clientFile, Context mContext) {
+    Node(File clientFile, Context c) {
+        mContext = c;
         control.client = new Client(clientFile);
         control.active = false;
         control.ip = null;
@@ -407,7 +410,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 e.printStackTrace();
             }
         }
-        tcp = new TCPListener(mContext);
+        tcp = new TCPListener();
         udp = new UDPListener();
     }
     private void start() {
@@ -417,7 +420,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             control.active = true;
         }
     }
-    void stop() throws Exception{
+    private void stop() throws Exception{
         if (control.active)
             control.active = false;
             tcp.isActive = false;
@@ -428,7 +431,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     p.socket.shutdownOutput();
                 }
     }
-    public void send(final Socket s, final int t, final String m) {
+    private void send(final Socket s, final int t, final String m) {
         new Thread((new Runnable(){
             public void run(){
                 try {
@@ -454,7 +457,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             }
         })).start();
     }
-    public Message receive(Peer p) throws IOException {
+    private Message receive(Peer p) throws IOException {
         DataInputStream input = new DataInputStream(p.socket.getInputStream());
 
         // read message length
@@ -504,9 +507,16 @@ public class Node extends AsyncTask<Void, Void, Void>{
 //        }
         return new Message(type, msg);
     }
-    public void getPeers() throws Exception {
+    private void getPeers() throws Exception {
         while (control.ip == null || control.port == 0)
             Thread.sleep(1000);
+//        WifiManager wifiManager = (WifiManager)mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//        WifiManager.WifiLock wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, TAG);
+//        WifiManager.MulticastLock multicastLock = wifiManager.createMulticastLock(TAG);
+//        multicastLock.setReferenceCounted(true);
+//        wifiLock.acquire();
+//        multicastLock.acquire();
+
         byte[] msg = ("62757a7aGP" + control.port).getBytes();
         MulticastSocket ms = new MulticastSocket();
         InetAddress group = InetAddress.getByName("224.98.117.122");
@@ -514,6 +524,9 @@ public class Node extends AsyncTask<Void, Void, Void>{
         System.out.println("Sending broadcast message ("+new String(msg)+")");
         ms.send(dp);
         ms.close();
+
+//        multicastLock.release();
+//        wifiLock.release();
     }
     public void sendTransaction(int t, String i, double a) {
         while (control.active && control.pending_block != null)
