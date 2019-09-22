@@ -13,12 +13,16 @@ app = Flask(__name__)
 # for registration
 clients = []
 vendors = []
-saved_state_initialized = False
 pending_transactions_saved_state = None
 
 node = Leader()
 
+print(node.pending_transactions)
+
 def get_transactions():
+    global pending_transactions_saved_state
+    if pending_transactions_saved_state is None:
+        pending_transactions_saved_state = node.pending_transactions
     t_senders = []
     t_recipients = []
     pt_senders = []
@@ -48,7 +52,7 @@ def get_transactions():
             pt_recipients.append(pt_recipient)
         else:
             pt_recipients.append('unnamed')
-    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=node.pending_transactions, pt_senders=pt_senders, pt_recipients=pt_recipients)
+    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients)
 
 @app.route('/')
 def home():
@@ -58,9 +62,6 @@ def home():
 
 @app.route('/transactions')
 def overview():
-    if not saved_state_initialized:
-        pending_transactions_saved_state = node.pending_transactions
-        saved_state_initialized = True
     url_for('static', filename='js/transactions.js')
     url_for('static', filename='css/style.css')
     return get_transactions()
@@ -103,12 +104,16 @@ def finalize():
 def toggle():
     if node.active:
         node.stop()
+        print('node stopped')
     else:
         node.start()
+        print('node started')
+    return ''
 
 @app.route('/check_transactions_changed')
 def check_transactions_changed():
     if pending_transactions_saved_state != node.pending_transactions:
+        print('changes were made')
         return get_transactions()
     else:
         return ''

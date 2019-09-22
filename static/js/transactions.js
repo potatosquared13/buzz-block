@@ -1,8 +1,13 @@
 window.onload = () => {
+  setInterval(checkTransactionsChanged, 1000);
+}
 
-  setInterval(() => {
+function toggleNode() {
 
-  }, 1000);
+  let xhr = new XMLHttpRequest();
+
+  xhr.open('GET', '/toggle', true);
+  xhr.send();
 
 }
 
