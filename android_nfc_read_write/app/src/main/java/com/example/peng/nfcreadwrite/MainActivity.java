@@ -110,11 +110,12 @@ public class MainActivity extends Activity {
         });
 
         /**ADD FUNDS**/
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        final EditText input = new EditText(this);
+
         btnAddFunds.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                final EditText input = new EditText(MainActivity.this);
                 // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
                 builder.setTitle("Add Funds");
                 input.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -144,6 +145,9 @@ public class MainActivity extends Activity {
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                final EditText input = new EditText(MainActivity.this);
+                builder.show();
                 builder.setTitle("Payment");
                 input.setInputType(InputType.TYPE_CLASS_NUMBER);
                 builder.setView(input);
@@ -163,8 +167,6 @@ public class MainActivity extends Activity {
                         dialog.cancel();
                     }
                 });
-
-                builder.show();
             }
         });
 
