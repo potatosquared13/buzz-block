@@ -6,10 +6,10 @@ from node import *
 
 class Leader(Node):
     def __init__(self, block_size, debug=False):
-        if (not os.path.isfile('./admin.key')):
+        if (not os.path.isfile('clients/admin.key')):
             self.client = Client("admin")
             self.client.export()
-        super().__init__("admin.key", debug)
+        super().__init__("clients/admin.key", debug)
         self.new_funds = []
         self.block_size = block_size
 

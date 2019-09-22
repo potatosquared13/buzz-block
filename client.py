@@ -78,6 +78,9 @@ class Client:
         filename = re.sub('[^\w\s-]', '', filename).strip().lower()
         filename = re.sub('[-\s]+', '-', filename)
         filename = filename + ".key"
+        if (not os.path.exists('clients')):
+            os.makedirs('clients')
+        filename = "clients/"+filename
         with open(filename, 'w') as f:
             f.write(f"{self.name}\n{''.join(private_key.splitlines())}\n{''.join(public_key.splitlines())}")
         # with open("private.pem", 'w') as f:
