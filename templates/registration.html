@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registration</title>
   <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
+  <script src="../static/js/register.js"></script>
 </head>
 <body>
 
@@ -15,7 +17,7 @@
       </div>
       <div class="ph">
         <a href="#">REGISTRATION</a>
-        <a href="#">TRANSACTIONS</a>
+        <a href="/transactions">TRANSACTIONS</a>
       </div>
     </div>
 
@@ -26,7 +28,7 @@
         <input placeholder="Client name" id="client-name" type="text" class="text-input" name="client-name" /><br />
         <input placeholder="Contact number" id="client-contact" type="text" class="text-input" name="client-contact" /><br />
         <input placeholder="Amount" id="client-amount" type="text" class="text-input" name="client-amount" /><br />
-        <button id="client-add" type="button">add</button>
+        <button id="client-add" type="button" onclick="registerClient()">add</button>
       </form>
 
       <hr/><br/><br/>
@@ -35,7 +37,7 @@
         VENDOR REGISTRATION<br/><br/>
         <input placeholder="Business name" id="vendor-name" type="text" class="text-input" name="vendor-name" /><br />
         <input placeholder="Contact number" id="vendor-contact" type="text" class="text-input" name="vendor-contact" /><br />
-        <button id="vendor-add" type="button">add</button>
+        <button id="vendor-add" type="button" onclick="registerVendor()">add</button>
       </form>
 
     </div>
