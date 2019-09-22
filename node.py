@@ -96,7 +96,7 @@ class Node(threading.Thread):
                     sock.listen(8)
                     c, addr = sock.accept()
                     id = hexlify(c.recv(96)).decode()
-                    if (not [peer for p in self.peers if p.identity == id]):
+                    if (not [p for p in self.peers if p.identity == id]):
                         peer = Peer(c, c.getpeername(), id)
                         self.peers.add(peer)
                         c.sendall(unhexlify(self.client.identity))
@@ -119,7 +119,8 @@ class Node(threading.Thread):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 try:
-                    sock.bind(self.address)
+                    # sock.bind(self.address)
+                    logging.debug(f"Attempting to connect to {addr[0]}:{addr[1]}")
                     sock.connect(addr)
                     sock.settimeout(4)
                     sock.sendall(unhexlify(self.client.identity))
@@ -213,6 +214,9 @@ class Node(threading.Thread):
     # broadcast connect message to network to discover peers
     # nodes receiving this broadcast that aren't already connected will try to connect
     def get_peers(self):
+        logging.debug("Sending peer discovery broadcast")
+        while (self.address is None):
+            time.sleep(1)
         msg = "62757a7aGP" + str(self.address[1])
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
             sock.setsockopt(socket.SOL_IP, socket.IP_MULTICAST_IF, socket.inet_aton(self.address[0]))
@@ -238,7 +242,6 @@ class Node(threading.Thread):
                     msg = data.decode()
                     if (msg.startswith('62757a7aGP')):
                         port = int(msg[10:])
-                        logging.debug(f"Attempting to connect to {addr[0]}:{port}")
                         if ((addr[0], port) != self.address):
                             self.connect((addr[0], port))
                 except socket.error:
@@ -336,7 +339,7 @@ class Node(threading.Thread):
         start = time.time()
         while (time.time() - start < 60 and len(self.hashes) <= len(self.peers)):
             time.sleep(2)
-            print(f"{len(self.hashes)}/{len(self.peers)}")
+            # print(f"{len(self.hashes)}/{len(self.peers)}")
         hashes = [h[1] for h in self.hashes]
         if (len(hashes) < len(self.peers) + 1):
             hashes += ['0'] * (1 + len(self.peers) - len(hashes))

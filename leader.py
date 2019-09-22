@@ -35,8 +35,7 @@ class Leader(Node):
     def record_transaction(self, transaction, peer_identity):
         sender = db.search(transaction.sender)
         recipient = db.search(transaction.address)
-        if (transaction.sender != transaction.address and
-            self.is_valid_transaction(transaction, peer_identity)):
+        if (sender and recipient and transaction.sender != transaction.address and self.is_valid_transaction(transaction, peer_identity)):
             if (transaction.transaction == 1 and sender.pending_balance >= transaction.amount):
                 db.update_pending(transaction.sender, transaction.address, transaction.amount)
             elif (transaction.transaction == 2 and recipient.is_vendor == "no"):
@@ -56,6 +55,14 @@ class Leader(Node):
                 threading.Thread(target=self.sleep).start()
                 while (self.address is None):
                     time.sleep(1)
+                while(self.active):
+                    peers = len(self.peers)
+                    self.get_peers()
+                    time.sleep(1)
+                    if (len(self.peers) != peers):
+                        time.sleep(2)
+                    else:
+                        time.sleep(28)
                 self.leader = Peer(None, self.address, self.client.identity)
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
