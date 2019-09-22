@@ -65,7 +65,7 @@
         android:id="@+id/btnSendTransaction"
         android:layout_width="match_parent"
         android:layout_height="86dp"
-        android:text="Send Transactions" />
+        android:text="Pay" />
 
     <Button
         android:id="@+id/btnAddFunds"

@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
     Context context;
 
     TextView tvNFCContent, tvBalance;
-    Button btnWrite, btnGetBalance, btnStartNode, btnStopNode, btnAddFunds;
+    Button btnWrite, btnGetBalance, btnStartNode, btnStopNode, btnAddFunds, btnSendTransaction;
     EditText etAmount;
     Node node;
     Client testclient;
@@ -54,14 +54,15 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        tvNFCContent    = (TextView) findViewById(R.id.nfc_contents);
-        btnWrite        = (Button) findViewById(R.id.btnWrite);
-        btnGetBalance   = (Button) findViewById(R.id.btnGetBalance);
-        btnStartNode    = (Button) findViewById(R.id.btnStartNode);
-        btnStopNode     = (Button) findViewById(R.id.btnStopNode);
-        btnAddFunds     = (Button) findViewById(R.id.btnAddFunds);
-        tvBalance       = (TextView) findViewById(R.id.tvBalance);
-        etAmount        = (EditText) findViewById(R.id.etAmount);
+        tvNFCContent        = (TextView) findViewById(R.id.nfc_contents);
+        btnWrite            = (Button) findViewById(R.id.btnWrite);
+        btnGetBalance       = (Button) findViewById(R.id.btnGetBalance);
+        btnStartNode        = (Button) findViewById(R.id.btnStartNode);
+        btnStopNode         = (Button) findViewById(R.id.btnStopNode);
+        btnAddFunds         = (Button) findViewById(R.id.btnAddFunds);
+        btnSendTransaction  = (Button) findViewById(R.id.btnSendTransaction);
+        tvBalance           = (TextView) findViewById(R.id.tvBalance);
+        etAmount            = (EditText) findViewById(R.id.etAmount);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,15 +109,14 @@ public class MainActivity extends Activity {
             }
         });
 
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Funds");
-        final EditText input = new EditText(this);
         /**ADD FUNDS**/
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final EditText input = new EditText(this);
         btnAddFunds.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Set up the input
                 // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                builder.setTitle("Add Funds");
                 input.setInputType(InputType.TYPE_CLASS_NUMBER);
                 builder.setView(input);
 
@@ -126,6 +126,35 @@ public class MainActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         double amount = Double.parseDouble(input.getText().toString());
                         node.sendTransaction(2, tvNFCContent.getText().toString(), amount);
+                        dialog.cancel();
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
+            }
+        });
+
+        /**PAYMENT**/
+        btnSendTransaction.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                builder.setTitle("Payment");
+                input.setInputType(InputType.TYPE_CLASS_NUMBER);
+                builder.setView(input);
+
+                // Set up the buttons
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        double amount = Double.parseDouble(input.getText().toString());
+                        node.sendTransaction(1, tvNFCContent.getText().toString(), amount);
+                        dialog.cancel();
                     }
                 });
                 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
