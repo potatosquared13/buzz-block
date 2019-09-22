@@ -284,9 +284,9 @@ class Node(threading.Thread):
         while(self.active and self.pending_block is not None):
             time.sleep(1)
         if (transaction_type == 1):
-            transaction = Transaction(1, identity, self.client.identity, amount)
+            transaction = Transaction(1, identity[:96], self.client.identity, amount)
         elif (transaction_type == 2):
-            transaction = Transaction(2, self.client.identity, identity, amount)
+            transaction = Transaction(2, self.client.identity, identity[:96], amount)
         self.client.sign(transaction)
         self.pending_transactions.append(transaction)
         for peer in self.peers.copy():
