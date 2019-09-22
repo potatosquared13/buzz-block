@@ -20,10 +20,16 @@
 
     <TextView
         android:id="@+id/nfc_contents"
-        android:layout_width="match_parent"
-        android:layout_height="91dp"
+        android:layout_width="424dp"
+        android:layout_height="57dp"
         android:textAlignment="center"
         android:textSize="60sp" />
+
+    <TextView
+        android:id="@+id/tvBalance"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Balance" />
 
     <Button
         android:id="@+id/btnStartNode"

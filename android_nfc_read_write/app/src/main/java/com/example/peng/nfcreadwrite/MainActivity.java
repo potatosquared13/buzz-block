@@ -43,7 +43,7 @@ public class MainActivity extends Activity {
     PopupWindow popupWindow;
     LinearLayout linearLayout1;
 
-    TextView tvNFCContent;
+    TextView tvNFCContent, tvBalance;
     Button btnWrite, btnGetBalance, btnStartNode, btnStopNode, btnAddFunds;
     Button closePopupBtn;
     Node node;
@@ -56,13 +56,14 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        tvNFCContent = (TextView) findViewById(R.id.nfc_contents);
-        btnWrite = (Button) findViewById(R.id.btnWrite);
-        btnGetBalance = (Button) findViewById(R.id.btnGetBalance);
-        btnStartNode = (Button) findViewById(R.id.btnStartNode);
-        btnStopNode = (Button) findViewById(R.id.btnStopNode);
-        btnAddFunds = (Button) findViewById(R.id.btnAddFunds);
-        linearLayout1 = (LinearLayout) findViewById(R.id.linearLayout1);
+        tvNFCContent    = (TextView) findViewById(R.id.nfc_contents);
+        btnWrite        = (Button) findViewById(R.id.btnWrite);
+        btnGetBalance   = (Button) findViewById(R.id.btnGetBalance);
+        btnStartNode    = (Button) findViewById(R.id.btnStartNode);
+        btnStopNode     = (Button) findViewById(R.id.btnStopNode);
+        btnAddFunds     = (Button) findViewById(R.id.btnAddFunds);
+        linearLayout1   = (LinearLayout) findViewById(R.id.linearLayout1);
+        tvBalance       = (TextView) findViewById(R.id.tvBalance);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -121,7 +122,7 @@ public class MainActivity extends Activity {
 //                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
 
                 if(myTag == null) {
-                    tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
+                    tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
                     popupWindow.dismiss();
                 } else {
                     Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
@@ -204,7 +205,7 @@ public class MainActivity extends Activity {
             // Get the Text
         text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
 
-//        tvNFCContent.setText(text);
+        tvNFCContent.setText(text);
     }
 
     /******************************************************************************
