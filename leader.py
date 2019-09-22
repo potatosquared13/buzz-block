@@ -46,6 +46,16 @@ class Leader(Node):
             return True
         return False
 
+    def advertise(self):
+        while(self.active):
+            peers = len(self.peers)
+            self.get_peers()
+            time.sleep(1)
+            if (len(self.peers) != peers):
+                time.sleep(2)
+            else:
+                time.sleep(28)
+
     def start(self):
         try:
             if (not self.active):
@@ -55,15 +65,8 @@ class Leader(Node):
                 threading.Thread(target=self.sleep).start()
                 while (self.address is None):
                     time.sleep(1)
-                while(self.active):
-                    peers = len(self.peers)
-                    self.get_peers()
-                    time.sleep(1)
-                    if (len(self.peers) != peers):
-                        time.sleep(2)
-                    else:
-                        time.sleep(28)
                 self.leader = Peer(None, self.address, self.client.identity)
+                threading.Thread(target=self.advertise).start()
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
