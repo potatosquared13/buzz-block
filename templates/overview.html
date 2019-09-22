@@ -74,23 +74,20 @@
           {% set ns = namespace() %}
           {% set ns.index = 0 %}
 
-          {% for block in blocks %}
       
-            {% for transaction in block.transactions %}
-        
-        
-            <tr>
-        
-              <td>{{senders[ns.index].name}} ({{transaction.sender[:8]}})</td>
-              <td>{{recipients[ns.index].name}} ({{transaction.address[:8]}})</td>
-              <td>{{transaction.amount}}</td>
-        
-            </tr>
+          {% for pending_transaction in pending_transactions %}
+      
+      
+          <tr>
+      
+            <td>{{pending_senders[ns.index].name}} ({{pending_transaction.sender[:8]}})</td>
+            <td>{{pending_recipients[ns.index].name}} ({{pending_transaction.address[:8]}})</td>
+            <td>{{pending_transaction.amount}}</td>
+      
+          </tr>
 
-                  {% set ns.index = ns.index + 1 %}
-      
-            {% endfor %}
-      
+                {% set ns.index = ns.index + 1 %}
+    
           {% endfor %}
       
         </tbody>

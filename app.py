@@ -35,10 +35,6 @@ def save_client(client_id, name, contact, amount, is_vendor):
     storage = open('clients.json', 'w+')
     storage.write(jsonify(clients))
 
-def add_funds(client_id, amount):
-    l.add_funds(client_id, amount)
-    return ''
-
 # create the genesis block, which introduces the initial balance for all clients to the blockchain
 # so that the balance can be determined by reading through the blockchain in the future
 # def finalize_for_real():
@@ -65,7 +61,9 @@ def overview():
     url_for('static', filename='js/overview.js')
     url_for('static', filename='css/style.css')
     senders = []
+    pending_senders = []
     recipients = []
+    pending_recipients = []
     for block in l.chain.blocks:
         for transaction in block.transactions:
             sender = db.search(transaction.sender)
@@ -78,10 +76,21 @@ def overview():
                 recipients.append(recipient)
             else:
                 recipients.append('unnamed')
+    for pending_transaction in l.pending_transactions:
+            pending_sender = db.search(pending_transaction.sender)
+            if pending_sender is not None:
+                pending_senders.append(pending_sender)
+            else:
+                pending_senders.append('unnamed')
+            pending_recipient = db.search(pending_transaction.address)
+            if pending_recipient is not None:
+                pending_recipients.append(recipient)
+            else:
+                pending_recipients.append('unnamed')
     print(l.pending_transactions)
     print(senders)
     print(recipients)
-    return render_template('overview.html', blocks=l.chain.blocks, senders=senders, recipients=recipients)
+    return render_template('overview.html', blocks=l.chain.blocks, senders=senders, recipients=recipients, pending_transactions=l.pending_transactions, pending_senders=pending_senders, pending_recipients=pending_recipients)
 
 @app.route('/register', methods=['POST'])
 def register():
@@ -114,6 +123,7 @@ def finalize():
     # finalize_for_real()
     return render_template('register.html', can_register=False)
 
+# for closing the leader
 @app.route('/close')
 def close():
     l.stop()
