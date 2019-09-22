@@ -66,8 +66,8 @@
             {% for pending_transaction in pending_transactions %}
 
             <tr>
-              <td style="width: 30%; text-align: center">{{pt_senders[ns.t_index].name}} ({{(pending_transaction.sender[:8])}})</td>
-              <td style="width: 30%; text-align: center">{{pt_recipients[ns.t_index].name}} ({{(pending_transaction.address[:8])}})</td>
+              <td style="width: 30%; text-align: center">{{pt_senders[ns.pt_index].name}} ({{(pending_transaction.sender[:8])}})</td>
+              <td style="width: 30%; text-align: center">{{pt_recipients[ns.pt_index].name}} ({{(pending_transaction.address[:8])}})</td>
               <td style="width: 15%; text-align: center">{{pending_transaction.amount}}</td>
               <td style="width: 25%; text-align: center">{{pending_transaction.timestamp}}</td>
             </tr>

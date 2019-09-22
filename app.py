@@ -13,22 +13,20 @@ app = Flask(__name__)
 # for registration
 clients = []
 vendors = []
-pending_transactions_saved_state = None
+pending_transactions_saved_state = []
 
 node = Leader()
 
-print(node.pending_transactions)
-
 def get_transactions():
     global pending_transactions_saved_state
-    if pending_transactions_saved_state is None:
-        pending_transactions_saved_state = node.pending_transactions
+    if len(pending_transactions_saved_state) == 0:
+        pending_transactions_saved_state = node.pending_transactions.copy()
     t_senders = []
     t_recipients = []
     pt_senders = []
     pt_recipients = []
-    if pending_transactions_saved_state != node.pending_transactions:
-        pending_transactions_saved_state = node.pending_transactions
+    if pending_transactions_saved_state != node.pending_transactions.copy():
+        pending_transactions_saved_state = node.pending_transactions.copy()
     for block in node.chain.blocks:
         for t in block.transactions:
             t_sender = db.search(t.sender)
@@ -46,7 +44,7 @@ def get_transactions():
         if pt_sender is not None:
             pt_senders.append(pt_sender)
         else:
-            pt_senders.append('unnamed')
+            pt_senders.append({name:"unnamed"})
         pt_recipient = db.search(pt.address)
         if pt_recipient is not None:
             pt_recipients.append(pt_recipient)
@@ -110,10 +108,13 @@ def toggle():
         print('node started')
     return ''
 
-@app.route('/check_transactions_changed')
+@app.route('/check_transactions_changed', methods=['POST'])
 def check_transactions_changed():
-    if pending_transactions_saved_state != node.pending_transactions:
-        print('changes were made')
-        return get_transactions()
+    print(node.pending_transactions)
+    global pending_transactions_saved_state
+    print(pending_transactions_saved_state)
+    if pending_transactions_saved_state != node.pending_transactions.copy():
+        print('changes made')
+        return 'good'
     else:
         return ''

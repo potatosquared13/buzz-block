@@ -15,7 +15,19 @@ function checkTransactionsChanged() {
 
   let xhr = new XMLHttpRequest();
 
-  xhr.open('GET', '/check_transactions_changed', true);
+  xhr.onreadystatechange = () => {
+
+    if (xhr.readyState == 4 && xhr.status == 200) {
+
+      if (xhr.responseText == 'good') {
+        window.location.href = '/transactions'
+      }
+
+    }
+
+  }
+
+  xhr.open('POST', '/check_transactions_changed', true);
   xhr.send();
 
 }
