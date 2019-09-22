@@ -117,18 +117,17 @@ public class MainActivity extends Activity {
                 popupWindow.showAtLocation(linearLayout1, Gravity.CENTER, 0, 0);
 
                 /* GET BALANCE */
-                System.out.println(node.control.chain.blocks.size());
-                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
+//                System.out.println(node.control.chain.blocks.size());
+//                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
 
-                if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(true)
-                        || NfcAdapter.ACTION_TECH_DISCOVERED.equals(true)
-                        || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(true)) {
-                    tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
+                if(myTag == null) {
+                    tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
                     popupWindow.dismiss();
                 } else {
-                    popupWindow.dismiss();
                     Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
+                    popupWindow.dismiss();
                 }
+
 //                if(myTag == null) {
 //
 //                } else {
