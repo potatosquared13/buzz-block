@@ -101,6 +101,10 @@ class Node(threading.Thread):
                         self.peers.add(peer)
                         c.sendall(unhexlify(self.client.identity))
                         threading.Thread(target=self.handle_connection, args=(peer,)).start()
+                        if (self.leader is not None):
+                            if (self.leader.address == self.address):
+                                logging.info("asserting dominance")
+                                self.send(c, LEADER, self.client.identity)
                     else:
                         c.shutdown(socket.SHUT_RDWR)
                         c.close()
@@ -127,10 +131,11 @@ class Node(threading.Thread):
                     id = hexlify(sock.recv(96)).decode()
                     peer = Peer(sock, addr, id)
                     self.peers.add(peer)
+                    threading.Thread(target=self.handle_connection, args=(peer,)).start()
                     if (self.leader is not None):
                         if (self.leader.address == self.address):
-                            self.send(sock, LEADER, self.client.identity)
-                    threading.Thread(target=self.handle_connection, args=(peer,)).start()
+                            logging.info("asserting dominance")
+                            self.send(c, LEADER, self.client.identity)
                     return True
                 except socket.timeout:
                     pass
