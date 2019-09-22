@@ -5,7 +5,7 @@ import db
 from node import *
 
 class Leader(Node):
-    def __init__(self, block_size, debug=False):
+    def __init__(self, block_size=100, debug=False):
         if (not os.path.isfile('clients/admin.key')):
             self.client = Client("admin")
             self.client.export()
