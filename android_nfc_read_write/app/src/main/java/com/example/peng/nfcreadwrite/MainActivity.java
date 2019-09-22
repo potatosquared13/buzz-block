@@ -111,8 +111,13 @@ public class MainActivity extends Activity {
                 popupWindow.showAtLocation(linearLayout1, Gravity.CENTER, 0, 0);
 
                 /* GET BALANCE */
-                Double balance = node.getBalance("");
-                tvNFCContent.setText(balance.toString());
+                if(myTag == null) {
+
+                } else {
+                    Double balance = node.getBalance("");
+                    tvNFCContent.setText(balance.toString());
+                    popupWindow.dismiss();
+                }
 
                 //close the popup window on button click
                 closePopupBtn.setOnClickListener(new View.OnClickListener() {
