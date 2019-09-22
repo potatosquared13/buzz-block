@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
         btnStopNode     = (Button) findViewById(R.id.btnStopNode);
         btnAddFunds     = (Button) findViewById(R.id.btnAddFunds);
         linearLayout1   = (LinearLayout) findViewById(R.id.linearLayout1);
-        tvBalance       = (TextView) findViewById(R.id.nfc_contents);
+        tvBalance       = (TextView) findViewById(R.id.tvBalance);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,7 +122,7 @@ public class MainActivity extends Activity {
 ////                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
 //
 //                if(myTag == null) {
-                    tvBalance.setText(String.valueOf(node.getBalance(tvNFCContent.toString())));
+                    tvBalance.setText(String.valueOf(node.getBalance(tvNFCContent.getText().toString())));
 //                    popupWindow.dismiss();
 //                } else {
 //                    Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
@@ -189,7 +189,7 @@ public class MainActivity extends Activity {
                 }
             }
             buildTagViews(msgs);
-            tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
+//            tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
         }
     }
     private void buildTagViews(NdefMessage[] msgs) {
