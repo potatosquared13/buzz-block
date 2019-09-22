@@ -78,6 +78,9 @@ def overview():
                 recipients.append(recipient)
             else:
                 recipients.append('unnamed')
+    print(l.pending_transactions)
+    print(senders)
+    print(recipients)
     return render_template('overview.html', blocks=l.chain.blocks, senders=senders, recipients=recipients)
 
 @app.route('/register', methods=['POST'])

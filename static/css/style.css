@@ -3,7 +3,7 @@ body {
   position: relative;
 }
 
-#header {
+.header {
   background-color: darkslategray;
   color: white;
   text-align: center;
@@ -61,7 +61,7 @@ input {
   top: 33%;
 }
 
-#transactions-container {
+.transactions-container {
   width: 80%;
   margin: 0 auto;
   overflow: scroll;

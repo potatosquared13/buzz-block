@@ -11,16 +11,16 @@
 
   <body>
 
-    <div id="transactions-container">
+    <h2 class="header">CONFIRMED</h2>
+
+    <div class="transactions-container">
 
       <table>
 
         <thead>
           <tr>
-            <th>SENDER NAME</th>
-            <th>SENDER ID</th>
-            <th>RECIPIENT NAME</th>
-            <th>RECIPIENT ID</th>
+            <th>SENDER</th>
+            <th>RECIPIENT</th>
             <th>AMOUNT</th>
           </tr>
         </thead>
@@ -37,10 +37,52 @@
         
             <tr>
         
-              <td>{{senders[ns.index].name}}</td>
-              <td>{{transaction.sender[:8]}}</td>
-              <td>{{recipients[ns.index].name}}</td>
-              <td>{{transaction.address[:8]}}</td>
+              <td>{{senders[ns.index].name}} ({{transaction.sender[:8]}})</td>
+              <td>{{recipients[ns.index].name}} ({{transaction.address[:8]}})</td>
+              <td>{{transaction.amount}}</td>
+        
+            </tr>
+
+                  {% set ns.index = ns.index + 1 %}
+      
+            {% endfor %}
+      
+          {% endfor %}
+      
+        </tbody>
+      
+      </table>
+
+    </div>
+
+    <h2 class="header">PENDING</h2>
+
+    <div class="transactions-container">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>SENDER</th>
+            <th>RECIPIENT</th>
+            <th>AMOUNT</th>
+          </tr>
+        </thead>
+      
+        <tbody>
+      
+          {% set ns = namespace() %}
+          {% set ns.index = 0 %}
+
+          {% for block in blocks %}
+      
+            {% for transaction in block.transactions %}
+        
+        
+            <tr>
+        
+              <td>{{senders[ns.index].name}} ({{transaction.sender[:8]}})</td>
+              <td>{{recipients[ns.index].name}} ({{transaction.address[:8]}})</td>
               <td>{{transaction.amount}}</td>
         
             </tr>
