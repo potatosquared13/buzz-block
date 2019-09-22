@@ -48,6 +48,7 @@ public class MainActivity extends Activity {
     Button closePopupBtn;
     Node node;
     Client testclient;
+    Intent intent1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -118,13 +119,24 @@ public class MainActivity extends Activity {
                 /* GET BALANCE */
                 System.out.println(node.control.chain.blocks.size());
                 System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
-                if(myTag == null) {
 
-                } else {
-//                    Double balance = node.getBalance(testclient.getIdentity().substring(0,96));
+                String action = intent1.getAction();
+                if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
+                        || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
+                        || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
                     tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
                     popupWindow.dismiss();
+                } else {
+                    popupWindow.dismiss();
+                    Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
                 }
+//                if(myTag == null) {
+//
+//                } else {
+////                    Double balance = node.getBalance(testclient.getIdentity().substring(0,96));
+//                    tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
+//                    popupWindow.dismiss();
+//                }
 
                 //close the popup window on button click
                 closePopupBtn.setOnClickListener(new View.OnClickListener() {
@@ -133,6 +145,8 @@ public class MainActivity extends Activity {
                         popupWindow.dismiss();
                     }
                 });
+
+                popupWindow.dismiss();
             }
         });
 
@@ -192,7 +206,7 @@ public class MainActivity extends Activity {
             // Get the Text
         text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
 
-        tvNFCContent.setText(text);
+//        tvNFCContent.setText(text);
     }
 
     /******************************************************************************
