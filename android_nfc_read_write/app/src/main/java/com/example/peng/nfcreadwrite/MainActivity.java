@@ -120,10 +120,9 @@ public class MainActivity extends Activity {
                 System.out.println(node.control.chain.blocks.size());
                 System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
 
-                String action = intent1.getAction();
-                if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
-                        || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
-                        || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+                if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(true)
+                        || NfcAdapter.ACTION_TECH_DISCOVERED.equals(true)
+                        || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(true)) {
                     tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
                     popupWindow.dismiss();
                 } else {
