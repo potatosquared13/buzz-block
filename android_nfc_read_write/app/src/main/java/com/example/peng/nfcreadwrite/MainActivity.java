@@ -83,21 +83,26 @@ public class MainActivity extends Activity {
         btnStartNode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                node.doInBackground();
+                if (node == null) {
+                    node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
+                    node.execute();
+                }
             }
         });
 
         btnStopNode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                node.stop();
+                if (node != null) {
+                    node.stop();
+                }
             }
         });
 
         btnGetBalance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                tvNFCContent.setText(node.getBalance();
+//                tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
                 //instantiate the popup.xml layout file
                 LayoutInflater layoutInflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 View customView = layoutInflater.inflate(R.layout.popup,null);
@@ -111,11 +116,13 @@ public class MainActivity extends Activity {
                 popupWindow.showAtLocation(linearLayout1, Gravity.CENTER, 0, 0);
 
                 /* GET BALANCE */
+                System.out.println(node.control.chain.blocks.size());
+                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
                 if(myTag == null) {
 
                 } else {
-                    Double balance = node.getBalance("");
-                    tvNFCContent.setText(balance.toString());
+//                    Double balance = node.getBalance(testclient.getIdentity().substring(0,96));
+                    tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
                     popupWindow.dismiss();
                 }
 
@@ -126,7 +133,6 @@ public class MainActivity extends Activity {
                         popupWindow.dismiss();
                     }
                 });
-
             }
         });
 
@@ -149,9 +155,8 @@ public class MainActivity extends Activity {
                     "android.permission.READ_EXTERNAL_STORAGE",
                     "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
 
-        node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
         testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
-        node.execute();
+//        node.execute();
     }
 
 

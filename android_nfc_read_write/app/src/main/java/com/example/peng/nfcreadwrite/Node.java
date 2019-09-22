@@ -73,13 +73,14 @@ public class Node extends AsyncTask<Void, Void, Void>{
 //            getPeers();
 //            Thread.sleep(4000);
 //            System.out.println(control.ip + ":" + control.port);
-//            while (control.leader == null) {
+            while (control.leader == null) {
 //                getPeers();
-//                Thread.sleep(4000);
-//            }
-//            if (control.chain.blocks.size() == 0) {
-//                updateChain(control.leader.socket);
-//            }
+                Thread.sleep(4000);
+            }
+            if (control.chain.blocks.size() == 0) {
+                System.out.println(control.leader.ip + ":" + control.leader.port);
+                updateChain(control.leader.socket);
+            }
             while (control.active)
                 Thread.sleep(1000);
             stop();
@@ -139,7 +140,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 InetAddress group = InetAddress.getByName("224.98.117.122");
                 ms.joinGroup(group);
                 isActive = true;
-//                System.out.println("Listening for broadcasts");
+                System.out.println("Listening for broadcasts");
                 while (control.active && isActive) {
                     DatagramPacket dp = new DatagramPacket(buf, buf.length);
                     ms.receive(dp);
@@ -193,7 +194,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 }
                 sock.setSoTimeout(4000);
                 isActive = true;
-//                System.out.println("Listening for connections");
+                System.out.println("Listening for connections");
                 while (control.active && isActive) {
                     byte[] buf = new byte[96];
                     c = sock.accept();
@@ -420,15 +421,19 @@ public class Node extends AsyncTask<Void, Void, Void>{
             control.active = true;
         }
     }
-    public void stop() throws Exception{
+    public void stop() {
         if (control.active)
             control.active = false;
             tcp.isActive = false;
             udp.isActive = false;
             for (Peer p : control.peers)
                 if (!p.socket.isClosed()) {
-                    p.socket.shutdownInput();
-                    p.socket.shutdownOutput();
+                    try {
+                        p.socket.shutdownInput();
+                        p.socket.shutdownOutput();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
     }
     private void send(final Socket s, final int t, final String m) {
