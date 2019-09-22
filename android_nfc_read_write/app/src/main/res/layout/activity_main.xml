@@ -4,21 +4,14 @@
     android:layout_height="fill_parent"
     android:orientation="vertical" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Write a message: ">
-    </TextView>
-
     <LinearLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="20sp" >
 
         <Button
             android:id="@+id/btnWrite"
-            android:layout_width="wrap_content"
+            android:layout_width="216dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Write" />
@@ -27,7 +20,21 @@
     <TextView
         android:id="@+id/nfc_contents"
         android:layout_width="match_parent"
-        android:layout_height="91dp" />
+        android:layout_height="91dp"
+        android:textAlignment="center"
+        android:textSize="60sp" />
+
+    <Button
+        android:id="@+id/btnStartNode"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Start Node" />
+
+    <Button
+        android:id="@+id/btnStopNode"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Stop Node" />
 
     <Button
         android:id="@+id/btnSendTransaction"
@@ -39,13 +46,14 @@
         android:id="@+id/btnGetBalance"
         android:layout_width="match_parent"
         android:layout_height="87dp"
-        android:text="Get Balance"
-        android:onClick="getBalance"/>
+        android:onClick="getBalance"
+        android:text="Get Balance" />
 
     <Button
-        android:id="@+id/btnFile"
+        android:id="@+id/btnAddFunds"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:onClick="onFile"
-        android:text="Choose File" />
+        android:layout_height="87dp"
+        android:onClick="getBalance"
+        android:text="Add Funds" />
+
 </LinearLayout>

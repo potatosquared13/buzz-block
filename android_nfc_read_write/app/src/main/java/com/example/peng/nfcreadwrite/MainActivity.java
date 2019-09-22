@@ -39,6 +39,9 @@ public class MainActivity extends Activity {
     TextView tvNFCContent;
     Button btnWrite;
     Button btnGetBalance;
+    Button btnStartNode;
+    Button btnStopNode;
+    Button btnAddFunds;
     Node node;
     Client testclient;
 
