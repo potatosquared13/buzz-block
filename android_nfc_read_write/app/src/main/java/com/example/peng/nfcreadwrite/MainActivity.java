@@ -43,7 +43,6 @@ public class MainActivity extends Activity {
 
     TextView tvNFCContent, tvBalance;
     Button btnWrite, btnGetBalance, btnStartNode, btnStopNode, btnAddFunds, btnSendTransaction;
-    EditText etAmount;
     Node node;
     Client testclient;
 
@@ -62,7 +61,6 @@ public class MainActivity extends Activity {
         btnAddFunds         = (Button) findViewById(R.id.btnAddFunds);
         btnSendTransaction  = (Button) findViewById(R.id.btnSendTransaction);
         tvBalance           = (TextView) findViewById(R.id.tvBalance);
-        etAmount            = (EditText) findViewById(R.id.etAmount);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,17 +107,16 @@ public class MainActivity extends Activity {
             }
         });
 
+        final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        final EditText input = new EditText(MainActivity.this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
         /**ADD FUNDS**/
-
         btnAddFunds.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                final EditText input = new EditText(MainActivity.this);
-                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+
                 builder.setTitle("Add Funds");
-                input.setInputType(InputType.TYPE_CLASS_NUMBER);
-                builder.setView(input);
 
                 // Set up the buttons
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -136,7 +133,6 @@ public class MainActivity extends Activity {
                         dialog.cancel();
                     }
                 });
-
                 builder.show();
             }
         });
@@ -145,12 +141,8 @@ public class MainActivity extends Activity {
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                final EditText input = new EditText(MainActivity.this);
-                builder.show();
+
                 builder.setTitle("Payment");
-                input.setInputType(InputType.TYPE_CLASS_NUMBER);
-                builder.setView(input);
 
                 // Set up the buttons
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -167,6 +159,7 @@ public class MainActivity extends Activity {
                         dialog.cancel();
                     }
                 });
+                builder.show();
             }
         });
 

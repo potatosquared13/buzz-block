@@ -54,12 +54,11 @@
         android:onClick="getBalance"
         android:text="Get Balance" />
 
-    <EditText
-        android:id="@+id/etAmount"
+    <View
+        android:id="@+id/divider"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:inputType="number" />
+        android:layout_height="23dp"
+        android:background="?android:attr/listDivider" />
 
     <Button
         android:id="@+id/btnSendTransaction"
