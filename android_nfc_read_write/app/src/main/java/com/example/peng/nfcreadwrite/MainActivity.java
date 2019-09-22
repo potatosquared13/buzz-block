@@ -63,7 +63,7 @@ public class MainActivity extends Activity {
         btnStopNode     = (Button) findViewById(R.id.btnStopNode);
         btnAddFunds     = (Button) findViewById(R.id.btnAddFunds);
         linearLayout1   = (LinearLayout) findViewById(R.id.linearLayout1);
-        tvBalance       = (TextView) findViewById(R.id.tvBalance);
+        tvBalance       = (TextView) findViewById(R.id.nfc_contents);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,28 +106,28 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
 //                tvNFCContent.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0,96))));
                 //instantiate the popup.xml layout file
-                LayoutInflater layoutInflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                View customView = layoutInflater.inflate(R.layout.popup,null);
-
-                closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);
-
-                //instantiate popup window
-                popupWindow = new PopupWindow(customView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-
-                //display the popup window
-                popupWindow.showAtLocation(linearLayout1, Gravity.CENTER, 0, 0);
-
-                /* GET BALANCE */
-//                System.out.println(node.control.chain.blocks.size());
-//                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
-
-                if(myTag == null) {
-                    tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
-                    popupWindow.dismiss();
-                } else {
-                    Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
-                    popupWindow.dismiss();
-                }
+//                LayoutInflater layoutInflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//                View customView = layoutInflater.inflate(R.layout.popup,null);
+//
+//                closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);
+//
+//                //instantiate popup window
+//                popupWindow = new PopupWindow(customView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+//
+//                //display the popup window
+//                popupWindow.showAtLocation(linearLayout1, Gravity.CENTER, 0, 0);
+//
+//                /* GET BALANCE */
+////                System.out.println(node.control.chain.blocks.size());
+////                System.out.println(node.getBalance(testclient.getIdentity().substring(0,96)));
+//
+//                if(myTag == null) {
+                    tvBalance.setText(String.valueOf(node.getBalance(tvNFCContent.toString())));
+//                    popupWindow.dismiss();
+//                } else {
+//                    Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
+//                    popupWindow.dismiss();
+//                }
 
 //                if(myTag == null) {
 //
@@ -138,14 +138,14 @@ public class MainActivity extends Activity {
 //                }
 
                 //close the popup window on button click
-                closePopupBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        popupWindow.dismiss();
-                    }
-                });
-
-                popupWindow.dismiss();
+//                closePopupBtn.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        popupWindow.dismiss();
+//                    }
+//                });
+//
+//                popupWindow.dismiss();
             }
         });
 
@@ -169,7 +169,6 @@ public class MainActivity extends Activity {
                     "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
 
         testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
-//        node.execute();
     }
 
 
@@ -190,6 +189,7 @@ public class MainActivity extends Activity {
                 }
             }
             buildTagViews(msgs);
+            tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
         }
     }
     private void buildTagViews(NdefMessage[] msgs) {
