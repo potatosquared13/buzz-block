@@ -420,7 +420,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             control.active = true;
         }
     }
-    private void stop() throws Exception{
+    public void stop() throws Exception{
         if (control.active)
             control.active = false;
             tcp.isActive = false;

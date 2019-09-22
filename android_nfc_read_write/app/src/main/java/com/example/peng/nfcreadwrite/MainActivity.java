@@ -15,10 +15,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.view.LayoutInflater;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,16 +40,14 @@ public class MainActivity extends Activity {
     boolean writeMode;
     Tag myTag;
     Context context;
+    PopupWindow popupWindow;
+    LinearLayout linearLayout1;
 
     TextView tvNFCContent;
-    Button btnWrite;
-    Button btnGetBalance;
-    Button btnStartNode;
-    Button btnStopNode;
-    Button btnAddFunds;
+    Button btnWrite, btnGetBalance, btnStartNode, btnStopNode, btnAddFunds;
+    Button closePopupBtn;
     Node node;
     Client testclient;
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,6 +57,11 @@ public class MainActivity extends Activity {
 
         tvNFCContent = (TextView) findViewById(R.id.nfc_contents);
         btnWrite = (Button) findViewById(R.id.btnWrite);
+        btnGetBalance = (Button) findViewById(R.id.btnGetBalance);
+        btnStartNode = (Button) findViewById(R.id.btnStartNode);
+        btnStopNode = (Button) findViewById(R.id.btnStopNode);
+        btnAddFunds = (Button) findViewById(R.id.btnAddFunds);
+        linearLayout1 = (LinearLayout) findViewById(R.id.linearLayout1);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,6 +77,51 @@ public class MainActivity extends Activity {
                     Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
+            }
+        });
+
+        btnStartNode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                node.doInBackground();
+            }
+        });
+
+        btnStopNode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                node.stop();
+            }
+        });
+
+        btnGetBalance.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                tvNFCContent.setText(node.getBalance();
+                //instantiate the popup.xml layout file
+                LayoutInflater layoutInflater = (LayoutInflater) MainActivity.this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                View customView = layoutInflater.inflate(R.layout.popup,null);
+
+                closePopupBtn = (Button) customView.findViewById(R.id.closePopupBtn);
+
+                //instantiate popup window
+                popupWindow = new PopupWindow(customView, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+
+                //display the popup window
+                popupWindow.showAtLocation(linearLayout1, Gravity.CENTER, 0, 0);
+
+                /* GET BALANCE */
+                Double balance = node.getBalance("");
+                tvNFCContent.setText(balance.toString());
+
+                //close the popup window on button click
+                closePopupBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        popupWindow.dismiss();
+                    }
+                });
+
             }
         });
 
@@ -127,15 +180,9 @@ public class MainActivity extends Activity {
         // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
 
             // Get the Text
-            text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
+        text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
 
         tvNFCContent.setText(text);
-    }
-
-
-
-    public void getBalance(View view) {
-
     }
 
     /******************************************************************************
