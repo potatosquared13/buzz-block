@@ -54,7 +54,7 @@ class Leader(Node):
             if (len(self.peers) != peers):
                 time.sleep(2)
             else:
-                time.sleep(28)
+                time.sleep(8)
 
     def start(self):
         try:
@@ -80,17 +80,17 @@ class Leader(Node):
             if (len(self.pending_transactions) >= self.block_size):
                 self.start_consensus()
 
-    def add_funds(self, recipient, amount):
-        transaction = Transaction("add funds", recipient, amount)
-        self.client.sign(transaction)
-        self.pending_transactions.append(transaction)
-        for peer in self.peers:
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect(peer.address)
-                    self.send(sock, TRANSACTION, transaction.json)
-            except socket.error:
-                logging.error(f"Peer refused connection")
+    # def add_funds(self, recipient, amount):
+    #     transaction = Transaction("add funds", recipient, amount)
+    #     self.client.sign(transaction)
+    #     self.pending_transactions.append(transaction)
+    #     for peer in self.peers:
+    #         try:
+    #             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    #                 sock.connect(peer.address)
+    #                 self.send(sock, TRANSACTION, transaction.json)
+    #         except socket.error:
+    #             logging.error(f"Peer refused connection")
 
     def get_balance(self, client):
         return db.search(client).pending_balance

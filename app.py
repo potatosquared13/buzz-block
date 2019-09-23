@@ -15,7 +15,7 @@ clients = []
 vendors = []
 pending_transactions_saved_state = []
 
-node = Leader()
+node = Leader(10)
 
 def get_transactions():
     global pending_transactions_saved_state
@@ -88,7 +88,9 @@ def finalize():
         c = Client(client[0])
         c.export()
         db.insert(c, client[1], client[2])
-        transactions.append(Transaction(1, node.client.identity, c.identity[:96], client[2]))
+        t = Transaction(2, node.client.identity, c.identity[:96], client[2])
+        node.client.sign(t)
+        transactions.append(t)
     for vendor in vendors:
         v = Client(vendor[0])
         v.export()
@@ -110,9 +112,7 @@ def toggle():
 
 @app.route('/check_transactions_changed', methods=['POST'])
 def check_transactions_changed():
-    print(node.pending_transactions)
     global pending_transactions_saved_state
-    print(pending_transactions_saved_state)
     if pending_transactions_saved_state != node.pending_transactions.copy():
         print('changes made')
         return 'good'

@@ -57,8 +57,6 @@ class Node(threading.Thread):
         self.chain = Blockchain()
         if(os.path.isfile('./blockchain.json')):
             self.chain.rebuild(open('./blockchain.json', 'r').read())
-        # root = logging.getLogger()
-        # handler = logging.StreamHandler(sys.stdout)
         if (debug):
             logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.DEBUG)
         else:
@@ -124,18 +122,19 @@ class Node(threading.Thread):
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 try:
                     # sock.bind(self.address)
-                    logging.debug(f"Attempting to connect to {addr[0]}:{addr[1]}")
                     sock.connect(addr)
                     sock.settimeout(4)
                     sock.sendall(unhexlify(self.client.identity))
                     id = hexlify(sock.recv(96)).decode()
+                    if (not id):
+                        return False
                     peer = Peer(sock, addr, id)
                     self.peers.add(peer)
                     threading.Thread(target=self.handle_connection, args=(peer,)).start()
                     if (self.leader is not None):
                         if (self.leader.address == self.address):
                             logging.info("asserting dominance")
-                            self.send(c, LEADER, self.client.identity)
+                            self.send(sock, LEADER, self.client.identity)
                     return True
                 except socket.timeout:
                     pass

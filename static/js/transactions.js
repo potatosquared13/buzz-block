@@ -1,5 +1,5 @@
 window.onload = () => {
-  setInterval(checkTransactionsChanged, 1000);
+  setInterval(checkTransactionsChanged, 4000);
 }
 
 function toggleNode() {
