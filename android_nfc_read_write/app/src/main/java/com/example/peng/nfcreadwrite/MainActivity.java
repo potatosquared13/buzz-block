@@ -19,6 +19,7 @@ import android.os.Environment;
 import android.os.Parcelable;
 import android.text.InputType;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.PopupWindow;
@@ -115,7 +116,10 @@ public class MainActivity extends Activity {
         btnAddFunds.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                if (input.getParent() != null) {
+                    ((ViewGroup) input.getParent()).removeView(input);
+                    input.setText("");
+                }
                 builder.setTitle("Add Funds");
 
                 // Set up the buttons
@@ -141,7 +145,10 @@ public class MainActivity extends Activity {
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                if (input.getParent() != null) {
+                    ((ViewGroup) input.getParent()).removeView(input);
+                    input.setText("");
+                }
                 builder.setTitle("Payment");
 
                 // Set up the buttons
@@ -183,6 +190,8 @@ public class MainActivity extends Activity {
                     "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
 
         testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
+        node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
+        node.execute();
     }
 
 
@@ -210,11 +219,9 @@ public class MainActivity extends Activity {
         if (msgs == null || msgs.length == 0) return;
 
         String text = "";
-//        String tagId = new String(msgs[0].getRecords()[0].getType());
         byte[] payload = msgs[0].getRecords()[0].getPayload();
         String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
         int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
-        // String languageCode = new String(payload, 1, languageCodeLength, "US-ASCII");
 
             // Get the Text
         text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);

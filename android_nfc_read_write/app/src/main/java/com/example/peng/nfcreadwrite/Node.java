@@ -70,11 +70,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         System.out.println("Starting node");
         start();
         try {
-//            getPeers();
-//            Thread.sleep(4000);
-//            System.out.println(control.ip + ":" + control.port);
             while (control.leader == null) {
-//                getPeers();
                 Thread.sleep(4000);
             }
             if (control.chain.blocks.size() == 0) {
@@ -151,7 +147,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         if (!ip.equals(control.ip) || port != control.port) {
                             while (!tcp.isActive)
                                 Thread.sleep(1000);
-//                            System.out.println("Connecting to "+ip+":"+port);
                             tcp.connect(ip, port);
                         }
                     }
@@ -233,7 +228,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
         void connect(String i, int p) throws Exception{
             if (!control.ip.equals(i) && control.port != p){
                 boolean newPeer = true;
-//                System.out.println("Checking if peer is new");
                 for (Peer peer : control.peers)
                     if (peer.ip.equals(i) && peer.port == p) {
                         newPeer = false;
@@ -489,39 +483,17 @@ public class Node extends AsyncTask<Void, Void, Void>{
 
         // decompress
         InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(compressed_data));
-//        byte[] data = new byte[length];
-//        int len = iis.read(data);
-//        Inflater i = new Inflater();
-//        i.setInput(compressed_data, 0, compressed_data.length);
         ByteArrayOutputStream baos = new ByteArrayOutputStream(compressed_data.length);
-//        byte[] data = new byte[compressed_data.length * 3];
         int b;
         while ((b = iis.read()) != -1){
             baos.write(b);
         }
         String msg = new String(baos.toByteArray());
-//        iis.close();
-//        baos.close();
-//        try {
-//            len = i.inflate(baos);
-//            msg = new String(baos, 0, len, StandardCharsets.UTF_8);
-//            System.out.println("Received "+(10+length)+" bytes from "+p.identity.substring(0, 8));
-//            System.out.println(len);
-//        } catch (DataFormatException e){
-//            e.printStackTrace();
-//        }
         return new Message(type, msg);
     }
     private void getPeers() throws Exception {
         while (control.ip == null || control.port == 0)
             Thread.sleep(1000);
-//        WifiManager wifiManager = (WifiManager)mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-//        WifiManager.WifiLock wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, TAG);
-//        WifiManager.MulticastLock multicastLock = wifiManager.createMulticastLock(TAG);
-//        multicastLock.setReferenceCounted(true);
-//        wifiLock.acquire();
-//        multicastLock.acquire();
-
         byte[] msg = ("62757a7aGP" + control.port).getBytes();
         MulticastSocket ms = new MulticastSocket();
         InetAddress group = InetAddress.getByName("224.98.117.122");
@@ -529,9 +501,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
         System.out.println("Sending broadcast message ("+new String(msg)+")");
         ms.send(dp);
         ms.close();
-
-//        multicastLock.release();
-//        wifiLock.release();
     }
     public void sendTransaction(int t, String i, double a) {
         while (control.active && control.pending_block != null)

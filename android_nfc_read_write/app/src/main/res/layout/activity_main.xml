@@ -24,16 +24,15 @@
         android:layout_height="28dp"
         android:text="ID"
         android:textAlignment="center"
-        android:textSize="10sp" />
+        android:textSize="20sp" />
 
     <TextView
         android:id="@+id/tvBalance"
         android:layout_width="match_parent"
         android:layout_height="78dp"
-        android:text="Balance"
         android:textAlignment="center"
         android:textAllCaps="true"
-        android:textSize="45sp" />
+        android:textSize="30sp" />
 
     <Button
         android:id="@+id/btnStartNode"
