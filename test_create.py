@@ -30,7 +30,7 @@ for c in lc:
     # add client to database
     db.insert(c, str(randint(100000000, 999999999)), 500, 0)
     # create transaction and add to transaction list
-    t = Transaction(2, node.client.identity, c.identity[:96], 500)
+    t = Transaction(3, node.client.identity, c.identity[:96], 500)
     node.client.sign(t)
     ts.append(t)
     # export client keys for reuse later
