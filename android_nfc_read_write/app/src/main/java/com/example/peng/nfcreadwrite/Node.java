@@ -502,7 +502,10 @@ public class Node extends AsyncTask<Void, Void, Void>{
         ms.send(dp);
         ms.close();
     }
-    public void sendTransaction(int t, String i, double a) {
+    public void sendPayment(String i, double a) {
+        sendTransaction(1, i, a);
+    }
+    private void sendTransaction(int t, String i, double a) {
         while (control.active && control.pending_block != null)
             try {
                 Thread.sleep(1000);
@@ -512,8 +515,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         Transaction txn = null;
         if (t == 1)
             txn = new Transaction(1, i, control.client.getIdentity(), a);
-        else if (t == 2)
-            txn = new Transaction(2, control.client.getIdentity(), i, a);
+        else return;
         control.client.sign(txn);
         control.pending_transactions.add(txn);
         System.out.println(txn.toJson());

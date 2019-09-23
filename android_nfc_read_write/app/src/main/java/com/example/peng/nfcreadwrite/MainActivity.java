@@ -113,34 +113,34 @@ public class MainActivity extends Activity {
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(input);
         /**ADD FUNDS**/
-        btnAddFunds.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (input.getParent() != null) {
-                    ((ViewGroup) input.getParent()).removeView(input);
-                    input.setText("");
-                }
-                builder.setTitle("Add Funds");
+        // btnAddFunds.setOnClickListener(new View.OnClickListener() {
+        //     @Override
+        //     public void onClick(View v) {
+        //         if (input.getParent() != null) {
+        //             ((ViewGroup) input.getParent()).removeView(input);
+        //             input.setText("");
+        //         }
+        //         builder.setTitle("Add Funds");
 
-                // Set up the buttons
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        double amount = Double.parseDouble(input.getText().toString());
-                        node.sendTransaction(2, tvNFCContent.getText().toString(), amount);
-                        tv.NFCContent.setText("");
-                        dialog.cancel();
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                builder.show();
-            }
-        });
+        //         // Set up the buttons
+        //         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        //             @Override
+        //             public void onClick(DialogInterface dialog, int which) {
+        //                 double amount = Double.parseDouble(input.getText().toString());
+        //                 node.sendTransaction(2, tvNFCContent.getText().toString(), amount);
+        //                 tv.NFCContent.setText("");
+        //                 dialog.cancel();
+        //             }
+        //         });
+        //         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        //             @Override
+        //             public void onClick(DialogInterface dialog, int which) {
+        //                 dialog.cancel();
+        //             }
+        //         });
+        //         builder.show();
+        //     }
+        // });
 
         /**PAYMENT**/
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
@@ -157,7 +157,7 @@ public class MainActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         double amount = Double.parseDouble(input.getText().toString());
-                        node.sendTransaction(1, tvNFCContent.getText().toString(), amount);
+                        node.sendPayment(tvNFCContent.getText().toString(), amount);
                         tv.NFCContent.setText("");
                         dialog.cancel();
                     }
