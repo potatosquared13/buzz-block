@@ -74,11 +74,11 @@ button:hover {
     color: #a542b9;
 }
 
-.header .right-align {
+.header .left-align {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     height: 100%;
-    margin-right: 4vw;
+    margin-left: 2vw;
 }
 
 .content, .content-flex {
