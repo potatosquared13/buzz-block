@@ -88,7 +88,7 @@ def finalize():
         c = Client(client[0])
         c.export()
         db.insert(c, client[1], client[2])
-        t = Transaction(2, node.client.identity, c.identity[:96], client[2])
+        t = Transaction(3, node.client.identity, c.identity[:96], client[2])
         node.client.sign(t)
         transactions.append(t)
     for vendor in vendors:

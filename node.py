@@ -280,7 +280,10 @@ class Node(threading.Thread):
     def record_transaction(self, transaction, peer_identity):
         if (transaction.sender != transaction.address and
             self.is_valid_transaction(transaction, peer_identity)):
-            self.pending_transactions.append(transaction)
+            if ((transaction.transaction == 1 and transaction.address == peer_identity) or
+                (transaction.transaction == 2 and transaction.sender == peer_identity and peer_identity == self.leader.identity)):
+                if (self.get_balance(transaction.sender) > transaction.amount):
+                    self.pending_transactions.append(transaction)
             return True
         return False
 
@@ -292,8 +295,10 @@ class Node(threading.Thread):
             time.sleep(1)
         if (transaction_type == 1):
             transaction = Transaction(1, identity[:96], self.client.identity, amount)
-        elif (transaction_type == 2):
-            transaction = Transaction(2, self.client.identity, identity[:96], amount)
+        # elif (transaction_type == 2):
+            # transaction = Transaction(2, self.client.identity, identity[:96], amount)
+        else:
+            return
         self.client.sign(transaction)
         self.pending_transactions.append(transaction)
         for peer in self.peers.copy():
