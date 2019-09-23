@@ -298,6 +298,7 @@ class Node(threading.Thread):
         # elif (transaction_type == 2):
             # transaction = Transaction(2, self.client.identity, identity[:96], amount)
         else:
+            logging.error("Invalid transaction type")
             return
         self.client.sign(transaction)
         self.pending_transactions.append(transaction)
