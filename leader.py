@@ -35,11 +35,18 @@ class Leader(Node):
     def record_transaction(self, transaction, peer_identity):
         sender = db.search(transaction.sender)
         recipient = db.search(transaction.address)
-        if (sender and recipient and transaction.sender != transaction.address and self.is_valid_transaction(transaction, peer_identity)):
-            if (transaction.transaction == 1 and transaction.address == peer_identity and sender.pending_balance >= transaction.amount):
+        if (sender and recipient and transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
+            if (transaction.transaction == 0): # initial balance
+                pass
+            elif (transaction.transaction == 1 and transaction.address == peer_identity and sender.pending_balance >= transaction.amount): # payment
                 db.update_pending(transaction.sender, transaction.address, transaction.amount)
-            elif (transaction.transaction == 2 and transaction.sender == self.client.identity):
+            elif (transaction.transaction == 2 and transaction.sender == self.client.identity): # add funds
                 db.update_pending(None, transaction.address, transaction.amount)
+            elif (transaction.transaction == 3): # disable wallet
+                self.blacklist.append(transaction.sender)
+                # transfer funds to new address
+                # update db, replace sender id with new id
+                pass
             else:
                 return False
             self.pending_transactions.append(transaction)

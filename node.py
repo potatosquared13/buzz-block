@@ -55,6 +55,7 @@ class Node(threading.Thread):
         self.pending_transactions = []
         self.hashes = []
         self.chain = Blockchain()
+        self.blacklist = []
         if(os.path.isfile('./blockchain.json')):
             self.chain.rebuild(open('./blockchain.json', 'r').read())
         if (debug):
@@ -84,7 +85,10 @@ class Node(threading.Thread):
     def accept_connections(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind(([ip for ip in socket.gethostbyname_ex(socket.getfqdn())[2] if not ip.startswith('169')][0], 0))
+            try:
+                sock.bind(([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith('169')][0], 0))
+            except socket.gaierror:
+                sock.bind(([ip for ip in socket.gethostbyname_ex(socket.getfqdn())[2] if not ip.startswith('169')][0], 0))
             self.address = sock.getsockname()
             logging.debug(self.address)
             sock.settimeout(4)
@@ -149,16 +153,16 @@ class Node(threading.Thread):
     # helper functions for sending and receiving messages
     def send(self, sock, msg_type, msg):
         payload = base64.b64encode(zlib.compress(msg.encode(), 9))
-        bmessage = str(len(payload)).zfill(8).encode() + str(msg_type).zfill(2).encode() + payload
+        bmessage = hex(len(payload))[2:].zfill(8).encode() + str(msg_type).encode() + payload
         sock.sendall(bmessage)
         logging.debug(f"send {len(payload) + 10} bytes to {sock.getpeername()}")
 
     def receive(self, sock):
         try:
-            length = int(sock.recv(8))
+            length = int(sock.recv(8), 16)
         except ValueError:
             return 0, b''
-        message_type = int(sock.recv(2))
+        message_type = int(sock.recv(1), 16)
         bmessage = sock.recv(length)
         while (length > len(bmessage)):
             m = sock.recv(length - len(bmessage))
@@ -263,7 +267,7 @@ class Node(threading.Thread):
         return transaction
 
     # verify the signature of a transaction
-    def is_valid_transaction(self, transaction, peer_identity):
+    def is_valid_signature(self, transaction, peer_identity):
         if (transaction.signature):
             try:
                 identity = unhexlify("3076301006072a8648ce3d020106052b8104002203620004" + peer_identity)
@@ -278,12 +282,24 @@ class Node(threading.Thread):
 
     # add a transaction to own list of pending transactions if it passes several checks
     def record_transaction(self, transaction, peer_identity):
-        if (transaction.sender != transaction.address and
-            self.is_valid_transaction(transaction, peer_identity)):
-            if ((transaction.transaction == 1 and transaction.address == peer_identity) or
-                (transaction.transaction == 2 and transaction.sender == peer_identity and peer_identity == self.leader.identity)):
-                if (self.get_balance(transaction.sender) > transaction.amount):
-                    self.pending_transactions.append(transaction)
+        if (transaction.sender in self.blacklist):
+            return False
+        if (transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
+            if (transaction.transaction == 0): # initial balance
+                l = []
+                for block in self.chain.blocks:
+                    l = l + list([t for t in block.transactions if t.transaction == 0 and t.address == transaction.address])
+                if (l is None):
+                    return True
+                return False
+            elif (transaction.transaction == 1 and transaction.address == peer_identity and self.get_balance(transaction.sender) >= transaction.amount): # payment
+                self.pending_transactions.append(transaction)
+            elif (transaction.transaction == 2 and transaction.sender == peer_identity and peer_identity == self.leader.identity): # add funds
+                self.pending_transactions.append(transaction)
+            elif (transaction.transaction == 3): # disable wallet
+                self.blacklist.append(transaction.sender)
+            else:
+                return False
             return True
         return False
 
@@ -295,8 +311,6 @@ class Node(threading.Thread):
             time.sleep(1)
         if (transaction_type == 1):
             transaction = Transaction(1, identity[:96], self.client.identity, amount)
-        # elif (transaction_type == 2):
-            # transaction = Transaction(2, self.client.identity, identity[:96], amount)
         else:
             logging.error("Invalid transaction type")
             return
@@ -314,7 +328,7 @@ class Node(threading.Thread):
                 transactions.append(txn)
         transactions = transactions + self.pending_transactions
         sending = list((t for t in transactions if t.sender == identity))
-        receiving = list((t for t in transactions if t.address == identity and t.transaction == 2))
+        receiving = list((t for t in transactions if t.address == identity and (t.transaction == 0 or t.transaction == 2)))
         if (not sending and not receiving):
             return -1
         for transaction in sending:
