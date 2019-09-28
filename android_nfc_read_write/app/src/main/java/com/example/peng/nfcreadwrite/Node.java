@@ -120,6 +120,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         volatile ArrayList<IdentityHashPair> hashes;
         volatile Client client;
         volatile Peer leader;
+        volatile ArrayList<String> blacklist;
     }
     public final Control control = new Control();
 
@@ -447,8 +448,8 @@ public class Node extends AsyncTask<Void, Void, Void>{
 
                     // send data to peer (data = LLLLLLLLLLTTN... where T = message type, L = message length, N... = compressed message encoded in base64)
                     DataOutputStream dos = new DataOutputStream(s.getOutputStream());
-                    dos.write(String.format(Locale.getDefault(), "%08d", payload.length).getBytes());
-                    dos.write(String.format(Locale.getDefault(), "%02d", t).getBytes());
+                    dos.write(String.format(Locale.getDefault(), "%08X", payload.length).getBytes());
+                    dos.write(String.format(Locale.getDefault(), "%02X", t).getBytes());
                     dos.write(payload);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -464,7 +465,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         int length;
         try {
             input.read(blength, 0, 8);
-            length = Integer.parseInt(new String(blength));
+            length = Integer.parseInt(new String(blength), 16);
         } catch (NumberFormatException e){
             return new Message(0, "");
         }
@@ -472,7 +473,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         // read message type
         byte[] btype = new byte[2];
         input.read(btype, 0, 2);
-        int type = Integer.parseInt(new String(btype));
+        int type = Integer.parseInt(new String(btype), 16);
 
         //read message
         byte[] ecdata = new byte[length];
@@ -530,25 +531,23 @@ public class Node extends AsyncTask<Void, Void, Void>{
         double balance = 0;
         for (Block b : control.chain.blocks){
             for (Transaction t : b.transactions){
-                if (t.sender.startsWith(i)){
+                if (t.address.startsWith(i) && (t.transaction == 0 || t.transaction == 2)){
+                        balance += t.amount;
+                } else if (t.transaction == 1 && t.sender.startsWith(i)){
                     balance -= t.amount;
-                }
-                else if (t.address.startsWith(i) && t.transaction == 2) {
-                    balance += t.amount;
                 }
             }
         }
         for (Transaction t : control.pending_transactions){
-            if (t.sender.startsWith(i)) {
-                balance -= t.amount;
-            }
-            else if (t.address.startsWith(i) && t.transaction == 2) {
+            if (t.address.startsWith(i) && (t.transaction == 0 || t.transaction == 2)){
                 balance += t.amount;
+            } else if (t.transaction == 1 && t.sender.startsWith(i)){
+                balance -= t.amount;
             }
         }
         return balance;
     }
-    private boolean isValidTransaction(Transaction t, String i) throws Exception {
+    private boolean isValidSignature(Transaction t, String i) throws Exception {
         if (!t.signature.isEmpty()) {
             byte[] identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + i);
             Signature sig = Signature.getInstance("SHA256withECDSA");
@@ -559,9 +558,29 @@ public class Node extends AsyncTask<Void, Void, Void>{
         }
         return false;
     }
+    // TODO
     private boolean recordTransaction(Transaction t, String i) throws Exception {
-        if (!t.sender.equals(t.address) && isValidTransaction(t, i)) {
-            control.pending_transactions.add(t);
+        if (control.blacklist.contains(i))
+            return false;
+        if (t.sender != t.address && isValidSignature(t, i)){
+            switch (t.transaction) {
+            case 0: // initial balance
+
+                break;
+            case 1: // payment
+                if (t.address == i && getBalance(t.sender) >= t.amount)
+                    control.pending_transactions.add(t);
+                break;
+            case 2: // add funds
+                if (t.sender == i && i == control.leader.identity)
+                    control.pending_transactions.add(t);
+                break;
+            case 3: // disable wallet
+                control.blacklist.add(t.sender);
+                break;
+            default:
+                return false;
+            }
             return true;
         }
         return false;
