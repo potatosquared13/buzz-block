@@ -52,6 +52,10 @@ def get_transactions():
             pt_recipients.append('unnamed')
     return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients)
 
+def get_vendor_transactions(vendor):
+    vendors = db.get_vendors()
+    return [t for sublist in [b.transactions for b in node.chain.blocks] for t in sublist if t.recipient == vendor]
+
 @app.route('/')
 def home():
     url_for('static', filename='js/register.js')

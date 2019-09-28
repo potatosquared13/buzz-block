@@ -63,7 +63,7 @@ def search(string):
     e = None
     with conn:
         try:
-            lock.acquire(True)
+            lock.acquire()
             c.execute("select * from clients where name like ? or identity=?", ('%{}%'.format(string),'{}'.format(string),))
             e = c.fetchone()
             if (e is not None):
@@ -74,3 +74,13 @@ def search(string):
             lock.release()
     return entry
 
+def get_vendors():
+    vendors = []
+    with conn:
+        try:
+            lock.acquire()
+            c.execute("select * from clients where is_vendor=1")
+            vendors = c.fetchall()
+        finally:
+            lock.release()
+    return vendors
