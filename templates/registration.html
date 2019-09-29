@@ -20,12 +20,12 @@
                 <div class="link">TRANSACTIONS</div>
             </a>
             <a href="#">
-                <div class="link">REPORT GENERATION</div>
+                <div class="link">VENDOR REPORT</div>
             </a>
         </div>
         <div id="main">
             <div class="header">
-                <div class="right-align">
+                <div class="left-align">
                     <button id="finalize" type="button" onclick="finalize()">FINISH</button>
                 </div>
             </div>
@@ -48,7 +48,9 @@
                             <input placeholder="Amount" id="client-amount" type="text" class="text-input"
                                 name="client-amount" />
                         </div>
-                        <button id="client-add" type="button" onclick="registerClient()">add</button>
+                        <div class="button-container">
+                            <button id="client-add" type="button" onclick="registerClient()">add</button>
+                        </div>
                     </form>
                 </div>
                 <div class="box-50">
@@ -64,7 +66,9 @@
                             <input placeholder="Contact number" id="vendor-contact" type="text" class="text-input"
                                 name="vendor-contact" />
                         </div>
-                        <button id="vendor-add" type="button" onclick="registerVendor()">add</button>
+                        <div class="button-container">
+                            <button id="vendor-add" type="button" onclick="registerVendor()">add</button>
+                        </div>
                     </form>
                 </div>
             </div>
