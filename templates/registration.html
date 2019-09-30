@@ -13,26 +13,28 @@
     <div id="container">
         <div id="sidebar">
             <div class="header"></div>
-            <a class="active" href="#">
-                <div class="link">REGISTRATION</div>
-            </a>
             <a href="/transactions">
                 <div class="link">TRANSACTIONS</div>
             </a>
+            <a class="active" href="#">
+                <div class="link">REGISTRATION</div>
+            </a>
             <a href="/report">
-                <div class="link">VENDOR REPORT</div>
+                <div class="link">REPORTS</div>
             </a>
         </div>
         <div id="main">
             <div class="header">
                 <div class="left-align">
-                    <button id="finalize" type="button" onclick="finalize()">FINISH</button>
+                    <!-- <button id="finalize" type="button" onclick="finalize()">FINISH</button> -->
+                    <button id="client-reg" class="tab active" type="button" onclick="client()">CLIENTS</button>
+                    <button id="vendor-reg" class="tab" type="button" onclick="vendor()">VENDORS</button>
                 </div>
             </div>
-            <div class="content-flex">
-                <div class="box-50">
+            <div class="content">
+                <div id="client-container" class="box-auto">
                     <form id="client-form">
-                        <div class="client-header">CLIENT</div>
+                        <div class="client-header">REGISTER NEW CLIENT</div>
                         <div class="label-input">
                             Name
                             <input placeholder="Client name" id="client-name" type="text" class="text-input"
@@ -53,9 +55,9 @@
                         </div>
                     </form>
                 </div>
-                <div class="box-50">
+                <div id="vendor-container" class="box-auto" style="display: none">
                     <form id="vendor-form">
-                        <div class="vendor-header">VENDOR</div>
+                        <div class="vendor-header">REGISTER NEW VENDOR  </div>
                         <div class="label-input">
                             Name
                             <input placeholder="Business name" id="vendor-name" type="text" class="text-input"

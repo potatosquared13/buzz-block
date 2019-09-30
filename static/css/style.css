@@ -55,12 +55,38 @@
 
 .header {
     height: 8vh;
-    min-height: 24px;
+    min-height: 42px;
 }
 
 #main .header {
     background: #fff;
     border-bottom: 1px solid #ddd;
+}
+
+.tab {
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+    background: transparent;
+    border-bottom: 4px solid transparent;
+    border-top: 4px solid transparent;
+    box-sizing: border-box;
+    color: #888;
+}
+
+.tab:hover {
+    background: transparent;
+}
+
+.tab.active {
+    background: rgba(198, 140, 219, 0.1);
+    border-bottom-color: #ddd;
+    color: #555;
+}
+
+.tab.disabled {
+    color: #bbb;
+    cursor: auto;
 }
 
 button {
@@ -102,6 +128,10 @@ button:hover {
     padding: 12px;
 }
 
+.box-auto {
+    width: auto;
+}
+
 .box-50 {
     width: 50%;
 }
@@ -116,6 +146,11 @@ button:hover {
 
 form {
     color: #888;
+}
+
+#client-form, #vendor-form {
+    /* outline: 1px solid red; */
+    margin: 0 16px;
 }
 
 .label-input {
@@ -159,6 +194,10 @@ th {
     display: flex;
     padding-right: 10px;
     word-wrap: break-word;
+}
+
+.vendor-title {
+    font-size: 20px;
 }
 
 .vendor-name {
