@@ -57,7 +57,10 @@ def get_vendor_transactions():
     vendors = db.get_vendors()
     vendor = request.args.get('vendor')
     transactions = [t for sublist in [b.transactions for b in node.chain.blocks] for t in sublist if t.address == vendor]
-    return render_template('reportgeneration.html', vendors=vendors, transactions=transactions, t_length=len(transactions))
+    total = 0
+    for t in transaction:
+        total += t.amount
+    return render_template('reportgeneration.html', vendors=vendors, transactions=transactions, t_length=len(transactions), t_total=total)
 
 @app.route('/')
 def home():
@@ -89,7 +92,10 @@ def register_client():
 def register_vendor():
     name = request.args.get('name')
     contact = request.args.get('contact')
-    vendors.append((name, contact))
+    v = Client(vendor[0])
+    v.export()
+    db.insert(v, vendor[1], 0, 1)
+    # vendors.append((name, contact))
     print(vendors)
     return ''
 

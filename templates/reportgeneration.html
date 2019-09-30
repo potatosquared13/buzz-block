@@ -14,14 +14,14 @@
     <section id="container">
         <div id="sidebar">
             <div class="header"></div>
-            <a href="/">
-                <div class="link">REGISTRATION</div>
-            </a>
             <a href="/transactions">
                 <div class="link">TRANSACTIONS</div>
             </a>
+            <a href="/">
+                <div class="link">REGISTRATION</div>
+            </a>
             <a class="active" href="#">
-                <div class="link">VENDOR REPORT</div>
+                <div class="link">REPORTS</div>
             </a>
         </div>
         <div id="main">
@@ -43,6 +43,9 @@
                     </ul>
                 </div>
                 <div class="box-auto">
+                    {% if t_length != 0 %}
+                    <div class="vendor-title">VENDOR NAME</div>
+                    {% end if %}
                     <table>
                         
                         {% if t_length == 0 %}
@@ -73,6 +76,15 @@
 
                         {% endfor %}
                     </table>
+                    {% if t_length != 0 %}
+                    <hr/>
+                    <div class="total">
+                        TOTAL:
+                        <span style="float: right">
+                            <!-- get total amount -->
+                        </span>
+                    </div>
+                    {% end if %}
                 </div>
             </div>
         </div>
