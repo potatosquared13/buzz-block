@@ -45,7 +45,7 @@
                 <div class="box-auto">
                     {% if t_length != 0 %}
                     <div class="vendor-title">VENDOR NAME</div>
-                    {% end if %}
+                    {% endif %}
                     <table>
                         
                         {% if t_length == 0 %}
@@ -81,10 +81,10 @@
                     <div class="total">
                         TOTAL:
                         <span style="float: right">
-                            <!-- get total amount -->
+                            {{t_total}}
                         </span>
                     </div>
-                    {% end if %}
+                    {% endif %}
                 </div>
             </div>
         </div>
