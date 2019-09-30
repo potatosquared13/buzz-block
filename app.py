@@ -52,9 +52,12 @@ def get_transactions():
             pt_recipients.append('unnamed')
     return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients)
 
-def get_vendor_transactions(vendor):
+@app.route('/get_vendor_transactions')
+def get_vendor_transactions():
     vendors = db.get_vendors()
-    return [t for sublist in [b.transactions for b in node.chain.blocks] for t in sublist if t.recipient == vendor]
+    vendor = request.args.get('vendor')
+    transactions = [t for sublist in [b.transactions for b in node.chain.blocks] for t in sublist if t.address == vendor]
+    return render_template('reportgeneration.html', vendors=vendors, transactions=transactions, t_length=len(transactions))
 
 @app.route('/')
 def home():
@@ -67,6 +70,11 @@ def overview():
     url_for('static', filename='js/transactions.js')
     url_for('static', filename='css/style.css')
     return get_transactions()
+
+@app.route('/report')
+def report():
+    vendors = db.get_vendors()
+    return render_template('reportgeneration.html', vendors=vendors, transactions=[], t_length=0)
 
 @app.route('/register_client', methods=['POST'])
 def register_client():

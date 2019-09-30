@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vendors</title>
     <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
-    <!-- <script src="../static/js/reportgeneration.js"></script> -->
+    <script src="../static/js/reportgeneration.js"></script>
 </head>
 
 <body>
@@ -30,36 +30,46 @@
             <div class="content-flex">
                 <div class="box-30">
                     <ul id="vendor-list">
-                        <li>
-                            <button class="vendor-list-item">
-                                <div class="vendor-name">Aoyama Coffee</div>
-                                <div class="vendor-identity">46acec94</div>
-                            </button>
-                        </li>
+                        {% for vendor in vendors %}
+
+                            <li>
+                                <button onclick="getVendorTransactions('{{vendor[1]}}')" class="vendor-list-item">
+                                    <div class="vendor-name">{{vendor[0]}}</div>
+                                    <div class="vendor-identity">{{vendor[1][:8]}}</div>
+                                </button>
+                            </li>
+
+                        {% endfor %}
                     </ul>
                 </div>
                 <div class="box-auto">
                     <table>
-                        <tr>
-                            <th scope="col">sender</th>
-                            <th scope="col">amount</th>
-                            <th scope="col">timestamp</th>
-                        </tr>
+                        
+                        {% if t_length == 0 %}
+
+                            <tr>
+                                <th>no transactions</th>
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+                                <th scope="col">sender</th>
+                                <th scope="col">amount</th>
+                                <th scope="col">timestamp</th>
+                            </tr>
+
+                        {% endif %}
 
                         {% set ns = namespace(t_index = 0) %}
 
-                        {% for block in blocks %}
-
-                        {% for transaction in block.transactions %}
+                        {% for transaction in transactions %}
                         <tr>
-                            <td style="width: 30%; text-align: center">{{t_senders[ns.t_index].name}}
-                                ({{(transaction.sender[:8])}})</td>
+                            <td style="width: 30%; text-align: center">{{(transaction.sender[:8])}}</td>
                             <td style="width: 15%; text-align: center">{{transaction.amount}}</td>
                             <td style="width: 25%; text-align: center">{{transaction.timestamp}}</td>
                         </tr>
-                        {% set ns.t_index = ns.t_index + 1%}
-
-                        {% endfor %}
+                        {% set ns.t_index = ns.t_index + 1 %}
 
                         {% endfor %}
                     </table>
