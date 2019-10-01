@@ -56,11 +56,12 @@ def get_transactions():
 def get_vendor_transactions():
     vendors = db.get_vendors()
     vendor = request.args.get('vendor')
+    vendor_requested = db.search(vendor)
     transactions = [t for sublist in [b.transactions for b in node.chain.blocks] for t in sublist if t.address == vendor]
     total = 0
     for t in transactions:
         total += t.amount
-    return render_template('reportgeneration.html', vendors=vendors, transactions=transactions, t_length=len(transactions), t_total=total)
+    return render_template('reportgeneration.html', vendor_requested=vendor_requested, vendors=vendors, transactions=transactions, t_length=len(transactions), t_total=total)
 
 @app.route('/')
 def home():
@@ -77,7 +78,7 @@ def overview():
 @app.route('/report')
 def report():
     vendors = db.get_vendors()
-    return render_template('reportgeneration.html', vendors=vendors, transactions=[], t_length=0, t_total=0)
+    return render_template('reportgeneration.html', vendor_requested=None, vendors=vendors, transactions=[], t_length=0, t_total=0)
 
 @app.route('/register_client', methods=['POST'])
 def register_client():
