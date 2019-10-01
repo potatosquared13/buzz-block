@@ -10,7 +10,7 @@
 
 #sidebar {
     background-image: linear-gradient(to bottom right, #a542b9, #a860c7, #bf6cd7);
-    width: 14vw;
+    width: 192px;
     position: fixed;
     height: 100vh;
 }
@@ -45,7 +45,7 @@
 
 #main {
     background: #eaeaea;
-    margin-left: 14vw;
+    margin-left: 192px;
     min-height: 100vh;
 }
 
@@ -129,7 +129,7 @@ button:hover {
 }
 
 .box-auto {
-    width: auto;
+    width: calc(100% - 42px);
 }
 
 .box-50 {
@@ -173,10 +173,29 @@ form {
 table {
     width : 100%;
     border-radius: 4px;
+    border-collapse: collapse;
 }
 
-th {
+table th {
     color: #aaa;
+}
+
+table td {
+    text-align: center;
+    padding: 4px 0;
+}
+
+table tr {
+    border-top: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
+}
+
+table tr:first-child {
+    border-top: 0;
+}
+
+table tr:last-child {
+    border-bottom: 0;
 }
 
 .button-container {
@@ -194,10 +213,6 @@ th {
     display: flex;
     padding-right: 10px;
     word-wrap: break-word;
-}
-
-.vendor-title {
-    font-size: 20px;
 }
 
 .vendor-name {

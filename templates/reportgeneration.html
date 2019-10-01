@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vendors</title>
+    <title>Reports</title>
     <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
     <script src="../static/js/reportgeneration.js"></script>
 </head>
@@ -32,35 +32,36 @@
                     <ul id="vendor-list">
                         {% for vendor in vendors %}
 
-                            <li>
-                                <button onclick="getVendorTransactions('{{vendor[1]}}')" class="vendor-list-item">
-                                    <div class="vendor-name">{{vendor[0]}}</div>
-                                    <div class="vendor-identity">{{vendor[1][:8]}}</div>
-                                </button>
-                            </li>
+                        <li>
+                            <button onclick="getVendorTransactions('{{vendor[1]}}')" class="vendor-list-item">
+                                <div class="vendor-name">{{vendor[0]}}</div>
+                                <div class="vendor-identity">{{vendor[1][:8]}}</div>
+                            </button>
+                        </li>
 
                         {% endfor %}
                     </ul>
                 </div>
                 <div class="box-auto">
                     {% if t_length != 0 %}
-                    <div class="vendor-title">VENDOR NAME</div>
+                    INSERT TIME NOW HERE
+                    <div style="font-size: 18px">VENDOR NAME</div>
                     {% endif %}
                     <table>
-                        
+
                         {% if t_length == 0 %}
 
-                            <tr>
-                                <th>no transactions</th>
-                            </tr>
+                        <tr>
+                            <th>no transactions</th>
+                        </tr>
 
                         {% else %}
 
-                            <tr>
-                                <th scope="col">sender</th>
-                                <th scope="col">amount</th>
-                                <th scope="col">timestamp</th>
-                            </tr>
+                        <tr>
+                            <th scope="col">date</th>
+                            <th scope="col">sender</th>
+                            <th scope="col">amount</th>
+                        </tr>
 
                         {% endif %}
 
@@ -68,16 +69,16 @@
 
                         {% for transaction in transactions %}
                         <tr>
-                            <td style="width: 30%; text-align: center">{{(transaction.sender[:8])}}</td>
-                            <td style="width: 15%; text-align: center">{{transaction.amount}}</td>
-                            <td style="width: 25%; text-align: center">{{transaction.timestamp}}</td>
+                            <td style="width: 30%; text-align: center">{{transaction.timestamp[:10]}}</td>
+                            <td style="width: 50%; text-align: center">{{(transaction.sender[:8])}}</td>
+                            <td style="width: 20%; text-align: center">{{transaction.amount}}</td>
                         </tr>
                         {% set ns.t_index = ns.t_index + 1 %}
 
                         {% endfor %}
                     </table>
                     {% if t_length != 0 %}
-                    <hr/>
+                    <hr />
                     <div class="total">
                         TOTAL:
                         <span style="float: right">
