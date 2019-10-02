@@ -114,7 +114,7 @@ def get_vendors():
     with conn:
         try:
             lock.acquire()
-            c.execute("SELECT v.* FROM vendors UNION SELECT b.current_balance FROM balances b WHERE b.identity=v.identity")
+            c.execute("SELECT vendors.identity, clients.name, balances.current_balance FROM vendors INNER JOIN clients ON vendors.identity=clients.identity INNER JOIN balances ON vendors.identity=balances.identity")
             vendors = c.fetchall()
         finally:
             lock.release()

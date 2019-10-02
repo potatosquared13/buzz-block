@@ -33,9 +33,9 @@
                         {% for vendor in vendors %}
 
                         <li>
-                            <button onclick="getVendorTransactions('{{vendor[1]}}')" class="vendor-list-item">
-                                <div class="vendor-name">{{vendor[0]}}</div>
-                                <div class="vendor-identity">{{vendor[1][:8]}}</div>
+                            <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
+                                <div class="vendor-name">{{vendor[1]}}</div>
+                                <div class="vendor-identity">{{vendor[0][:8]}}</div>
                             </button>
                         </li>
 
