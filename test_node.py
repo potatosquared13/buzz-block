@@ -20,6 +20,12 @@ v2 = Node("clients/mcdonalds.key")
 v3 = Node("clients/aoyama-coffee.key", debug=True)
 v4 = Node("clients/leylam-shawarma.key")
 
+def stop(): # hammer time
+    v1.stop()
+    v2.stop()
+    v3.stop()
+    v4.stop()
+
 print("start vendors")
 v1.start()
 v2.start()
@@ -39,37 +45,43 @@ if (input("Press enter to start sending transactions ") == 'q'):
     stop()
     exit()
 v2.send_transaction(1, c9.identity, 59)
+# time.sleep(1)
 # v1.send_transaction(1, c1.identity, 59)
+# time.sleep(1)
 # v1.send_transaction(1, c2.identity, 59)
+# time.sleep(1)
 # v1.send_transaction(1, c3.identity, 79)
+# time.sleep(1)
 # v1.send_transaction(1, c4.identity, 59)
+# time.sleep(1)
 # v1.send_transaction(1, c5.identity, 59)
 
 # time.sleep(2)
 
 # v2.send_transaction(1, c9.identity, 149)
+# time.sleep(1)
 # v2.send_transaction(1, c0.identity, 149)
+# time.sleep(1)
 # v2.send_transaction(1, c9.identity, 59)
 
 # time.sleep(2)
 
 # v3.send_transaction(1, c7.identity, 49)
+# time.sleep(1)
 # v3.send_transaction(1, c8.identity, 49)
+# time.sleep(1)
 # v3.send_transaction(1, c0.identity, 49)
+# time.sleep(1)
 # v2.send_transaction(1, c9.identity, 59)
+# time.sleep(1)
 # v3.send_transaction(1, c9.identity, 59)
 
 # time.sleep(2)
 
 # v4.send_transaction(1, c3.identity, 79)
+# time.sleep(1)
 # v4.send_transaction(1, c4.identity, 29)
+# time.sleep(1)
 # v2.send_transaction(1, c9.identity, 59)
 
 print("done")
-
-def stop(): # hammer time
-    v1.stop()
-    v2.stop()
-    v3.stop()
-    v4.stop()
-
