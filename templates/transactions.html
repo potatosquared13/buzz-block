@@ -151,11 +151,11 @@
                             </td>
                             <td style="min-width: 4%; font-size: 24px">⟶</td>
                             <td style="min-width: 23%">
-                                {{t_recipients[ns.t_index].name}}
-                                <span style="color:#aaa">({{(transaction.address[:8])}})</span>
+                                {{pt_recipients[ns.pt_index].name}}
+                                <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{transaction.amount}}
+                                {{pending_transaction.amount}}
                             </td>
                         </tr>
                         {% elif pending_transaction.transaction == 2 %}
