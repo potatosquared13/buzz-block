@@ -100,7 +100,7 @@ def get_transactions():
 def get_vendor_transactions():
     vendors = db.get_vendors()
     vendor = request.args.get('vendor')
-    vendor_requested = db.search(vendor)
+    vendor_requested = db.search_vendor(vendor)
     transactions = [t for sublist in [b.transactions for b in node.chain.blocks] for t in sublist if t.address == vendor]
     total = 0
     for t in transactions:
