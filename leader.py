@@ -3,6 +3,7 @@
 
 import db
 from node import *
+from copy import deepcopy
 
 class Leader(Node):
     def __init__(self, block_size=100, debug=False):
@@ -10,12 +11,11 @@ class Leader(Node):
             self.client = Client("admin")
             self.client.export()
         super().__init__("clients/admin.key", debug)
-        self.new_funds = []
         self.block_size = block_size
 
     def start_consensus(self):
-        self.pending_transactions = self.new_funds + self.pending_transactions
         if self.pending_transactions:
+            pt = deepcopy(self.pending_transactions)
             for peer in self.peers:
                 self.send(peer.socket, BFTSTART, helpers.jsonify(self.pending_transactions))
             logging.info("Waiting for network consensus")
@@ -24,13 +24,13 @@ class Leader(Node):
                 time.sleep(1)
             logging.info("Updating client balances")
             affected = set()
-            for transaction in self.pending_transactions:
+            for transaction in pt:
+                print(transaction.type)
                 if (transaction.transaction == 1):
                     affected.add(transaction.sender)
                 affected.add(transaction.address)
             for identity in affected:
                 db.update_balance(identity)
-            self.new_funds = []
 
     def record_transaction(self, transaction, peer_identity):
         if (transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
@@ -90,6 +90,35 @@ class Leader(Node):
     def get_balance(self, client):
         return db.search(client).pending_balance
 
-    def send_transaction(self, sender, amount):
-        pass
+    def create_account(self, identity, amount):
+        if (self.pending_block is not None):
+            logging.debug("Waiting until consensus is over before sending transaction")
+        while(self.active and self.pending_block is not None):
+            time.sleep(1)
+        transaction = Transaction(0, self.client.identity, identity, amount)
+        self.client.sign(transaction)
+        self.record_transaction(transaction, self.client.identity)
+        for peer in self.peers.copy():
+            self.send(peer.socket, TRANSACTION, transaction.json)
+
+    def add_funds(self, identity, amount):
+        if (identity in self.blacklist):
+            logging.warning("ID is in blacklist, not proceding")
+            return
+        if (self.pending_block is not None):
+            logging.debug("Waiting until consensus is over before sending transaction")
+        while(self.active and self.pending_block is not None):
+            time.sleep(1)
+        transaction = Transaction(2, self.client.identity, identity, amount)
+        self.client.sign(transaction)
+        self.record_transaction(transaction, self.client.identity)
+        for peer in self.peers.copy():
+            self.send(peer.socket, TRANSACTION, transaction.json)
+
+    def blacklist_account(self, identity):
+        transaction = Transaction(3, self.client.identity, identity, None)
+        self.client.sign(transaction)
+        self.record_transaction(transaction, self.client.identity)
+        for peer in self.peers.copy():
+            self.send(peer.socket, TRANSACTION, transaction.json)
 

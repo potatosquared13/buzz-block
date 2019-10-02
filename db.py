@@ -39,7 +39,7 @@ def update_balance(identity):
     # change balance to pending_balance
     with conn:
         lock.acquire()
-        c.execute("UPDATE balances SET current_balance=(SELECT pending_balance FROM clients WHERE identity=?) WHERE identity=?", (identity, identity,))
+        c.execute("UPDATE balances SET current_balance=(SELECT pending_balance FROM balances WHERE identity=?) WHERE identity=?", (identity, identity,))
         lock.release()
 
 def update_pending(sender, recipient=None, amount=0):
@@ -76,13 +76,10 @@ def search_user(string):
     with conn:
         try:
             lock.acquire()
-            c.execute("SELECT * FROM clients WHERE identity in (SELECT identity FROM users WHERE name LIKE ? OR identity=?)", ('%{}%'.format(string),'{}'.format(string),))
+            c.execute("SELECT clients.identity, clients.name, clients.contact, balances.current_balance, balances.pending_balance FROM users INNER JOIN clients ON users.identity=clients.identity INNER JOIN balances ON users.identity=balances.identity WHERE clients.name LIKE ? OR clients.identity=?", ('%{}%'.format(string),'{}'.format(string),))
             e = c.fetchone()
             if (e is not None):
-                c.execute("SELECT * FROM balances WHERE identity=?", (e[0],))
-                b = c.fetchone()
-                if (b is not None):
-                    entry = Entry("user", e[0], e[1], e[2], b[1], b[2])
+                entry = Entry("user", e[0], e[1], e[2], e[3], e[4])
             else:
                 entry = None
         finally:
@@ -95,13 +92,10 @@ def search_vendor(string):
     with conn:
         try:
             lock.acquire()
-            c.execute("SELECT * FROM clients WHERE identity in (SELECT identity FROM vendors WHERE name LIKE ? OR identity=?)", ('%{}%'.format(string),'{}'.format(string),))
+            c.execute("SELECT clients.identity, clients.name, clients.contact, balances.current_balance, balances.pending_balance FROM vendors INNER JOIN clients ON vendors.identity=clients.identity INNER JOIN balances ON vendors.identity=balances.identity WHERE clients.name LIKE ? OR clients.identity=?", ('%{}%'.format(string),'{}'.format(string),))
             e = c.fetchone()
             if (e is not None):
-                c.execute("SELECT * FROM balances WHERE identity=?", (e[0],))
-                b = c.fetchone()
-                if (b is not None):
-                    entry = Entry("vendor", e[0], e[1], e[2], b[1], b[2])
+                entry = Entry("vendor", e[0], e[1], e[2], e[3], e[4])
             else:
                 entry = None
         finally:
@@ -114,7 +108,7 @@ def get_vendors():
     with conn:
         try:
             lock.acquire()
-            c.execute("SELECT vendors.identity, clients.name, balances.current_balance FROM vendors INNER JOIN clients ON vendors.identity=clients.identity INNER JOIN balances ON vendors.identity=balances.identity")
+            c.execute("SELECT vendors.identity, clients.name, clients.contact, balances.current_balance, balances.pending_balance FROM vendors INNER JOIN clients ON vendors.identity=clients.identity INNER JOIN balances ON vendors.identity=balances.identity")
             vendors = c.fetchall()
         finally:
             lock.release()

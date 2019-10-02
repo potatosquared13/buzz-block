@@ -105,7 +105,6 @@ class Node(threading.Thread):
                         threading.Thread(target=self.handle_connection, args=(peer,)).start()
                         if (self.leader is not None):
                             if (self.leader.address == self.address):
-                                logging.info("asserting dominance")
                                 self.send(c, LEADER, self.client.identity)
                     else:
                         c.shutdown(socket.SHUT_RDWR)
@@ -243,7 +242,7 @@ class Node(threading.Thread):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, group+iface)
             sock.bind(('', 60000))
-            sock.settimeout(30)
+            sock.settimeout(20)
             while (self.active):
                 try:
                     data, addr = sock.recvfrom(256)
@@ -252,7 +251,7 @@ class Node(threading.Thread):
                         port = int(msg[10:])
                         if ((addr[0], port) != self.address):
                             self.connect((addr[0], port))
-                except socket.error:
+                except socket.timeout:
                     pass
                 except (KeyboardInterrupt, SystemExit):
                     self.stop()
@@ -305,17 +304,20 @@ class Node(threading.Thread):
 
     # send a transaction to connected peers
     def send_transaction(self, transaction_type, identity, amount):
+        if (identity in self.blacklist):
+            logging.warning("ID is in blacklist, not proceding")
+            return
         if (self.pending_block is not None):
             logging.debug("Waiting until consensus is over before sending transaction")
         while(self.active and self.pending_block is not None):
             time.sleep(1)
         if (transaction_type == 1):
-            transaction = Transaction(1, identity[:96], self.client.identity, amount)
+            transaction = Transaction(1, identity, self.client.identity, amount)
         else:
-            logging.error("Invalid transaction type")
+            logging.error(f"Invalid transaction type ({transaction_type})")
             return
         self.client.sign(transaction)
-        self.pending_transactions.append(transaction)
+        self.record_transaction(transaction, self.client.identity)
         for peer in self.peers.copy():
             self.send(peer.socket, TRANSACTION, transaction.json)
 
