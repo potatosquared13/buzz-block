@@ -33,13 +33,13 @@ class Leader(Node):
             self.new_funds = []
 
     def record_transaction(self, transaction, peer_identity):
-        sender = db.search(transaction.sender)
-        recipient = db.search(transaction.address)
-        if (sender and recipient and transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
+        if (transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
             if (transaction.transaction == 0): # initial balance
                 pass
-            elif (transaction.transaction == 1 and transaction.address == peer_identity and sender.pending_balance >= transaction.amount): # payment
-                db.update_pending(transaction.sender, transaction.address, transaction.amount)
+            elif (transaction.transaction == 1 and transaction.address == peer_identity): # payment
+                sender = db.search_user(transaction.sender)
+                if (sender.pending_balance >= transaction.amount):
+                    db.update_pending(transaction.sender, transaction.address, transaction.amount)
             elif (transaction.transaction == 2 and transaction.sender == self.client.identity): # add funds
                 db.update_pending(None, transaction.address, transaction.amount)
             elif (transaction.transaction == 3): # disable wallet

@@ -29,27 +29,71 @@ def get_transactions():
         pending_transactions_saved_state = node.pending_transactions.copy()
     for block in node.chain.blocks:
         for t in block.transactions:
-            t_sender = db.search(t.sender)
-            if t_sender is not None:
-                t_senders.append(t_sender)
-            else:
-                t_senders.append('unnamed')
-            t_recipient = db.search(t.address)
-            if t_recipient is not None:
-                t_recipients.append(t_recipient)
-            else:
-                t_recipients.append('unnamed')
+            if (t.transaction == 0):
+                t_senders.append('Admin')
+                t_recipient = db.search_user(t.address)
+                if t_recipient is not None:
+                    t_recipients.append(t_recipient)
+                else:
+                    t_recipients.append('unnamed')
+            elif (t.transaction == 1):
+                t_sender = db.search_user(t.sender)
+                if t_sender is not None:
+                    t_senders.append(t_sender)
+                else:
+                    t_senders.append('unnamed')
+                t_recipient = db.search_vendor(t.address)
+                if t_recipient is not None:
+                    t_recipients.append(t_recipient)
+                else:
+                    t_recipients.append('unnamed')
+            elif (t.transaction == 2):
+                t_senders.append('Admin')
+                t_recipient = db.search_user(t.address)
+                if t_recipient is not None:
+                    t_recipients.append(t_recipient)
+                else:
+                    t_recipients.append('unnamed')
+            elif (t.transaction == 3):
+                t_senders.append('Admin')
+                t_recipient = db.search_user(t.address)
+                if t_recipient is not None:
+                    t_recipients.append(t_recipient)
+                else:
+                    t_recipients.append('unnamed')
     for pt in node.pending_transactions:
-        pt_sender = db.search(pt.sender)
-        if pt_sender is not None:
-            pt_senders.append(pt_sender)
-        else:
-            pt_senders.append({name:"unnamed"})
-        pt_recipient = db.search(pt.address)
-        if pt_recipient is not None:
-            pt_recipients.append(pt_recipient)
-        else:
-            pt_recipients.append('unnamed')
+        if (pt.transaction == 0):
+            pt_senders.append({name:"Admin"})
+            pt_recipient = db.search_user(pt.address)
+            if pt_recipient is not None:
+                pt_recipients.append(pt_recipient)
+            else:
+                pt_recipients.append('unnamed')
+        elif (pt.transaction == 1):
+            pt_sender = db.search_user(pt.sender)
+            if pt_sender is not None:
+                pt_senders.append(pt_sender)
+            else:
+                pt_senders.append({name:"unnamed"})
+            pt_recipient = db.search_vendor(pt.address)
+            if pt_recipient is not None:
+                pt_recipients.append(pt_recipient)
+            else:
+                pt_recipients.append('unnamed')
+        elif (pt.transaction == 2):
+            pt_senders.append({name:"Admin"})
+            pt_recipient = db.search_user(pt.address)
+            if pt_recipient is not None:
+                pt_recipients.append(pt_recipient)
+            else:
+                pt_recipients.append('unnamed')
+        elif (pt.transaction == 3):
+            pt_senders.append({name:"Admin"})
+            pt_recipient = db.search_user(pt.address)
+            if pt_recipient is not None:
+                pt_recipients.append(pt_recipient)
+            else:
+                pt_recipients.append('unnamed')
     return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients)
 
 @app.route('/get_vendor_transactions')
