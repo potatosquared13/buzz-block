@@ -25,7 +25,6 @@ class Leader(Node):
             logging.info("Updating client balances")
             affected = set()
             for transaction in pt:
-                print(transaction.type)
                 if (transaction.transaction == 1):
                     affected.add(transaction.sender)
                 affected.add(transaction.address)

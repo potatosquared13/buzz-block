@@ -34,24 +34,24 @@ function finalize() {
   window.location.href = '/finalize';
 }
 
-function vendor() {
-  var v = document.getElementById("vendor-container")
-  if (v.style.display === "none") {
-    v.style.display = "block";
-    document.getElementById("vendor-reg").classList.add("active");
+// function vendor() {
+//   var v = document.getElementById("vendor-container")
+//   if (v.style.display === "none") {
+//     v.style.display = "block";
+//     document.getElementById("vendor-reg").classList.add("active");
 
-    document.getElementById("client-container").style.display = "none";
-    document.getElementById("client-reg").classList.remove("active");
-  }
-}
+//     document.getElementById("client-container").style.display = "none";
+//     document.getElementById("client-reg").classList.remove("active");
+//   }
+// }
 
-function client() {
-  var c = document.getElementById("client-container")
-  if (c.style.display === "none") {
-    c.style.display = "block";
-    document.getElementById("client-reg").classList.add("active");
+// function client() {
+//   var c = document.getElementById("client-container")
+//   if (c.style.display === "none") {
+//     c.style.display = "block";
+//     document.getElementById("client-reg").classList.add("active");
 
-    document.getElementById("vendor-container").style.display = "none";
-    document.getElementById("vendor-reg").classList.remove("active");
-  }
-}
+//     document.getElementById("vendor-container").style.display = "none";
+//     document.getElementById("vendor-reg").classList.remove("active");
+//   }
+// }

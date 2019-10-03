@@ -18,7 +18,7 @@
                 <div class="link">TRANSACTIONS</div>
             </a>
             <a href="/">
-                <div class="link">REGISTRATION</div>
+                <div class="link">ACCOUNTS</div>
             </a>
             <a href="/report">
                 <div class="link">REPORTS</div>
@@ -27,11 +27,17 @@
         <div id="main">
             <div class="header">
                 <div class="left-align">
+                    TRANSACTIONS OVERVIEW
+                </div>
+                <div class="right-align">
                     <button id="toggle-node" type="button" onclick="toggleNode()">START/STOP</button>
                 </div>
             </div>
             <div class="content">
                 <div class="box-auto">
+                    <div style="text-align: center">
+                        <span style="font-size: 18px">CONFIRMED TRANSACTIONS</span><hr/>
+                    </div>
                     <table>
                         {% set ns = namespace(t_index = 0) %}
 
@@ -116,6 +122,9 @@
                     </table>
                 </div>
                 <div class="box-auto">
+                    <div style="text-align: center">
+                        <span style="font-size: 18px">PENDING TRANSACTIONS</span><hr/>
+                    </div>
                     <table>
                         {% set ns = namespace(pt_index=0) %}
 

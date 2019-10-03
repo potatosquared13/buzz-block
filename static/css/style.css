@@ -2,6 +2,7 @@
     margin: 0;
     font-family: sans-serif;
     font-size: 15px;
+    /* outline: 1px solid red; */
 }
 
 #container {
@@ -18,8 +19,8 @@
 #sidebar a {
     background: transparent;
     display: block;
-    height: 8vh;
-    line-height: 8vh;
+    min-height: 72px;
+    line-height: 72px;
     width: 90%;
     margin: auto;
     border-radius: 8px;
@@ -44,7 +45,7 @@
 }
 
 #main {
-    background: #eaeaea;
+    background: #eee;
     margin-left: 192px;
     min-height: 100vh;
 }
@@ -93,7 +94,7 @@ button {
     border: none;
     border-radius: 8px;
     margin: 1vh 0;
-    padding: 8px;
+    padding: 16px 24px;
     background: rgba(198, 140, 219, 0.1);
     color: #555;
     transition: 0.2s ease-in-out background-color, 0.2s ease-in-out color;
@@ -105,15 +106,22 @@ button:hover {
     background: rgba(198, 198, 219, 0.4);
 }
 
+/* TODO display left-align and right-align on same line */
+.header .left-align, .header .right-align {
+    line-height: 8vh;
+}
+
 .header .left-align {
-    display: flex;
-    justify-content: flex-start;
     height: 100%;
     margin-left: 2vw;
 }
 
+.header .left-align {
+    height: 100%;
+    margin-right: 2vw;
+}
+
 .content, .content-flex {
-    /* min-height: 50vh; */
     padding: 12px;
 }
 
@@ -126,6 +134,7 @@ button:hover {
     border-radius: 4px;
     margin: 8px;
     padding: 12px;
+    height: 0%;
 }
 
 .box-auto {
@@ -172,7 +181,7 @@ form {
 
 table {
     width : 100%;
-    border-radius: 4px;
+    border-radius: 8px;
     border-collapse: collapse;
 }
 
@@ -182,12 +191,23 @@ table th {
 
 table td {
     text-align: center;
-    padding: 4px 0;
+    padding: 8px 0;
 }
 
 table tr {
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
+    /* border-top: 1px solid #ddd; */
+    /* border-bottom: 1px solid #ddd; */
+    background: rgba(198, 198, 219, 0.1);
+}
+
+table tr.client {
+    background: rgba(198, 140, 219, 0.1);
+    transition: 0.2s ease-in-out background-color;
+}
+
+table tr.client:hover {
+    background: rgba(198, 198, 219, 0.4);
+    cursor: pointer;
 }
 
 table tr:first-child {
@@ -224,4 +244,11 @@ table tr:last-child {
     text-align: right;
     border-left: 1px solid #ddd;
     padding-left: 4px;
+}
+
+hr {
+    border: none;
+    background-color: #ddd;
+    min-height: 2px;
+    margin: 8px 0;
 }
