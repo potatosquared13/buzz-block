@@ -108,8 +108,19 @@ def get_vendors():
     with conn:
         try:
             lock.acquire()
-            c.execute("SELECT vendors.identity, clients.name, clients.contact, balances.current_balance, balances.pending_balance FROM vendors INNER JOIN clients ON vendors.identity=clients.identity INNER JOIN balances ON vendors.identity=balances.identity")
+            c.execute("SELECT vendors.identity, clients.name, clients.contact, vendors.business_type, balances.current_balance, balances.pending_balance FROM vendors INNER JOIN clients ON vendors.identity=clients.identity INNER JOIN balances ON vendors.identity=balances.identity")
             vendors = c.fetchall()
         finally:
             lock.release()
     return vendors
+
+def get_users():
+    users = []
+    with conn:
+        try:
+            lock.acquire()
+            c.execute("SELECT users.identity, clients.name, clients.contact, users.initial_balance, balances.current_balance, balances.pending_balance FROM users INNER JOIN clients ON users.identity=clients.identity INNER JOIN balances ON users.identity=balances.identity")
+            users = c.fetchall()
+        finally:
+            lock.release()
+    return users
