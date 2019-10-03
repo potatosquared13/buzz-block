@@ -30,13 +30,19 @@
                     TRANSACTIONS OVERVIEW
                 </div>
                 <div class="right-align">
-                    <button id="toggle-node" type="button" onclick="toggleNode()">START/STOP</button>
+                    STATUS
+                    <label class="switch">
+                        <!-- change with document.getElementById("node-status").setAttribute("checked", "true/false") -->
+                        <input id="node-status" type="checkbox" onclick="toggleNode()">
+                        <span class="slider round"></span>
+                    </label>
                 </div>
             </div>
             <div class="content">
                 <div class="box-auto">
                     <div style="text-align: center">
-                        <span style="font-size: 18px">CONFIRMED TRANSACTIONS</span><hr/>
+                        <span style="font-size: 16px">CONFIRMED TRANSACTIONS</span>
+                        <hr />
                     </div>
                     <table>
                         {% set ns = namespace(t_index = 0) %}
@@ -123,7 +129,8 @@
                 </div>
                 <div class="box-auto">
                     <div style="text-align: center">
-                        <span style="font-size: 18px">PENDING TRANSACTIONS</span><hr/>
+                        <span style="font-size: 18px">PENDING TRANSACTIONS</span>
+                        <hr />
                     </div>
                     <table>
                         {% set ns = namespace(pt_index=0) %}
