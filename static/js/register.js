@@ -45,20 +45,15 @@ function finalize() {
 
 function addFunds(identity) {
   while(isNaN(amount = window.prompt("Enter an amount", "")));
-
   let xhr = new XMLHttpRequest();
-
-  xhr.open('POST', `/add_funds?id=${identity}?amount=${amount}`, true);
+  xhr.open('POST', `/add_funds?identity=${identity}&amount=${amount}`, true);
   xhr.send()
 }
 
 function blacklist(name, current_id) {
     if (window.confirm("Blacklist user's current id?\nA new id will be generated for this user.")) {
-      
       let xhr = new XMLHttpRequest();
-
-      xhr.open('POST', `/register_client?replace=true?name=${name}?id=${current_id}`, true);
+      xhr.open('POST', `/register_client?replace=true&identity=${current_id}&name=${name}`, true);
       xhr.send()
-
     }
 }

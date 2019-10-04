@@ -182,10 +182,8 @@ def finalize():
 def toggle():
     if node.active:
         node.stop()
-        print('node stopped')
     else:
         node.start()
-        print('node started')
     return ''
 
 @app.route('/check_toggle')
@@ -198,7 +196,6 @@ def check_toggle():
 def check_transactions_changed():
     global pending_transactions_saved_state
     if pending_transactions_saved_state != node.pending_transactions.copy():
-        print('changes made')
         return 'good'
     else:
         return ''

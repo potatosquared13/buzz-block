@@ -83,7 +83,7 @@ class Leader(Node):
             start = time.time()
             while (self.active and time.time() - start < 600 and len(self.pending_transactions) < self.block_size):
                 time.sleep(10)
-            if (len(self.pending_transactions) >= self.block_size / 2):
+            if (self.pending_transactions):
                 self.start_consensus()
 
     def get_balance(self, client):

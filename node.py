@@ -303,7 +303,7 @@ class Node(threading.Thread):
         return False
 
     # send a transaction to connected peers
-    def send_transaction(self, transaction_type, identity, amount):
+    def send_transaction(self, identity, amount):
         if (identity in self.blacklist):
             logging.warning("ID is in blacklist, not proceding")
             return
@@ -311,11 +311,7 @@ class Node(threading.Thread):
             logging.debug("Waiting until consensus is over before sending transaction")
         while(self.active and self.pending_block is not None):
             time.sleep(1)
-        if (transaction_type == 1):
-            transaction = Transaction(1, identity, self.client.identity, amount)
-        else:
-            logging.error(f"Invalid transaction type ({transaction_type})")
-            return
+        transaction = Transaction(1, identity, self.client.identity, amount)
         self.client.sign(transaction)
         self.record_transaction(transaction, self.client.identity)
         for peer in self.peers.copy():

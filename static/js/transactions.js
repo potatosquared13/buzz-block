@@ -1,14 +1,12 @@
 window.onload = () => {
   checkIfNodeToggled();
+  setInterval(checkTransactionsChanged, 4000);
 }
 
 function toggleNode(e) {
-
   let xhr = new XMLHttpRequest();
-
   xhr.open('GET', '/toggle', true);
   xhr.send();
-
 }
 
 function checkTransactionsChanged() {
@@ -30,7 +28,6 @@ function checkIfNodeToggled() {
     if (xhr.readyState == 4 && xhr.status == 200) {
       if (xhr.responseText == '1') {
         document.getElementById("node-status").checked = true;
-        setInterval(checkTransactionsChanged, 4000);
       } else {
         document.getElementById("node-status").checked = false;
       }

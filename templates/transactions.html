@@ -42,7 +42,6 @@
                 <div class="box-auto">
                     <div style="text-align: center">
                         <span style="font-size: 16px">CONFIRMED TRANSACTIONS</span>
-                        <hr />
                     </div>
                     <table>
                         {% set ns = namespace(t_index = 0) %}
@@ -111,12 +110,9 @@
                             <td style="min-width: 20%">
                                 {{transaction.timestamp}}
                             </td>
-                            <td style="min-width: 50%" colspan="3">
+                            <td style="min-width: 65%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
                                 <span style="color:#aaa">({{(transaction.address[:8])}})</span>
-                            </td>
-                            <td style="min-width: 15%">
-                                {{transaction.amount}}
                             </td>
                         </tr>
                         {% endif %}
@@ -130,7 +126,6 @@
                 <div class="box-auto">
                     <div style="text-align: center">
                         <span style="font-size: 16px">PENDING TRANSACTIONS</span>
-                        <hr />
                     </div>
                     <table>
                         {% set ns = namespace(pt_index=0) %}
@@ -198,12 +193,9 @@
                             <td style="min-width: 20%">
                                 {{pending_transaction.timestamp}}
                             </td>
-                            <td style="min-width: 50%" colspan="3">
+                            <td style="min-width: 65%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
                                 <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
-                            </td>
-                            <td style="min-width: 15%">
-                                {{pending_transaction.amount}}
                             </td>
                         </tr>
                         {% endif %}
