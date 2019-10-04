@@ -86,23 +86,8 @@
     color: #888;
 }
 
-.tab:hover {
-    background: transparent;
-}
-
-.tab.active {
-    background: rgba(198, 140, 219, 0.1);
-    border-bottom-color: #ddd;
-    color: #555;
-}
-
-.tab.disabled {
-    color: #bbb;
-    cursor: auto;
-}
-
 button {
-    border: 1px solid #eee;
+    border: 1px solid #ccc;
     border-radius: 8px;
     margin: 1vh 0;
     padding: 8px 16px;
@@ -111,10 +96,30 @@ button {
     transition: 0.2s ease-in-out background-color, 0.2s ease-in-out color;
 }
 
-button:hover {
+button:disabled {
+    color: #bbb;
+}
+
+button:hover:not([disabled]) {
     cursor: pointer;
     color: #bf6cd7;
     background: rgba(198, 198, 219, 0.4);
+}
+
+button.add {
+    background: rgba(144, 238, 144, 0.4);
+}
+
+button.add:hover {
+    background: rgba(144, 238, 144, 0.6);
+}
+
+button.blacklist, button.cancel-edit {
+    background: rgba(240, 128, 128, 0.4);
+}
+
+button.blacklist:hover, button.cancel-edit:hover {
+    background: rgba(240, 128, 128, 0.6);
 }
 
 .content, .content-flex {
@@ -153,8 +158,11 @@ form {
     color: #888;
 }
 
+fieldset {
+    border: none;
+}
+
 #client-form, #vendor-form {
-    /* outline: 1px solid red; */
     margin: 0 16px;
 }
 
@@ -194,16 +202,6 @@ table tr {
     border-top: 1px solid #eee;
     border-bottom: 1px solid #eee;
     background: rgba(198, 198, 219, 0.1);
-}
-
-table tr.client {
-    background: rgba(198, 140, 219, 0.1);
-    transition: 0.2s ease-in-out background-color;
-}
-
-table tr.client:hover {
-    background: rgba(198, 198, 219, 0.4);
-    cursor: pointer;
 }
 
 table tr:first-child {
@@ -305,3 +303,7 @@ input:checked + .slider:before {
 .slider.round:before {
     border-radius: 50%;
 } 
+
+.hidden {
+    display: none;
+}

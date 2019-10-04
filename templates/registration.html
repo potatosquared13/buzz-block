@@ -16,7 +16,7 @@
             <a href="/transactions">
                 <div class="link">TRANSACTIONS</div>
             </a>
-            <a class="active" href="#">
+            <a class="active" href="/">
                 <div class="link">ACCOUNTS</div>
             </a>
             <a href="/report">
@@ -28,9 +28,20 @@
                 <div class="left-align">
                     ACCOUNT MANAGEMENT
                 </div>
+                <div class="right-align">
+                    {% if blockchain == 0 %}
+                    <button id="finalize" type="button" onclick="finalize()">FINALIZE</button>
+                    {% else %}
+                    <button id="finalize" type="button" onclick="finalize()" disabled>FINALIZE</button>
+                    {% endif %}
+                </div>
             </div>
             <div class="content-flex">
                 <div id="client-container" class="box-50">
+                    <div style="text-align: center">
+                        <span style="font-size: 16px">USERS</span>
+                        <hr />
+                    </div>
                     <form id="client-form">
                         <div class="client-header">REGISTER NEW CLIENT</div>
                         <div class="label-input">
@@ -49,62 +60,95 @@
                                 name="client-amount" />
                         </div>
                         <div class="button-container">
+                                <button class="hidden" id="cancel-edit" type="button" onclick="cancelEdit()">cancel</button>
+                            <button class="hidden" id="client-edit" type="button" onclick="editClient()">edit</button>
                             <button id="client-add" type="button" onclick="registerClient()">add</button>
                         </div>
                     </form>
                     <hr />
                     <div class="container">
                         <table>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Contact</th>
+                                <th scope="col">Balance</th>
+                            </tr>
+
                             {% for user in users %}
 
                             <tr>
-                                <td style="width: 40%">{{user[0][:8]}}</td>
-                                <td style="width: 20%">{{user[1]}}</td>
-                                <td style="width: 20%">{{user[3]}}</td>
-                                <td style="width: 20%">{{user[5]}}</td>
+                                <td style="width: 40%">{{user[1]}} <span style="color:#aaa">({{user[0][:8]}})</span></td>
+                                <td style="width: 20%">{{user[2]}}</td>
+                                <td style="width: 20%">{{user[4]}} ({{user[5]}})</td>
+                                <td style="width: 10%">
+                                    <button title="Add funds to this user's address" class="add" onclick="addFunds(id)">+</button>
+                                </td>
+                                <td style="width: 10%">
+                                    <button title="Blacklist this user's address" class="blacklist" onclick="blacklist(id)">x</button>
+                                </td>
                             </tr>
 
                             {% endfor %}
                         </table>
                     </div>
                 </div>
-                {% if blockchain == 0 %}
 
                 <div id="vendor-container" class="box-50">
+                    <div style="text-align: center">
+                        <span style="font-size: 16px">VENDORS</span>
+                        <hr />
+                    </div>
                     <form id="vendor-form">
-                        <div class="vendor-header">REGISTER NEW VENDOR </div>
-                        <div class="label-input">
-                            Name
-                            <input placeholder="Business name" id="vendor-name" type="text" class="text-input"
-                                name="vendor-name" />
-                        </div>
-                        <div class="label-input">
-                            Contact
-                            <input placeholder="Contact number" id="vendor-contact" type="text" class="text-input"
-                                name="vendor-contact" />
-                        </div>
-                        <div class="button-container">
-                            <button id="vendor-add" type="button" onclick="registerVendor()">add</button>
-                        </div>
+                        {% if blockchain == 0 %}
+                        <fieldset>
+                        {% else %}
+                        <fieldset disabled>
+                        {% endif %}
+                            <div class="vendor-header">REGISTER NEW VENDOR </div>
+                            <div class="label-input">
+                                Name
+                                <input placeholder="Business name" id="vendor-name" type="text" class="text-input"
+                                    name="vendor-name" />
+                            </div>
+                            <div class="label-input">
+                                Contact
+                                <input placeholder="Contact number" id="vendor-contact" type="text" class="text-input"
+                                    name="vendor-contact" />
+                            </div>
+                            {% if blockchain == 0 %}
+                            <div class="button-container">
+                                <button id="vendor-add" type="button" onclick="registerVendor()">add</button>
+                            </div>
+                            {% else %}
+                            <div class="button-container">
+                                <button id="vendor-add" type="button" onclick="registerVendor()" disabled>add</button>
+                            </div>
+                            {% endif %}
+                        </fieldset>
                     </form>
                     <hr />
                     <div class="container">
                         <table>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Contact</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Balance</th>
+                            </tr>
+
                             {% for vendor in vendors %}
 
                             <tr>
-                                <td style="width: 40%">{{vendor[0][:8]}}</td>
-                                <td style="width: 20%">{{vendor[1]}}</td>
+                                <td style="width: 40%">{{vendor[1]}} <span style="color:#aaa">({{vendor[0][:8]}})</span></td>
                                 <td style="width: 20%">{{vendor[2]}}</td>
-                                <td style="width: 20%">{{vendor[4]}}</td>
+                                <td style="width: 20%">{{vendor[3]}}</td>
+                                <td style="width: 20%">{{vendor[4]}} ({{vendor[5]}})</td>
                             </tr>
 
                             {% endfor %}
                         </table>
                     </div>
                 </div>
-
-                {% endif %}
             </div>
         </div>
     </div>

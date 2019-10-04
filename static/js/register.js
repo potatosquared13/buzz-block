@@ -34,24 +34,44 @@ function finalize() {
   window.location.href = '/finalize';
 }
 
-// function vendor() {
-//   var v = document.getElementById("vendor-container")
-//   if (v.style.display === "none") {
-//     v.style.display = "block";
-//     document.getElementById("vendor-reg").classList.add("active");
+function editClient() {
+  document.getElementById('client-edit').classList.add("hidden");
+  document.getElementById('cancel-edit').classList.add("hidden");
+  document.getElementById('client-add').classList.remove("hidden");
 
-//     document.getElementById("client-container").style.display = "none";
-//     document.getElementById("client-reg").classList.remove("active");
-//   }
-// }
+  document.getElementById('client-name').disabled = false;
+  document.getElementById('client-contact').disabled = false;
 
-// function client() {
-//   var c = document.getElementById("client-container")
-//   if (c.style.display === "none") {
-//     c.style.display = "block";
-//     document.getElementById("client-reg").classList.add("active");
+  // call registerClient() i guess
+}
 
-//     document.getElementById("vendor-container").style.display = "none";
-//     document.getElementById("vendor-reg").classList.remove("active");
-//   }
-// }
+function cancelEdit() {
+  document.getElementById('client-edit').classList.add("hidden");
+  document.getElementById('cancel-edit').classList.add("hidden");
+  document.getElementById('client-add').classList.remove("hidden");
+  document.getElementById('client-name').disabled = false;
+  document.getElementById('client-contact').disabled = false;
+  document.getElementById('client-name').value = "";
+  document.getElementById('client-contact').value = "";
+  document.getElementById('client-amount').value = "";
+}
+
+function addFunds() {
+  amount = window.prompt("Enter an amount", 0);
+  // do stuff
+  // call function/route in app.py to add funds
+}
+
+function blacklist() {
+  // get user information from table row
+  // document.getElementById('client-name').value = name;
+  // document.getElementById('client-amount').value = amount;
+  // document.getElementById('client-contact').value = contact;
+
+  document.getElementById('client-add').classList.add("hidden");
+  document.getElementById('client-edit').classList.remove("hidden");
+  document.getElementById('cancel-edit').classList.remove("hidden");
+
+  document.getElementById('client-name').disabled = true;
+  document.getElementById('client-contact').disabled = true;
+}

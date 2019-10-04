@@ -83,7 +83,7 @@ class Leader(Node):
             start = time.time()
             while (self.active and time.time() - start < 600 and len(self.pending_transactions) < self.block_size):
                 time.sleep(10)
-            if (len(self.pending_transactions) >= self.block_size):
+            if (len(self.pending_transactions) >= self.block_size / 2):
                 self.start_consensus()
 
     def get_balance(self, client):
@@ -92,7 +92,7 @@ class Leader(Node):
     def create_account(self, identity, amount):
         if (self.pending_block is not None):
             logging.debug("Waiting until consensus is over before sending transaction")
-        while(self.active and self.pending_block is not None):
+        while (self.pending_block is not None):
             time.sleep(1)
         transaction = Transaction(0, self.client.identity, identity, amount)
         self.client.sign(transaction)
@@ -106,7 +106,7 @@ class Leader(Node):
             return
         if (self.pending_block is not None):
             logging.debug("Waiting until consensus is over before sending transaction")
-        while(self.active and self.pending_block is not None):
+        while (self.pending_block is not None):
             time.sleep(1)
         transaction = Transaction(2, self.client.identity, identity, amount)
         self.client.sign(transaction)

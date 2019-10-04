@@ -115,7 +115,7 @@ def home():
     url_for('static', filename='js/register.js')
     url_for('static', filename='css/style.css')
 
-    if os.path.exists('./blockchain.json'):
+    if (node.chain.blocks):
         blockchain = 1
 
     c = db.get_users()
@@ -136,12 +136,15 @@ def report():
 
 @app.route('/register_client', methods=['POST'])
 def register_client():
-    if os.path.exists('./blockchain.json'):
-        name = request.args.get('name')
-        amount = request.args.get('amount')
-        contact = request.args.get('contact')
-        clients.append((name, contact, amount))
-    print(clients)
+    name = request.args.get('name')
+    amount = request.args.get('amount')
+    contact = request.args.get('contact')
+    client = Client(name)
+    if (node.chain.blocks):
+        db.insert_user(client, contact, amount)
+        node.create_account(client.identity[:96], amount)
+    else:
+        clients.append((client, contact, amount))
     return ''
 
 @app.route('/register_vendor', methods=['POST'])
@@ -151,24 +154,22 @@ def register_vendor():
     v = Client(vendor[0])
     v.export()
     db.insert(v, vendor[1], 0, 1)
-    # vendors.append((name, contact))
-    print(vendors)
     return ''
 
+# TODO change href to / so reloading won't call finalize() again
 @app.route('/finalize')
 def finalize():
     transactions = []
     for client in clients:
-        c = Client(client[0])
-        c.export()
-        db.insert(c, client[1], client[2])
-        t = Transaction(0, node.client.identity, c.identity[:96], client[2])
+        client[0].export()
+        db.insert_user(client[0], client[1], client[2])
+        t = Transaction(0, node.client.identity, client[0].identity[:96], client[2])
         node.client.sign(t)
         transactions.append(t)
     for vendor in vendors:
         v = Client(vendor[0])
         v.export()
-        db.insert(v, vendor[1], 0, 1)
+        db.insert_vendor(v, vendor[1], 0, 1)
     node.chain.genesis(transactions)
     node.chain.export()
     return get_transactions()

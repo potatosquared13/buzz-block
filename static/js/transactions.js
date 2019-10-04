@@ -2,7 +2,7 @@ window.onload = () => {
   setInterval(checkTransactionsChanged, 4000);
 }
 
-function toggleNode() {
+function toggleNode(e) {
 
   let xhr = new XMLHttpRequest();
 
