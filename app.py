@@ -109,9 +109,19 @@ def get_vendor_transactions():
 
 @app.route('/')
 def home():
+
+    blockchain = 0
+
     url_for('static', filename='js/register.js')
     url_for('static', filename='css/style.css')
-    return render_template('registration.html')
+
+    if os.path.exists('./blockchain.json'):
+        blockchain = 1
+
+    c = db.get_users()
+    v = db.get_vendors()
+
+    return render_template('registration.html', blockchain=blockchain, users=c, vendors=v)
 
 @app.route('/transactions')
 def overview():
@@ -126,10 +136,11 @@ def report():
 
 @app.route('/register_client', methods=['POST'])
 def register_client():
-    name = request.args.get('name')
-    amount = request.args.get('amount')
-    contact = request.args.get('contact')
-    clients.append((name, contact, amount))
+    if os.path.exists('./blockchain.json'):
+        name = request.args.get('name')
+        amount = request.args.get('amount')
+        contact = request.args.get('contact')
+        clients.append((name, contact, amount))
     print(clients)
     return ''
 

@@ -55,21 +55,21 @@
                     <hr />
                     <div class="container">
                         <table>
-                            <tr class="client">
-                                <td style="width: 40%">name (id)</td>
-                                <td style="width: 20%">contact</td>
-                                <td style="width: 20%">initial balance</td>
-                                <td style="width: 20%">balance (pending)</td>
+                            {% for user in users %}
+
+                            <tr>
+                                <td style="width: 40%">{{user[0][:8]}}</td>
+                                <td style="width: 20%">{{user[1]}}</td>
+                                <td style="width: 20%">{{user[3]}}</td>
+                                <td style="width: 20%">{{user[5]}}</td>
                             </tr>
-                            <tr class="client">
-                                <td style="width: 40%">name (id)</td>
-                                <td style="width: 20%">contact</td>
-                                <td style="width: 20%">initial balance</td>
-                                <td style="width: 20%">balance (pending)</td>
-                            </tr>
+
+                            {% endfor %}
                         </table>
                     </div>
                 </div>
+                {% if blockchain == 0 %}
+
                 <div id="vendor-container" class="box-50">
                     <form id="vendor-form">
                         <div class="vendor-header">REGISTER NEW VENDOR </div>
@@ -90,15 +90,21 @@
                     <hr />
                     <div class="container">
                         <table>
+                            {% for vendor in vendors %}
+
                             <tr>
-                                <td style="width: 40%">name (id)</td>
-                                <td style="width: 20%">contact</td>
-                                <td style="width: 20%">business type</td>
-                                <td style="width: 20%">balance (pending)</td>
+                                <td style="width: 40%">{{vendor[0][:8]}}</td>
+                                <td style="width: 20%">{{vendor[1]}}</td>
+                                <td style="width: 20%">{{vendor[2]}}</td>
+                                <td style="width: 20%">{{vendor[4]}}</td>
                             </tr>
+
+                            {% endfor %}
                         </table>
                     </div>
                 </div>
+
+                {% endif %}
             </div>
         </div>
     </div>
