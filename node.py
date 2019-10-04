@@ -117,7 +117,7 @@ class Node(threading.Thread):
     # connect to a peer
     def connect(self, addr):
         if (not self.active):
-            logging.error("call Node.start() first.")
+            return False
         elif (addr != self.address):
             peer = [p for p in self.peers if p.address == addr]
             if (not peer):

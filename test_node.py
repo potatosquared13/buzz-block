@@ -43,7 +43,6 @@ time.sleep(2)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
-    exit()
 v2.send_transaction(1, c9, 59)
 time.sleep(1)
 v1.send_transaction(1, c1, 59)
@@ -58,7 +57,6 @@ v1.send_transaction(1, c5, 59)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
-    exit()
 
 v2.send_transaction(1, c9, 149)
 time.sleep(1)
@@ -68,7 +66,6 @@ v2.send_transaction(1, c9, 59)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
-    exit()
 
 v3.send_transaction(1, c7, 49)
 time.sleep(1)
@@ -82,7 +79,6 @@ v3.send_transaction(1, c9, 59)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
-    exit()
 
 v4.send_transaction(1, c3, 79)
 time.sleep(1)

@@ -124,3 +124,12 @@ def get_users():
         finally:
             lock.release()
     return users
+
+def replace_id(old_identity, new_identity):
+    with conn:
+        try:
+            lock.acquire()
+            c.execute("UPDATE clients SET identity=? WHERE identity=?", (new_identity, old_identity,))
+            c.execute("UPDATE users SET identity=? WHERE identity=?", (new_identity, old_identity,))
+        finally:
+            lock.release()

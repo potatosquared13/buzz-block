@@ -6,7 +6,11 @@ function registerClient() {
   let url = `/register_client?name=${name}&amount=${amount}&contact=${contactNumber}`;
 
   let xhr = new XMLHttpRequest();
-
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState == 4 && xhr.status == 200) {
+        window.location.href = '/'
+    }
+  }
   xhr.open('POST', url, true);
   xhr.send()
 
@@ -16,62 +20,45 @@ function registerClient() {
 }
 
 function registerVendor() {
-
   let name = document.getElementById('vendor-name').value;
   let contactNumber = document.getElementById('vendor-contact').value;
-  let url = `/register_vendor?name=${name}&contact=${contactNumber}`;
+  let type = document.getElementById('vendor-type').value;
+  let url = `/register_vendor?name=${name}&contact=${contactNumber}&type=${type}`;
 
   let xhr = new XMLHttpRequest();
-
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState == 4 && xhr.status == 200) {
+        window.location.href = '/'
+    }
+  }
   xhr.open('POST', url, true);
   xhr.send()
 
-  name = document.getElementById('vendor-name').value = "";
-  contactNumber = document.getElementById('vendor-contact').value = "";
+  document.getElementById('vendor-name').value = "";
+  document.getElementById('vendor-contact').value = "";
+  document.getElementById('vendor-type').value = "";
 }
 
 function finalize() {
   window.location.href = '/finalize';
 }
 
-function editClient() {
-  document.getElementById('client-edit').classList.add("hidden");
-  document.getElementById('cancel-edit').classList.add("hidden");
-  document.getElementById('client-add').classList.remove("hidden");
+function addFunds(identity) {
+  while(isNaN(amount = window.prompt("Enter an amount", "")));
 
-  document.getElementById('client-name').disabled = false;
-  document.getElementById('client-contact').disabled = false;
+  let xhr = new XMLHttpRequest();
 
-  // call registerClient() i guess
+  xhr.open('POST', `/add_funds?id=${identity}?amount=${amount}`, true);
+  xhr.send()
 }
 
-function cancelEdit() {
-  document.getElementById('client-edit').classList.add("hidden");
-  document.getElementById('cancel-edit').classList.add("hidden");
-  document.getElementById('client-add').classList.remove("hidden");
-  document.getElementById('client-name').disabled = false;
-  document.getElementById('client-contact').disabled = false;
-  document.getElementById('client-name').value = "";
-  document.getElementById('client-contact').value = "";
-  document.getElementById('client-amount').value = "";
-}
+function blacklist(name, current_id) {
+    if (window.confirm("Blacklist user's current id?\nA new id will be generated for this user.")) {
+      
+      let xhr = new XMLHttpRequest();
 
-function addFunds() {
-  amount = window.prompt("Enter an amount", 0);
-  // do stuff
-  // call function/route in app.py to add funds
-}
+      xhr.open('POST', `/register_client?replace=true?name=${name}?id=${current_id}`, true);
+      xhr.send()
 
-function blacklist() {
-  // get user information from table row
-  // document.getElementById('client-name').value = name;
-  // document.getElementById('client-amount').value = amount;
-  // document.getElementById('client-contact').value = contact;
-
-  document.getElementById('client-add').classList.add("hidden");
-  document.getElementById('client-edit').classList.remove("hidden");
-  document.getElementById('cancel-edit').classList.remove("hidden");
-
-  document.getElementById('client-name').disabled = true;
-  document.getElementById('client-contact').disabled = true;
+    }
 }

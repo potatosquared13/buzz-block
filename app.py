@@ -7,7 +7,7 @@ from transaction import Transaction
 from helpers import jsonify
 import os.path
 
-from flask import Flask, render_template, url_for, request
+from flask import Flask, render_template, url_for, request, redirect
 app = Flask(__name__)
 
 # for registration
@@ -63,7 +63,7 @@ def get_transactions():
                     t_recipients.append('unnamed')
     for pt in node.pending_transactions:
         if (pt.transaction == 0):
-            pt_senders.append({name:"Admin"})
+            pt_senders.append('Admin')
             pt_recipient = db.search_user(pt.address)
             if pt_recipient is not None:
                 pt_recipients.append(pt_recipient)
@@ -74,21 +74,21 @@ def get_transactions():
             if pt_sender is not None:
                 pt_senders.append(pt_sender)
             else:
-                pt_senders.append({name:"unnamed"})
+                pt_senders.append('unnamed')
             pt_recipient = db.search_vendor(pt.address)
             if pt_recipient is not None:
                 pt_recipients.append(pt_recipient)
             else:
                 pt_recipients.append('unnamed')
         elif (pt.transaction == 2):
-            pt_senders.append({name:"Admin"})
+            pt_senders.append('Admin')
             pt_recipient = db.search_user(pt.address)
             if pt_recipient is not None:
                 pt_recipients.append(pt_recipient)
             else:
                 pt_recipients.append('unnamed')
         elif (pt.transaction == 3):
-            pt_senders.append({name:"Admin"})
+            pt_senders.append('Admin')
             pt_recipient = db.search_user(pt.address)
             if pt_recipient is not None:
                 pt_recipients.append(pt_recipient)
@@ -109,7 +109,6 @@ def get_vendor_transactions():
 
 @app.route('/')
 def home():
-
     blockchain = 0
 
     url_for('static', filename='js/register.js')
@@ -137,44 +136,48 @@ def report():
 @app.route('/register_client', methods=['POST'])
 def register_client():
     name = request.args.get('name')
-    amount = request.args.get('amount')
-    contact = request.args.get('contact')
     client = Client(name)
-    if (node.chain.blocks):
+    client.export()
+    if (not bool(request.args.get('replace'))):
+        amount = request.args.get('amount')
+        contact = request.args.get('contact')
         db.insert_user(client, contact, amount)
-        node.create_account(client.identity[:96], amount)
+        if (node.chain.blocks):
+            if (not node.active):
+                node.start()
+            node.create_account(client.identity[:96], amount)
+        else:
+            clients.append((client, contact, amount))
     else:
-        clients.append((client, contact, amount))
+        old_id = request.args.get('current_id')
+        db.replace_id(old_id, client.identity)
     return ''
 
 @app.route('/register_vendor', methods=['POST'])
 def register_vendor():
     name = request.args.get('name')
     contact = request.args.get('contact')
-    v = Client(vendor[0])
-    v.export()
-    db.insert(v, vendor[1], 0, 1)
+    btype = request.args.get('type')
+    client = Client(name)
+    client.export()
+    db.insert_vendor(client, contact, btype)
+    vendors.append((name, contact, btype))
     return ''
 
 # TODO change href to / so reloading won't call finalize() again
 @app.route('/finalize')
 def finalize():
-    transactions = []
-    for client in clients:
-        client[0].export()
-        db.insert_user(client[0], client[1], client[2])
-        t = Transaction(0, node.client.identity, client[0].identity[:96], client[2])
-        node.client.sign(t)
-        transactions.append(t)
-    for vendor in vendors:
-        v = Client(vendor[0])
-        v.export()
-        db.insert_vendor(v, vendor[1], 0, 1)
-    node.chain.genesis(transactions)
-    node.chain.export()
-    return get_transactions()
+    if (not node.chain.blocks):
+        transactions = []
+        for client in clients:
+            t = Transaction(0, node.client.identity, client[0].identity[:96], client[2])
+            node.client.sign(t)
+            transactions.append(t)
+        node.chain.genesis(transactions)
+        node.chain.export()
+    return redirect('/transactions')
 
-# for toggling the leader
+# for toggling the node
 @app.route('/toggle')
 def toggle():
     if node.active:
@@ -185,6 +188,12 @@ def toggle():
         print('node started')
     return ''
 
+@app.route('/check_toggle')
+def check_toggle():
+    if node.active:
+        return '1'
+    return '0'
+
 @app.route('/check_transactions_changed', methods=['POST'])
 def check_transactions_changed():
     global pending_transactions_saved_state
@@ -193,3 +202,10 @@ def check_transactions_changed():
         return 'good'
     else:
         return ''
+
+@app.route('/add_funds', methods=['POST'])
+def add_funds():
+    identity = request.args.get('identity')
+    amount = request.args.get('amount')
+    node.add_funds(identity, amount)
+    return ''

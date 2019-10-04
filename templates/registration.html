@@ -56,12 +56,9 @@
                         </div>
                         <div class="label-input">
                             Amount
-                            <input placeholder="Amount" id="client-amount" type="text" class="text-input"
-                                name="client-amount" />
+                            <input placeholder="Amount" id="client-amount" type="text" class="text-input" name="client-amount" />
                         </div>
                         <div class="button-container">
-                                <button class="hidden" id="cancel-edit" type="button" onclick="cancelEdit()">cancel</button>
-                            <button class="hidden" id="client-edit" type="button" onclick="editClient()">edit</button>
                             <button id="client-add" type="button" onclick="registerClient()">add</button>
                         </div>
                     </form>
@@ -72,6 +69,7 @@
                                 <th scope="col">Name</th>
                                 <th scope="col">Contact</th>
                                 <th scope="col">Balance</th>
+                                <th scope="col" colspan="2"></th>
                             </tr>
 
                             {% for user in users %}
@@ -81,10 +79,10 @@
                                 <td style="width: 20%">{{user[2]}}</td>
                                 <td style="width: 20%">{{user[4]}} ({{user[5]}})</td>
                                 <td style="width: 10%">
-                                    <button title="Add funds to this user's address" class="add" onclick="addFunds(id)">+</button>
+                                    <button title="Add funds to this user's address" class="add" onclick="addFunds('{{user[0]}}')">+</button>
                                 </td>
                                 <td style="width: 10%">
-                                    <button title="Blacklist this user's address" class="blacklist" onclick="blacklist(id)">x</button>
+                                    <button title="Blacklist this user's address" class="blacklist" onclick="blacklist('{{user[1]}}', '{{user[0]}}')">x</button>
                                 </td>
                             </tr>
 
@@ -115,13 +113,18 @@
                                 <input placeholder="Contact number" id="vendor-contact" type="text" class="text-input"
                                     name="vendor-contact" />
                             </div>
+                            <div class="label-input">
+                                    Type
+                                    <input placeholder="Business Type" id="vendor-type" type="text" class="text-input"
+                                        name="vendor-type" />
+                                </div>
                             {% if blockchain == 0 %}
                             <div class="button-container">
                                 <button id="vendor-add" type="button" onclick="registerVendor()">add</button>
                             </div>
                             {% else %}
                             <div class="button-container">
-                                <button id="vendor-add" type="button" onclick="registerVendor()" disabled>add</button>
+                                <button id="vendor-add" type="button" disabled>add</button>
                             </div>
                             {% endif %}
                         </fieldset>

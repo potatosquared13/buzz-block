@@ -20,14 +20,12 @@ node.start()
 
 if (input("Press enter to add funds to accounts ") == 'q'):
     node.stop()
-    exit()
 
 node.add_funds(c0.identity[:96], 200)
 node.add_funds(c9.identity[:96], 200)
 
 if (input("Press enter to blacklist account ") == 'q'):
     node.stop()
-    exit()
 
 node.blacklist_account(c9.identity[:96])
 
