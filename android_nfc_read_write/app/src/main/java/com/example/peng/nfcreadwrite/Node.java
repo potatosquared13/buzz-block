@@ -503,7 +503,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         ms.send(dp);
         ms.close();
     }
-    public void sendPayment(String i, double a) {
+    public boolean sendPayment(String i, double a) {
         if (control.blacklist.contains(i)){
             System.out.println("ID is in blacklist");
             return false;
@@ -516,10 +516,15 @@ public class Node extends AsyncTask<Void, Void, Void>{
             }
         Transaction txn = new Transaction(1, i, control.client.getIdentity(), a);
         control.client.sign(txn);
-        recordTransaction(txn, control.client.identity);
+        try {
+            recordTransaction(txn, control.client.getIdentity());
+        } catch (Exception e){
+            e.printStackTrace();
+        }
         for (Peer p : new HashSet<>(control.peers)) {
             send(p.socket, TRANSACTION, txn.toJson());
         }
+        return true;
     }
     public double getBalance(String i){
         double balance = 0;
@@ -561,7 +566,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             case 0: // initial balance
                 ArrayList<String> l = new ArrayList<String>();
                 for (Block b : control.chain.blocks){
-                    for (Transaction t : b){
+                    for (Transaction txn : b.transactions){
                         if (t.transaction == 0){
                             l.add(t.address);
                         }
@@ -571,7 +576,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     return true;
                 }
                 return false;
-                break;
             case 1: // payment
                 if (t.address == i && getBalance(t.sender) >= t.amount)
                     control.pending_transactions.add(t);
