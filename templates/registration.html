@@ -46,20 +46,18 @@
                         <div class="client-header">REGISTER NEW CLIENT</div>
                         <div class="label-input">
                             Name
-                            <input placeholder="Client name" id="client-name" type="text" class="text-input"
-                                name="client-name" />
+                            <input placeholder="Client name" id="client-name" type="text" class="text-input" name="client-name" onkeyup="checkClient(event)"/>
                         </div>
                         <div class="label-input">
                             Contact
-                            <input placeholder="Contact number" id="client-contact" type="text" class="text-input"
-                                name="client-contact" />
+                            <input placeholder="Contact number" id="client-contact" type="text" class="text-input" name="client-contact" onkeyup="checkClient(event)"/>
                         </div>
                         <div class="label-input">
                             Amount
-                            <input placeholder="Amount" id="client-amount" type="text" class="text-input" name="client-amount" />
+                            <input placeholder="Amount" id="client-amount" type="text" class="text-input" name="client-amount" onkeyup="checkClient(event)"/>
                         </div>
                         <div class="button-container">
-                            <button id="client-add" type="button" onclick="registerClient()">add</button>
+                            <button id="client-add" type="button" onclick="registerClient()" disabled>add</button>
                         </div>
                     </form>
                     <hr />
@@ -82,7 +80,7 @@
                                     <button title="Add funds to this user's address" class="add" onclick="addFunds('{{user[0]}}')">+</button>
                                 </td>
                                 <td style="width: 10%">
-                                    <button title="Blacklist this user's address" class="blacklist" onclick="blacklist('{{user[1]}}', '{{user[0]}}')">x</button>
+                                    <button title="Blacklist this user's address" class="blacklist" onclick="blacklist('{{user[1]}}', '{{user[0]}}', '{{user[5]}}')">x</button>
                                 </td>
                             </tr>
 
@@ -105,22 +103,19 @@
                             <div class="vendor-header">REGISTER NEW VENDOR </div>
                             <div class="label-input">
                                 Name
-                                <input placeholder="Business name" id="vendor-name" type="text" class="text-input"
-                                    name="vendor-name" />
+                                <input placeholder="Business name" id="vendor-name" type="text" class="text-input" name="vendor-name" onkeyup="checkVendor(event)"/>
                             </div>
                             <div class="label-input">
                                 Contact
-                                <input placeholder="Contact number (for stall operator)" id="vendor-contact" type="text" class="text-input"
-                                    name="vendor-contact" />
+                                <input placeholder="Contact number (for stall operator)" id="vendor-contact" type="text" class="text-input" name="vendor-contact" onkeyup="checkVendor(event)"/>
                             </div>
                             <div class="label-input">
                                     Type
-                                    <input placeholder="Business Type" id="vendor-type" type="text" class="text-input"
-                                        name="vendor-type" />
+                                    <input placeholder="Business Type" id="vendor-type" type="text" class="text-input" name="vendor-type" onkeyup="checkVendor(event)"/>
                                 </div>
                             {% if blockchain == 0 %}
                             <div class="button-container">
-                                <button id="vendor-add" type="button" onclick="registerVendor()">add</button>
+                                <button id="vendor-add" type="button" onclick="registerVendor()" disabled>add</button>
                             </div>
                             {% else %}
                             <div class="button-container">

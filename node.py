@@ -136,7 +136,6 @@ class Node(threading.Thread):
                     threading.Thread(target=self.handle_connection, args=(peer,)).start()
                     if (self.leader is not None):
                         if (self.leader.address == self.address):
-                            logging.info("asserting dominance")
                             self.send(sock, LEADER, self.client.identity)
                     return True
                 except socket.timeout:
@@ -281,7 +280,8 @@ class Node(threading.Thread):
 
     # add a transaction to own list of pending transactions if it passes several checks
     def record_transaction(self, transaction, peer_identity):
-        if (transaction.sender in self.blacklist):
+        if (transaction.sender in self.blacklist or transaction.address in self.blacklist):
+            logging.warning("ID is in blacklist, not proceeding")
             return False
         if (transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
             if (transaction.transaction == 0): # initial balance
@@ -296,7 +296,7 @@ class Node(threading.Thread):
             elif (transaction.transaction == 2 and transaction.sender == peer_identity and peer_identity == self.leader.identity): # add funds
                 self.pending_transactions.append(transaction)
             elif (transaction.transaction == 3): # disable wallet
-                self.blacklist.append(transaction.sender)
+                self.blacklist.append(transaction.address)
             else:
                 return False
             return True

@@ -136,10 +136,10 @@ def report():
 @app.route('/register_client', methods=['POST'])
 def register_client():
     name = request.args.get('name')
+    amount = request.args.get('amount')
     client = Client(name)
     client.export()
     if (not bool(request.args.get('replace'))):
-        amount = request.args.get('amount')
         contact = request.args.get('contact')
         db.insert_user(client, contact, amount)
         if (node.chain.blocks):
@@ -149,8 +149,10 @@ def register_client():
         else:
             clients.append((client, contact, amount))
     else:
-        old_id = request.args.get('current_id')
-        db.replace_id(old_id, client.identity)
+        old_id = request.args.get('identity')
+        node.blacklist_account(old_id)
+        db.replace_id(old_id, client.identity[:96])
+        node.create_account(client.identity[:96], amount)
     return ''
 
 @app.route('/register_vendor', methods=['POST'])

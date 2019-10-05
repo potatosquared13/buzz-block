@@ -32,6 +32,9 @@ class Leader(Node):
                 db.update_balance(identity)
 
     def record_transaction(self, transaction, peer_identity):
+        if (transaction.sender in self.blacklist or transaction.address in self.blacklist):
+            logging.warning("ID is in blacklist, not proceeding")
+            return False
         if (transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
             if (transaction.transaction == 0): # initial balance
                 pass
@@ -42,9 +45,7 @@ class Leader(Node):
             elif (transaction.transaction == 2 and transaction.sender == self.client.identity): # add funds
                 db.update_pending(None, transaction.address, transaction.amount)
             elif (transaction.transaction == 3): # disable wallet
-                self.blacklist.append(transaction.sender)
-                # transfer funds to new address
-                # update db, replace sender id with new id
+                self.blacklist.append(transaction.address)
                 pass
             else:
                 return False
@@ -102,7 +103,7 @@ class Leader(Node):
 
     def add_funds(self, identity, amount):
         if (identity in self.blacklist):
-            logging.warning("ID is in blacklist, not proceding")
+            logging.warning("ID is in blacklist, not proceeding")
             return
         if (self.pending_block is not None):
             logging.debug("Waiting until consensus is over before sending transaction")
@@ -115,7 +116,7 @@ class Leader(Node):
             self.send(peer.socket, TRANSACTION, transaction.json)
 
     def blacklist_account(self, identity):
-        transaction = Transaction(3, self.client.identity, identity, None)
+        transaction = Transaction(3, self.client.identity, identity, 0)
         self.client.sign(transaction)
         self.record_transaction(transaction, self.client.identity)
         for peer in self.peers.copy():
