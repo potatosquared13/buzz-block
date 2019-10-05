@@ -503,7 +503,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         ms.send(dp);
         ms.close();
     }
-    private void sendPayment(String i, double a) {
+    public void sendPayment(String i, double a) {
         if (control.blacklist.contains(i)){
             System.out.println("ID is in blacklist");
             return false;
