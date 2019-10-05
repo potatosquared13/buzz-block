@@ -421,7 +421,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             control.active = false;
             tcp.isActive = false;
             udp.isActive = false;
-            for (Peer p : control.peers)
+            for (Peer p : new HashSet<>(control.peers))
                 if (!p.socket.isClosed()) {
                     try {
                         p.socket.shutdownInput();
@@ -503,27 +503,21 @@ public class Node extends AsyncTask<Void, Void, Void>{
         ms.send(dp);
         ms.close();
     }
-    public void sendPayment(String i, double a) {
-        sendTransaction(1, i, a);
-    }
-    private void sendTransaction(int t, String i, double a) {
+    private void sendPayment(String i, double a) {
+        if (control.blacklist.contains(i)){
+            System.out.println("ID is in blacklist");
+            return false;
+        }
         while (control.active && control.pending_block != null)
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e){
                 e.printStackTrace();
             }
-        Transaction txn = null;
-        if (t == 1)
-            txn = new Transaction(1, i, control.client.getIdentity(), a);
-        else {
-            System.out.println("Invalid transaction type");
-            return;
-        }
+        Transaction txn = new Transaction(1, i, control.client.getIdentity(), a);
         control.client.sign(txn);
-        control.pending_transactions.add(txn);
-        System.out.println(txn.toJson());
-        for (Peer p : control.peers) {
+        recordTransaction(txn, control.client.identity);
+        for (Peer p : new HashSet<>(control.peers)) {
             send(p.socket, TRANSACTION, txn.toJson());
         }
     }
@@ -558,14 +552,25 @@ public class Node extends AsyncTask<Void, Void, Void>{
         }
         return false;
     }
-    // TODO
+
     private boolean recordTransaction(Transaction t, String i) throws Exception {
-        if (control.blacklist.contains(i))
+        if (control.blacklist.contains(t.sender) || control.blacklist.contains(t.address))
             return false;
         if (t.sender != t.address && isValidSignature(t, i)){
             switch (t.transaction) {
             case 0: // initial balance
-
+                ArrayList<String> l = new ArrayList<String>();
+                for (Block b : control.chain.blocks){
+                    for (Transaction t : b){
+                        if (t.transaction == 0){
+                            l.add(t.address);
+                        }
+                    }
+                }
+                if (l.isEmpty()){
+                    return true;
+                }
+                return false;
                 break;
             case 1: // payment
                 if (t.address == i && getBalance(t.sender) >= t.amount)
@@ -576,7 +581,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     control.pending_transactions.add(t);
                 break;
             case 3: // disable wallet
-                control.blacklist.add(t.sender);
+                control.blacklist.add(t.address);
                 break;
             default:
                 return false;
