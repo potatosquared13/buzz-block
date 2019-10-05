@@ -38,11 +38,11 @@
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
 
-            android:name="com.ipaulpro.afilechooser.FileChooserActivity"
-            android:icon="@drawable/ic_chooser"
-            android:enabled="@bool/use_activity"
-            android:exported="true"
-            android:label="@string/choose_file" >
+<!--            android:name="com.ipaulpro.afilechooser.FileChooserActivity"-->
+<!--            android:icon="@drawable/ic_chooser"-->
+<!--            android:enabled="@bool/use_activity"-->
+<!--            android:exported="true"-->
+<!--            android:label="@string/choose_file" >-->
             <intent-filter>
                 <action android:name="android.intent.action.GET_CONTENT" />
 

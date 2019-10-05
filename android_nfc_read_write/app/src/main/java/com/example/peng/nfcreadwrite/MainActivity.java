@@ -158,7 +158,7 @@ public class MainActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         double amount = Double.parseDouble(input.getText().toString());
                         node.sendPayment(tvNFCContent.getText().toString(), amount);
-                        tv.NFCContent.setText("");
+                        tvNFCContent.setText("");
                         dialog.cancel();
                     }
                 });
