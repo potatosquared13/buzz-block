@@ -54,14 +54,14 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         context = this;
 
-        tvNFCContent        = (TextView) findViewById(R.id.nfc_contents);
-        btnWrite            = (Button) findViewById(R.id.btnWrite);
-        btnGetBalance       = (Button) findViewById(R.id.btnGetBalance);
-        btnStartNode        = (Button) findViewById(R.id.btnStartNode);
-        btnStopNode         = (Button) findViewById(R.id.btnStopNode);
-        btnAddFunds         = (Button) findViewById(R.id.btnAddFunds);
-        btnSendTransaction  = (Button) findViewById(R.id.btnSendTransaction);
-        tvBalance           = (TextView) findViewById(R.id.tvBalance);
+        tvNFCContent        = findViewById(R.id.nfc_contents);
+        btnWrite            = findViewById(R.id.btnWrite);
+        btnGetBalance       = findViewById(R.id.btnGetBalance);
+        btnStartNode        = findViewById(R.id.btnStartNode);
+        btnStopNode         = findViewById(R.id.btnStopNode);
+        btnAddFunds         = findViewById(R.id.btnAddFunds);
+        btnSendTransaction  = findViewById(R.id.btnSendTransaction);
+        tvBalance           = findViewById(R.id.tvBalance);
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override

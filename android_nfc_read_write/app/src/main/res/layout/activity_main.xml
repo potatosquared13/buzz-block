@@ -34,7 +34,7 @@
         android:textAllCaps="true"
         android:textSize="30sp" />
 
-    <Button
+    <Button style="@style/Widget.AppCompat.Button"
         android:id="@+id/btnStartNode"
         android:layout_width="match_parent"
         android:layout_height="60dp"
