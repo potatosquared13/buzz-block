@@ -111,12 +111,12 @@ public class MainActivity extends Activity {
                             i++;
                             client = new Client(files[i]);
                             tvName.setText(client.name + " (" + client.getIdentity().substring(0,8) + ")");
-                            System.out.println(i+1 + "/" + files.length);
+                            System.out.println(i + 1 + "/" + files.length);
                             System.out.println(client.name);
                         } else {
                             tvName.setText("No more clients");
-                           Toast.makeText(context, "All Clients Written!", Toast.LENGTH_LONG).show();
-                           // disable write button
+                            Toast.makeText(context, "All Clients Written!", Toast.LENGTH_LONG).show();
+                            btnWrite.setEnabled(false);
                         }
                     }
 
