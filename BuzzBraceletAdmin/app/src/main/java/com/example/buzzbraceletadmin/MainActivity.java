@@ -43,121 +43,85 @@ public class MainActivity extends Activity {
     Tag myTag;
     Context context;
 
-    TextView tvNFCContent, tvBalance;
-    Button btnWrite, btnGetBalance, btnStartNode, btnStopNode, btnAddFunds;
-    com.example.buzzbraceletadmin.Node node;
-    com.example.buzzbraceletadmin.Client testclient;
+    TextView tvNFCContent, tvName;
+    Button btnWrite;
+    com.example.buzzbraceletadmin.Client client;
+    int i = 0;
+    File[] files;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
+        if (Build.VERSION.SDK_INT > 22)
+            requestPermissions(new String[] { "android.permission.READ_EXTERNAL_STORAGE" }, 1);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         context = this;
 
         tvNFCContent        = findViewById(R.id.nfc_contents);
+        tvName              = findViewById(R.id.tvName);
         btnWrite            = findViewById(R.id.btnWrite);
-        btnGetBalance       = findViewById(R.id.btnGetBalance);
-        btnGetBalance       = findViewById(R.id.btnGetBalance);
-        btnStartNode        = findViewById(R.id.btnStartNode);
-        btnStopNode         = findViewById(R.id.btnStopNode);
-        btnAddFunds         = findViewById(R.id.btnAddFunds);
-        tvBalance           = findViewById(R.id.tvBalance);
-        btnStartNode.setEnabled(true);
-        btnStopNode.setEnabled(false);
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
-        final AlertDialog.Builder popup = new AlertDialog.Builder(MainActivity.this);
-        popup.setTitle("Write to Tag");
-        popup.setMessage("Please scan nfc tag...");
-        popup.setCancelable(true);
-        final AlertDialog pendingNfc = popup.create();
+        //scanning dir
+        String path = Environment.getExternalStorageDirectory().toString() + "/buzz";
+        File directory = new File(path);
+
+        files = directory.listFiles();
+        for (File f : files)
+            System.out.println(f.getName());
+
+        client = new Client(files[i]);
+        tvName.setText(client.name + " (" + client.getIdentity().substring(0,8) + ")");
+
 
         btnWrite.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try {
                     if (myTag == null) {
                         Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
                     } else {
-                        write(testclient.getIdentity().substring(0, 96), myTag);
+                        if(input.getParent() != null) {
+                            ((ViewGroup) input.getParent()).removeView(input);
+                            input.setText("");
+                        }
+                        builder.setTitle("Write Identity to tag");
+
+                        //Buttons
+                        builder.setPositiveButton("Write!!!!", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                try {
+                                    write(client.getIdentity().substring(0, 96), myTag);
+                                } catch (IOException | FormatException e) {
+                                    Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG).show();
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
-                        pendingNfc.dismiss();
+                        if(i < files.length - 1) {
+                            i++;
+                            client = new Client(files[i]);
+                            tvName.setText(client.name + " (" + client.getIdentity().substring(0,8) + ")");
+                            System.out.println(i+1 + "/" + files.length);
+                            System.out.println(client.name);
+                        } else {
+                            tvName.setText("No more clients");
+                           Toast.makeText(context, "All Clients Written!", Toast.LENGTH_LONG).show();
+                           // disable write button
+                        }
                     }
-                } catch (IOException | FormatException e) {
-                    Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
-                }
+
             }
         });
-
-        btnStartNode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (node == null) {
-                    node = new com.example.buzzbraceletadmin.Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
-                    node.execute();
-                }
-                btnStartNode.setEnabled(false);
-                btnStopNode.setEnabled(true);
-            }
-        });
-
-        btnStopNode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (node != null) {
-                    node.stop();
-                }
-
-                btnStartNode.setEnabled(true);
-                btnStopNode.setEnabled(false);
-            }
-        });
-
-        /**GET BALANCE**/
-        btnGetBalance.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String balance = "Balance: P" + node.getBalance(tvNFCContent.getText().toString());
-                tvBalance.setText(balance);
-            }
-        });
-
-
-
-        /**ADD FUNDS**/
-         btnAddFunds.setOnClickListener(new View.OnClickListener() {
-             @Override
-             public void onClick(View v) {
-                 if (input.getParent() != null) {
-                     ((ViewGroup) input.getParent()).removeView(input);
-                     input.setText("");
-                 }
-                 builder.setTitle("Add Funds");
-
-                 // Set up the buttons
-                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                     @Override
-                     public void onClick(DialogInterface dialog, int which) {
-                         double amount = Double.parseDouble(input.getText().toString());
-                         node.sendTransaction(2, tvNFCContent.getText().toString(), amount);
-                         tvNFCContent.setText("");
-                         dialog.cancel();
-                     }
-                 });
-                 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                     @Override
-                     public void onClick(DialogInterface dialog, int which) {
-                         dialog.cancel();
-                     }
-                 });
-                 builder.show();
-             }
-         });
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
@@ -172,16 +136,10 @@ public class MainActivity extends Activity {
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
         writeTagFilters = new IntentFilter[] { tagDetected };
 
-        if (Build.VERSION.SDK_INT > 22)
-            requestPermissions(new String[] {"android.permission.INTERNET",
-                    "android.permission.ACCESS_WIFI_STATE",
-                    "android.permission.READ_EXTERNAL_STORAGE",
-                    "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
 
-        testclient = new com.example.buzzbraceletadmin.Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
-        node = new com.example.buzzbraceletadmin.Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
-        node.execute();
-    }
+
+//        client = new com.example.buzzbraceletadmin.Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
+        }
 
 
     /******************************************************************************
