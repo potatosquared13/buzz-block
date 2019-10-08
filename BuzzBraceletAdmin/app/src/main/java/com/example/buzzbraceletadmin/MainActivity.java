@@ -69,7 +69,7 @@ public class MainActivity extends Activity {
         builder.setView(input);
 
         //scanning dir
-        String path = Environment.getExternalStorageDirectory().toString() + "/buzz";
+        String path = Environment.getExternalStorageDirectory().toString() + "/buzz/clients";
         File directory = new File(path);
 
         files = directory.listFiles();
@@ -90,20 +90,14 @@ public class MainActivity extends Activity {
                             ((ViewGroup) input.getParent()).removeView(input);
                             input.setText("");
                         }
-                        builder.setTitle("Write Identity to tag");
 
-                        //Buttons
-                        builder.setPositiveButton("Write!!!!", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
                                 try {
+                                    System.out.println(client.getIdentity().substring(0, 96));
                                     write(client.getIdentity().substring(0, 96), myTag);
                                 } catch (IOException | FormatException e) {
                                     Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG).show();
                                     e.printStackTrace();
                                 }
-                            }
-                        });
 
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                         if(i < files.length - 1) {
@@ -129,7 +123,7 @@ public class MainActivity extends Activity {
             finish();
         }
 
-        readFromIntent(getIntent());
+//        readFromIntent(getIntent());
         pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
@@ -140,34 +134,34 @@ public class MainActivity extends Activity {
     /******************************************************************************
      **********************************Read From NFC Tag***************************
      ******************************************************************************/
-    private void readFromIntent(Intent intent) {
-        String action = intent.getAction();
-        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
-                || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
-                || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
-            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-            NdefMessage[] msgs = null;
-            if (rawMsgs != null) {
-                msgs = new NdefMessage[rawMsgs.length];
-                for (int i = 0; i < rawMsgs.length; i++) {
-                    msgs[i] = (NdefMessage) rawMsgs[i];
-                }
-            }
-            buildTagViews(msgs);
-//            tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
-        }
-    }
-    private void buildTagViews(NdefMessage[] msgs) {
-        if (msgs == null || msgs.length == 0) return;
-
-        String text = "";
-        byte[] payload = msgs[0].getRecords()[0].getPayload();
-        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
-
-        // Get the Text
-        text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
-        tvNFCContent.setText(text);
-    }
+//    private void readFromIntent(Intent intent) {
+//        String action = intent.getAction();
+//        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
+//                || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
+//                || NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
+//            Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+//            NdefMessage[] msgs = null;
+//            if (rawMsgs != null) {
+//                msgs = new NdefMessage[rawMsgs.length];
+//                for (int i = 0; i < rawMsgs.length; i++) {
+//                    msgs[i] = (NdefMessage) rawMsgs[i];
+//                }
+//            }
+//            buildTagViews(msgs);
+////            tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
+//        }
+//    }
+//    private void buildTagViews(NdefMessage[] msgs) {
+//        if (msgs == null || msgs.length == 0) return;
+//
+//        String text = "";
+//        byte[] payload = msgs[0].getRecords()[0].getPayload();
+//        int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
+//
+//        // Get the Text
+//        text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
+//        tvNFCContent.setText(text);
+//    }
 
     /******************************************************************************
      **********************************Write to NFC Tag****************************
@@ -209,7 +203,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         setIntent(intent);
-        readFromIntent(intent);
+//        readFromIntent(intent);
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())){
             myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         }

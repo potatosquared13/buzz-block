@@ -265,8 +265,10 @@ public class Node extends AsyncTask<Void, Void, Void>{
             while (control.active && tcp.isActive && !peer.socket.isClosed()){
                 try {
                     Message m = receive(peer);
-                    if (m.data.isEmpty())
+                    if (m.data.isEmpty()) {
+                        System.out.println("Empty message received");
                         break;
+                    }
                     switch (m.type) {
                         case RESPONSE:
                             System.out.println("Response from " + peer.identity.substring(0,8) + ": " + m.data
@@ -275,7 +277,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         case TRANSACTION:
                             System.out.println("Transaction from " + peer.identity.substring(0,8));
                             Transaction t = Transaction.fromJson(m.data);
-                            if (!recordTransaction(t, peer.identity))
+                            if (recordTransaction(t, peer.identity) == 0)
                                 send(peer.socket, RESPONSE, "Invalid transaction");
                             break;
                         case BFTSTART:
@@ -360,7 +362,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             if (Collections.frequency(hashes, mode) >= 2/3 && control.pending_block.getHash().equals(mode)){
                 System.out.println("Own hash matches network majority");
                 control.chain.newBlock(control.pending_block);
-                control.chain.export();
+                control.chain.export(mContext);
             } else {
                 try {
                     updateChain(control.leader.socket);
@@ -387,8 +389,9 @@ public class Node extends AsyncTask<Void, Void, Void>{
         control.pending_block = null;
         control.pending_transactions = new ArrayList<Transaction>();
         control.hashes = new ArrayList<IdentityHashPair>();
+        control.blacklist = new ArrayList<String>();
         control.chain = new Blockchain();
-        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "blockchain.json");
+        File f = new File(mContext.getExternalFilesDir(null), "blockchain.json");
         if (f.exists() && !f.isDirectory()){
             try{
                 Scanner s = new Scanner(f);
@@ -440,9 +443,10 @@ public class Node extends AsyncTask<Void, Void, Void>{
                     byte[] payload = Base64.encode(baos.toByteArray(), Base64.DEFAULT);
 
                     // send data to peer (data = LLLLLLLLLLTTN... where T = message type, L = message length, N... = compressed message encoded in base64)
+//                    byte[] bmessage = (String.format(Locale.getDefault(), "%02X", t) + String.format(Locale.getDefault(), "%02X", t) + payload).getBytes();
                     DataOutputStream dos = new DataOutputStream(s.getOutputStream());
                     dos.write(String.format(Locale.getDefault(), "%08X", payload.length).getBytes());
-                    dos.write(String.format(Locale.getDefault(), "%02X", t).getBytes());
+                    dos.write(String.format(Locale.getDefault(), "%01X", t).getBytes());
                     dos.write(payload);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -464,8 +468,8 @@ public class Node extends AsyncTask<Void, Void, Void>{
         }
 
         // read message type
-        byte[] btype = new byte[2];
-        input.read(btype, 0, 2);
+        byte[] btype = new byte[1];
+        input.read(btype, 0, 1);
         int type = Integer.parseInt(new String(btype), 16);
 
         //read message
@@ -496,29 +500,19 @@ public class Node extends AsyncTask<Void, Void, Void>{
         ms.send(dp);
         ms.close();
     }
-    public void sendPayment(String i, double a) {
-        sendTransaction(1, i, a);
-    }
-    public void sendTransaction(int t, String i, double a) {
+    public int sendPayment(String i, double a) {
         while (control.active && control.pending_block != null)
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e){
                 e.printStackTrace();
             }
-        Transaction txn = null;
-        if (t == 1)
-            txn = new Transaction(1, i, control.client.getIdentity(), a);
-        else {
-            System.out.println("Invalid transaction type");
-            return;
-        }
+        Transaction txn = new Transaction(1, i, control.client.getIdentity(), a);
         control.client.sign(txn);
-        control.pending_transactions.add(txn);
-        System.out.println(txn.toJson());
         for (Peer p : control.peers) {
             send(p.socket, TRANSACTION, txn.toJson());
         }
+        return recordTransaction(txn, control.client.getIdentity());
     }
     public double getBalance(String i){
         double balance = 0;
@@ -540,45 +534,60 @@ public class Node extends AsyncTask<Void, Void, Void>{
         }
         return balance;
     }
-    private boolean isValidSignature(Transaction t, String i) throws Exception {
-        if (!t.signature.isEmpty()) {
-            byte[] identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + i);
-            Signature sig = Signature.getInstance("SHA256withECDSA");
-            PublicKey pk = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(identity));
-            sig.initVerify(pk);
-            sig.update(Helper.hexToBytes(t.getHash()));
-            return sig.verify(Helper.hexToBytes(t.signature));
-        }
-        return false;
-    }
-    // TODO
-    private boolean recordTransaction(Transaction t, String i) throws Exception {
-        if (control.blacklist.contains(i))
-            return false;
-        if (t.sender != t.address && isValidSignature(t, i)){
-            switch (t.transaction) {
-            case 0: // initial balance
-
-                break;
-            case 1: // payment
-                if (t.address == i && getBalance(t.sender) >= t.amount)
-                    control.pending_transactions.add(t);
-                break;
-            case 2: // add funds
-                if (t.sender == i && i == control.leader.identity)
-                    control.pending_transactions.add(t);
-                break;
-            case 3: // disable wallet
-                control.blacklist.add(t.sender);
-                break;
-            default:
-                return false;
+    private boolean isValidSignature(Transaction t, String i)  {
+        try {
+            if (!t.signature.isEmpty()) {
+                byte[] identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + i);
+                Signature sig = Signature.getInstance("SHA256withECDSA");
+                PublicKey pk = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(identity));
+                sig.initVerify(pk);
+                sig.update(Helper.hexToBytes(t.getHash()));
+                return sig.verify(Helper.hexToBytes(t.signature));
             }
-            return true;
+        } catch (Exception e){
+            e.printStackTrace();
         }
         return false;
     }
-    private void updateChain(Socket sock) throws Exception {
+    private int recordTransaction(Transaction t, String i){
+//        0: valid
+//        1: blacklisted
+//        2: duplicate initial account transaction
+//        3: not enough funds
+//        4: add funds transaction not from leader
+//        5: invalid transaction type / general invalid transaction
+        if (control.blacklist.contains(t.sender) || control.blacklist.contains(t.address))
+            return 1;
+        switch (t.transaction){
+            case 0:
+                for (Block b : control.chain.blocks){
+                    for (Transaction txn : b.transactions){
+                        if (txn.transaction == 0 && t.address.equals(txn.address))
+                            return 2;
+                    }
+                }
+                control.pending_transactions.add(t);
+                return 0;
+            case 1:
+                if (t.address.equals(i) && getBalance(t.sender) >= t.amount){
+                    control.pending_transactions.add(t);
+                    return 0;
+                }
+                return 3;
+            case 2:
+                if (t.sender.equals(i)&& control.leader.identity.equals(i)){
+                    control.pending_transactions.add(t);
+                    return 0;
+                }
+                return 4;
+            case 3:
+                control.pending_transactions.add(t);
+                control.blacklist.add(t.address);
+                return 0;
+        }
+        return 5;
+    }
+    private void updateChain(Socket sock){
         System.out.println("Requesting up to date chain");
         send(sock, CHAINREQUEST, control.chain.getHash());
     }

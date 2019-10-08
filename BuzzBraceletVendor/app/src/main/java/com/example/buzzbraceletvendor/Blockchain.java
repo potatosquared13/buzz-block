@@ -1,5 +1,6 @@
 package com.example.buzzbraceletvendor;
 
+import android.content.Context;
 import android.os.Environment;
 
 import com.google.gson.Gson;
@@ -33,8 +34,8 @@ public class Blockchain extends HashableObject {
         timestamp = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss").format(new Date());
     }
 
-    public void export() {
-        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "blockchain.json");
+    public void export(Context c) {
+        File f = new File(c.getExternalFilesDir(null), "blockchain.json");
         try {
             f.createNewFile();
             FileWriter w = new FileWriter(f, false);

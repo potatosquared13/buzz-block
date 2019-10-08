@@ -43,9 +43,11 @@ public class MainActivity extends Activity {
     Context context;
 
     TextView tvNFCContent, tvBalance;
-    Button btnGetBalance, btnStartNode, btnStopNode, btnAddFunds, btnSendTransaction;
+    Button btnGetBalance, btnStartNode, btnStopNode, btnSendTransaction;
     Node node;
-    Client testclient;
+    Client client;
+
+    int returnCode;
 
 
     @Override
@@ -97,8 +99,7 @@ public class MainActivity extends Activity {
         btnGetBalance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //CHANGE THIS
-                String balance = "Balance: P" + node.getBalance(tvNFCContent.getText().toString());
+                String balance = "" + node.getBalance(tvNFCContent.getText().toString());
                 tvBalance.setText(balance);
             }
         });
@@ -123,9 +124,17 @@ public class MainActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         double amount = Double.parseDouble(input.getText().toString());
-                        node.sendPayment(tvNFCContent.getText().toString(), amount);
+                        returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
                         tvNFCContent.setText("");
-                        Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
+                        if(returnCode == 0) {
+                            Toast.makeText(context, "Transaction Successful!", Toast.LENGTH_LONG ).show();
+                        } else if(returnCode == 1) {
+                            Toast.makeText(context, "Failed. Account blacklisted!", Toast.LENGTH_LONG ).show();
+                        } else if (returnCode == 3) {
+                            Toast.makeText(context, "Failed. Insufficient Funds.", Toast.LENGTH_LONG ).show();
+                        } else {
+                            Toast.makeText(context, "Unable to send transaction.", Toast.LENGTH_LONG ).show();
+                        }
                         dialog.cancel();
                     }
                 });
@@ -136,6 +145,8 @@ public class MainActivity extends Activity {
                     }
                 });
                 builder.show();
+
+
             }
         });
 
@@ -154,7 +165,7 @@ public class MainActivity extends Activity {
 
 
 
-        testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
+//        testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
         node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
         node.execute();
     }
@@ -181,8 +192,9 @@ public class MainActivity extends Activity {
         }
     }
     private void buildTagViews(NdefMessage[] msgs) {
-        if (msgs == null || msgs.length == 0) return;
 
+
+        if (msgs == null || msgs.length == 0) return;
         String text = "";
         byte[] payload = msgs[0].getRecords()[0].getPayload();
         String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
@@ -190,45 +202,9 @@ public class MainActivity extends Activity {
 
         // Get the Text
         text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
-
+        System.out.println(text);
         tvNFCContent.setText(text);
     }
-
-    /******************************************************************************
-     **********************************Write to NFC Tag****************************
-     ******************************************************************************/
-    private void write(String text, Tag tag) throws IOException, FormatException {
-        NdefRecord[] records = { createRecord(text) };
-        NdefMessage message = new NdefMessage(records);
-        // Get an instance of Ndef for the tag.
-        Ndef ndef = Ndef.get(tag);
-        // Enable I/O
-        ndef.connect();
-        // Write the message
-        ndef.writeNdefMessage(message);
-        // Close the connection
-        ndef.close();
-    }
-    private NdefRecord createRecord(String text) {
-        String lang       = "en";
-        byte[] textBytes  = text.getBytes();
-        byte[] langBytes  = lang.getBytes(StandardCharsets.ISO_8859_1);
-        int    langLength = langBytes.length;
-        int    textLength = textBytes.length;
-        byte[] payload    = new byte[1 + langLength + textLength];
-
-        // set status byte (see NDEF spec for actual bits)
-        payload[0] = (byte) langLength;
-
-        // copy langbytes and textbytes into payload
-        System.arraycopy(langBytes, 0, payload, 1,              langLength);
-        System.arraycopy(textBytes, 0, payload, 1 + langLength, textLength);
-
-        NdefRecord recordNFC = new NdefRecord(NdefRecord.TNF_WELL_KNOWN,  NdefRecord.RTD_TEXT,  new byte[0], payload);
-
-        return recordNFC;
-    }
-
 
 
     @Override
