@@ -47,8 +47,9 @@
                 </div>
                 <div class="box-auto">
                     {% if t_length != 0 %}
-                    <div id="time"></div>
                     <div style="font-size: 18px">{{vendor_requested.name}}</div>
+                    Transaction Detail Report<br/>
+                    Generated on <span id="time"></span>
                     {% endif %}
                     <table>
 
@@ -65,10 +66,12 @@
 
                         {% else %}
 
-                        <tr>
-                            <th scope="col">date</th>
-                            <th scope="col">sender</th>
-                            <th scope="col">amount</th>
+                        <tr">
+                            <th scope="col">Transaction ID</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Customer ID</th>
+                            <th scope="col">Particulars</th>
+                            <th scope="col">Total Amount</th>
                         </tr>
 
                         {% endif %}
@@ -77,21 +80,22 @@
 
                         {% for transaction in transactions %}
                         <tr>
-                            <td style="width: 30%; text-align: center">{{transaction.timestamp[:10]}}</td>
-                            <td style="width: 50%; text-align: center">{{(transaction.sender[:8])}}</td>
-                            <td style="width: 20%; text-align: center">{{transaction.amount}}</td>
+                            <td style="width: 15%">{{transaction.address[:4]}}-{{transaction.hash[:3]}}</td>
+                            <td style="width: 15%">{{transaction.timestamp[:10]}}</td>
+                            <td style="width: 20%">{{(transaction.sender[:8])}}</td>
+                            <td style="width: 35%"></td>
+                            <td style="width: 15%">{{transaction.amount}}</td>
                         </tr>
                         {% set ns.t_index = ns.t_index + 1 %}
 
                         {% endfor %}
                     </table>
                     {% if t_length != 0 %}
-                    <hr />
                     <div class="total">
                         <table>
                             <tr>
-                                <td style="width: 80%; text-align: left" colspan="2">TOTAL:</td>
-                                <td style="width: 20%; text-align: center">{{t_total}}</td>
+                                <td style="width: 85%; text-align: left; padding-left: 8px" colspan="4">TOTAL:</td>
+                                <td style="width: 15%">{{t_total}}</td>
                             </tr>
                         </table>
                     </div>

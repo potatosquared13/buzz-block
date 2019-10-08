@@ -73,12 +73,12 @@
                             <td style="min-width: 20%">
                                 {{transaction.timestamp}}
                             </td>
-                            <td style="min-width: 23%">
+                            <td style="min-width: 23%; text-align: right!important">
                                 {{t_senders[ns.t_index].name}}
                                 <span style="color:#aaa">({{(transaction.sender[:8])}})</span>
                             </td>
                             <td style="min-width: 4%; font-size: 24px">⟶</td>
-                            <td style="min-width: 23%">
+                            <td style="min-width: 23%; text-align: left!important">
                                 {{t_recipients[ns.t_index].name}}
                                 <span style="color:#aaa">({{(transaction.address[:8])}})</span>
                             </td>
@@ -114,6 +114,7 @@
                                 {{t_recipients[ns.t_index].name}}
                                 <span style="color:#aaa">({{(transaction.address[:8])}})</span>
                             </td>
+                            <td></td>
                         </tr>
                         {% endif %}
                         {% set ns.t_index = ns.t_index + 1%}
@@ -156,12 +157,12 @@
                             <td style="min-width: 20%">
                                 {{pending_transaction.timestamp}}
                             </td>
-                            <td style="min-width: 23%">
+                            <td style="min-width: 23%; text-align: right!important">
                                 {{pt_senders[ns.pt_index].name}}
                                 <span style="color:#aaa">({{(pending_transaction.sender[:8])}})</span>
                             </td>
                             <td style="min-width: 4%; font-size: 24px">⟶</td>
-                            <td style="min-width: 23%">
+                            <td style="min-width: 23%; text-align: left!important">
                                 {{pt_recipients[ns.pt_index].name}}
                                 <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
                             </td>
@@ -197,6 +198,7 @@
                                 {{pt_recipients[ns.pt_index].name}}
                                 <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
                             </td>
+                            <td></td>
                         </tr>
                         {% endif %}
 

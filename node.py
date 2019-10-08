@@ -182,8 +182,8 @@ class Node(threading.Thread):
                 elif (message_type == RESPONSE):
                     logging.info(f"Response from {peer.identity[:8]}: {message}")
                 elif (message_type == TRANSACTION):
-                    logging.info(f"Transaction from {peer.identity[:8]}")
                     transaction = self.rebuild_transaction(json.loads(message))
+                    logging.info(f"Transaction type {transaction.transaction} from {peer.identity[:8]}")
                     if (not self.record_transaction(transaction, peer.identity)):
                         self.send(peer.socket, RESPONSE, "Invalid transaction")
                 elif (message_type == BFTSTART):
@@ -283,23 +283,43 @@ class Node(threading.Thread):
         if (transaction.sender in self.blacklist or transaction.address in self.blacklist):
             logging.warning("ID is in blacklist, not proceeding")
             return False
-        if (transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
-            if (transaction.transaction == 0): # initial balance
-                l = []
-                for block in self.chain.blocks:
-                    l = l + list([t for t in block.transactions if t.transaction == 0 and t.address == transaction.address])
-                if (l is None):
-                    return True
+        if (transaction.sender == transaction.address):
+            logging.warning("Transaction attempts to send amount to same address")
+            return False
+        if (not self.is_valid_signature(transaction, peer_identity)):
+            logging.warning("Transaction signature is missing or invalid")
+            return False
+        if (transaction.transaction == 0): # initial balance
+            l = []
+            for block in self.chain.blocks:
+                l = l + list([t for t in block.transactions if t.transaction == 0 and t.address == transaction.address])
+            if (l):
+                logging.warning("Only one initial balance transaction is allowed per address")
                 return False
-            elif (transaction.transaction == 1 and transaction.address == peer_identity and self.get_balance(transaction.sender) >= transaction.amount): # payment
-                self.pending_transactions.append(transaction)
-            elif (transaction.transaction == 2 and transaction.sender == peer_identity and peer_identity == self.leader.identity): # add funds
-                self.pending_transactions.append(transaction)
-            elif (transaction.transaction == 3): # disable wallet
-                self.blacklist.append(transaction.address)
             else:
+                self.pending_transactions.append(transaction)
+                return True
+        if (transaction.transaction == 1): # payment
+            if (transaction.address == peer_identity and self.get_balance(transaction.sender) >= transaction.amount):
+                self.pending_transactions.append(transaction)
+                return True
+            else:
+                print(f"sender: {transaction.sender}")
+                print(f"amount: {transaction.amount}")
+                logging.warning("Payment transaction is invalid")
                 return False
+        if (transaction.transaction == 2): # add funds
+            if (transaction.sender == peer_identity and peer_identity == self.leader.identity):
+                self.pending_transactions.append(transaction)
+                return True
+            else:
+                logging.warning("Add funds transaction is invalid")
+                return False
+        if (transaction.transaction == 3): # disable wallet
+            self.pending_transactions.append(transaction)
+            self.blacklist.append(transaction.address)
             return True
+        logging.warning("Invalid transaction type")
         return False
 
     # send a transaction to connected peers
@@ -361,7 +381,6 @@ class Node(threading.Thread):
         start = time.time()
         while (time.time() - start < 60 and len(self.hashes) <= len(self.peers)):
             time.sleep(2)
-            # print(f"{len(self.hashes)}/{len(self.peers)}")
         hashes = [h[1] for h in self.hashes]
         if (len(hashes) < len(self.peers) + 1):
             hashes += ['0'] * (1 + len(self.peers) - len(hashes))

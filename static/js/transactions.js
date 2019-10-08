@@ -1,6 +1,7 @@
+var checkInterval = null;
+
 window.onload = () => {
   checkIfNodeToggled();
-  setInterval(checkTransactionsChanged, 4000);
 }
 
 function toggleNode(e) {
@@ -28,8 +29,10 @@ function checkIfNodeToggled() {
     if (xhr.readyState == 4 && xhr.status == 200) {
       if (xhr.responseText == '1') {
         document.getElementById("node-status").checked = true;
+        checkInterval = setInterval(checkTransactionsChanged, 4000);
       } else {
         document.getElementById("node-status").checked = false;
+        clearInterval(checkInterval);
       }
     }
   }

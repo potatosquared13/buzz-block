@@ -1,3 +1,4 @@
+import db
 import time
 from node import Node
 from client import Client
@@ -43,47 +44,53 @@ time.sleep(2)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
-v2.send_transaction(1, c9, 59)
+v1.send_transaction(c1, 59)
 time.sleep(1)
-v1.send_transaction(1, c1, 59)
+v1.send_transaction(c2, 59)
 time.sleep(1)
-v1.send_transaction(1, c2, 59)
+v1.send_transaction(c3, 79)
 time.sleep(1)
-v1.send_transaction(1, c3, 79)
+v1.send_transaction(c4, 59)
 time.sleep(1)
-v1.send_transaction(1, c4, 59)
+v1.send_transaction(c5, 59)
 time.sleep(1)
-v1.send_transaction(1, c5, 59)
+v2.send_transaction(c9, 59)
+time.sleep(1)
+v2.send_transaction(c6, 159)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
 
-v2.send_transaction(1, c9, 149)
+v2.send_transaction(c9, 149)
 time.sleep(1)
-v2.send_transaction(1, c0, 149)
+v2.send_transaction(c0, 149)
 time.sleep(1)
-v2.send_transaction(1, c9, 59)
+v2.send_transaction(c9, 59)
+time.sleep(1)
+v3.send_transaction(c6, 55)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
 
-v3.send_transaction(1, c7, 49)
+v3.send_transaction(c7, 49)
 time.sleep(1)
-v3.send_transaction(1, c8, 49)
+v3.send_transaction(c8, 49)
 time.sleep(1)
-v3.send_transaction(1, c0, 49)
+v3.send_transaction(c0, 49)
 time.sleep(1)
-v2.send_transaction(1, c9, 59)
-time.sleep(1)
-v3.send_transaction(1, c9, 59)
+v2.send_transaction(c6, v2.get_balance(c6))
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
 
-v4.send_transaction(1, c3, 79)
+v4.send_transaction(c3, 79)
 time.sleep(1)
-v4.send_transaction(1, c4, 29)
+v4.send_transaction(c4, 29)
 time.sleep(1)
-v2.send_transaction(1, c9, 59)
+v2.send_transaction(db.search_user("Matsubara, Kanon").identity, 59)
+time.sleep(1)
+v1.send_transaction(c3, 79)
+time.sleep(1)
+v1.send_transaction(c4, 59)
 
 print("done")
