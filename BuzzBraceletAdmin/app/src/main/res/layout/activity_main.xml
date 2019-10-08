@@ -4,37 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context="com.example.buzzbraceletadmin.MainActivity">
 
-    <TextView
-        android:id="@+id/nfc_contents"
-        android:layout_width="352dp"
-        android:layout_height="19dp"
-        android:layout_marginTop="140dp"
-        android:fontFamily="monospace"
-        android:text="TextView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.728"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="26dp"
-        android:layout_height="19dp"
-        android:layout_marginStart="4dp"
-        android:layout_marginTop="140dp"
-        android:text="ID: "
-        app:layout_constraintEnd_toStartOf="@+id/nfc_contents"
-        app:layout_constraintHorizontal_bias="0.923"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar" />
 
     <Button
         android:id="@+id/btnWrite"
         android:layout_width="247dp"
         android:layout_height="104dp"
-        android:layout_marginTop="252dp"
+        android:layout_marginTop="332dp"
+        android:background="@drawable/custom_button"
         android:text="Write"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -44,15 +25,16 @@
         android:id="@+id/tvName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="41dp"
         android:layout_marginBottom="33dp"
-        android:fontFamily="serif"
+        android:fontFamily="@font/amiko_bold"
         android:text="Name "
         android:textAlignment="center"
         android:textSize="30sp"
         app:layout_constraintBottom_toTopOf="@+id/btnWrite"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nfc_contents" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.948" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

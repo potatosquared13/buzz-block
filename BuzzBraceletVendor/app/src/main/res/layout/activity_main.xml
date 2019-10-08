@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <include
+        android:id="@+id/include"
+        layout="@layout/toolbar" />
+
+    <Button
+        android:id="@+id/btnStartNode"
+        android:layout_width="126dp"
+        android:layout_height="56dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="20dp"
+        android:text="Start Node"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/include" />
+
+    <Button
+        android:id="@+id/btnStopNode"
+        android:layout_width="126dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="13dp"
+        android:text="Stop Node"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.056"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnStartNode" />
+
+    <TextView
+        android:id="@+id/tvBalance"
+        android:layout_width="247dp"
+        android:layout_height="125dp"
+        android:layout_marginTop="20dp"
+        android:text="0.0"
+        android:textAlignment="center"
+        android:textSize="80sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.902"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/include" />
+
+    <Button
+        android:id="@+id/btnGetBalance"
+        android:layout_width="271dp"
+        android:layout_height="116dp"
+        android:layout_marginTop="92dp"
+        android:text="Get Balance"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvBalance" />
+
+    <Button
+        android:id="@+id/btnSendTransaction"
+        android:layout_width="271dp"
+        android:layout_height="116dp"
+        android:layout_marginTop="20dp"
+        android:text="Payment"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnGetBalance" />
+
+    <TextView
+        android:id="@+id/nfc_contents"
+        android:layout_width="284dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="35dp"
+        android:text="Name"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvBalance" />
+</androidx.constraintlayout.widget.ConstraintLayout>

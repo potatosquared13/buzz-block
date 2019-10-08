@@ -1,4 +1,4 @@
-package com.example.buzzbraceletadmin;
+package com.example.buzzbraceletvendor;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -22,10 +22,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.appcompat.widget.Toolbar;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,82 +42,100 @@ public class MainActivity extends Activity {
     Tag myTag;
     Context context;
 
-    TextView tvNFCContent, tvName;
-    Button btnWrite;
-    com.example.buzzbraceletadmin.Client client;
-    int i = 0;
-    File[] files;
+    TextView tvNFCContent, tvBalance;
+    Button btnGetBalance, btnStartNode, btnStopNode, btnAddFunds, btnSendTransaction;
+    Node node;
+    Client testclient;
 
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
+        //Permissions
         if (Build.VERSION.SDK_INT > 22)
-            requestPermissions(new String[] { "android.permission.READ_EXTERNAL_STORAGE" }, 1);
-
+            requestPermissions(new String[] {"android.permission.INTERNET",
+                    "android.permission.ACCESS_WIFI_STATE",
+                    "android.permission.READ_EXTERNAL_STORAGE",
+                    "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         context = this;
 
-        tvName              = findViewById(R.id.tvName);
-        btnWrite            = findViewById(R.id.btnWrite);
+        tvNFCContent        = findViewById(R.id.nfc_contents);
+        btnGetBalance       = findViewById(R.id.btnGetBalance);
+        btnStartNode        = findViewById(R.id.btnStartNode);
+        btnStopNode         = findViewById(R.id.btnStopNode);
+        btnSendTransaction  = findViewById(R.id.btnSendTransaction);
+        tvBalance           = findViewById(R.id.tvBalance);
+        btnStopNode.setEnabled(false);
+
+        btnStartNode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (node == null) {
+                    node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
+                    node.execute();
+                }
+                btnStopNode.setEnabled(true);
+                btnStartNode.setEnabled(false);
+            }
+        });
+
+        btnStopNode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (node != null) {
+                    node.stop();
+                }
+                btnStopNode.setEnabled(false);
+                btnStartNode.setEnabled(true);
+            }
+        });
+
+        /**GET BALANCE**/
+        btnGetBalance.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //CHANGE THIS
+                String balance = "Balance: P" + node.getBalance(tvNFCContent.getText().toString());
+                tvBalance.setText(balance);
+            }
+        });
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(input);
 
-        //scanning dir
-        String path = Environment.getExternalStorageDirectory().toString() + "/buzz";
-        File directory = new File(path);
-
-        files = directory.listFiles();
-        for (File f : files)
-            System.out.println(f.getName());
-
-        client = new Client(files[i]);
-        tvName.setText(client.name + " (" + client.getIdentity().substring(0,8) + ")");
-
-
-        btnWrite.setOnClickListener(new View.OnClickListener() {
+        /**PAYMENT**/
+        btnSendTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    if (myTag == null) {
-                        Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show();
-                    } else {
-                        if(input.getParent() != null) {
-                            ((ViewGroup) input.getParent()).removeView(input);
-                            input.setText("");
-                        }
-                        builder.setTitle("Write Identity to tag");
+                if (input.getParent() != null) {
+                    ((ViewGroup) input.getParent()).removeView(input);
+                    input.setText("");
+                }
+                builder.setTitle("Payment");
 
-                        //Buttons
-                        builder.setPositiveButton("Write!!!!", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                try {
-                                    write(client.getIdentity().substring(0, 96), myTag);
-                                } catch (IOException | FormatException e) {
-                                    Toast.makeText(context, WRITE_ERROR, Toast.LENGTH_LONG).show();
-                                    e.printStackTrace();
-                                }
-                            }
-                        });
-
+                // Set up the buttons
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        double amount = Double.parseDouble(input.getText().toString());
+                        node.sendPayment(tvNFCContent.getText().toString(), amount);
+                        tvNFCContent.setText("");
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
-                        if(i < files.length - 1) {
-                            btnWrite.setEnabled(true);
-                            i++;
-                            client = new Client(files[i]);
-                            tvName.setText(client.name + " (" + client.getIdentity().substring(0,8) + ")");
-                            System.out.println(i + 1 + "/" + files.length);
-                            System.out.println(client.name);
-                        } else {
-                            tvName.setText("No more clients");
-                            Toast.makeText(context, "All Clients Written!", Toast.LENGTH_LONG).show();
-                            btnWrite.setEnabled(false);
-                        }
+                        dialog.cancel();
                     }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builder.show();
             }
         });
 
@@ -128,12 +145,18 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "This device doesn't support NFC.", Toast.LENGTH_LONG).show();
             finish();
         }
-
         readFromIntent(getIntent());
+
         pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
         writeTagFilters = new IntentFilter[] { tagDetected };
+
+
+
+        testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
+        node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
+        node.execute();
     }
 
 
@@ -162,10 +185,12 @@ public class MainActivity extends Activity {
 
         String text = "";
         byte[] payload = msgs[0].getRecords()[0].getPayload();
+        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
         int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
 
         // Get the Text
         text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
+
         tvNFCContent.setText(text);
     }
 
