@@ -94,7 +94,7 @@ def get_transactions():
                 pt_recipients.append(pt_recipient)
             else:
                 pt_recipients.append('unnamed')
-    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients)
+    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients, invalid_transactions=node.invalid_transactions)
 
 @app.route('/get_vendor_transactions')
 def get_vendor_transactions():
@@ -130,6 +130,7 @@ def overview():
 
 @app.route('/report')
 def report():
+    
     vendors = db.get_vendors()
     return render_template('reportgeneration.html', vendor_requested=None, vendors=vendors, transactions=[], t_length=0, t_total=0)
 
