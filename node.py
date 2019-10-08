@@ -53,6 +53,7 @@ class Node(threading.Thread):
         self.leader = None
         self.pending_block = None
         self.pending_transactions = []
+        self.invalid_transactions = []
         self.hashes = []
         self.chain = Blockchain()
         self.blacklist = []

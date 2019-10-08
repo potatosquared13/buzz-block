@@ -32,7 +32,6 @@
                 <div class="right-align">
                     STATUS
                     <label class="switch">
-                        <!-- change with document.getElementById("node-status").setAttribute("checked", "true/false") -->
                         <input id="node-status" type="checkbox" onclick="toggleNode(this)">
                         <span class="slider round"></span>
                     </label>
@@ -48,71 +47,71 @@
 
                         {% for block in blocks %}
 
-                        {% for transaction in block.transactions %}
-                        {% if transaction.transaction == 0 %}
+                        {% for t in block.transactions %}
+                        {% if t.transaction == 0 %}
                         <tr>
                             <td style="min-width: 15%">
                                 New account
                             </td>
                             <td style="min-width: 20%">
-                                {{transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
-                                <span style="color:#aaa">({{(transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{transaction.amount}}
+                                {{t.amount}}
                             </td>
                         </tr>
-                        {% elif transaction.transaction == 1 %}
+                        {% elif t.transaction == 1 %}
                         <tr>
                             <td style="min-width: 15%">
                                 Payment
                             </td>
                             <td style="min-width: 20%">
-                                {{transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 23%; text-align: right!important">
                                 {{t_senders[ns.t_index].name}}
-                                <span style="color:#aaa">({{(transaction.sender[:8])}})</span>
+                                <span style="color:#aaa">({{(t.sender[:8])}})</span>
                             </td>
                             <td style="min-width: 4%; font-size: 24px">⟶</td>
                             <td style="min-width: 23%; text-align: left!important">
                                 {{t_recipients[ns.t_index].name}}
-                                <span style="color:#aaa">({{(transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{transaction.amount}}
+                                {{t.amount}}
                             </td>
                         </tr>
-                        {% elif transaction.transaction == 2 %}
+                        {% elif t.transaction == 2 %}
                         <tr>
                             <td style="min-width: 15%">
                                 Add funds
                             </td>
                             <td style="min-width: 20%">
-                                {{transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
-                                <span style="color:#aaa">({{(transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{transaction.amount}}
+                                {{t.amount}}
                             </td>
                         </tr>
-                        {% elif transaction.transaction == 3 %}
+                        {% elif t.transaction == 3 %}
                         <tr>
                             <td style="min-width: 15%">
                                 Report lost id
                             </td>
                             <td style="min-width: 20%">
-                                {{transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 65%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
-                                <span style="color:#aaa">({{(transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td></td>
                         </tr>
@@ -131,78 +130,168 @@
                     <table>
                         {% set ns = namespace(pt_index=0) %}
 
-                        {% for pending_transaction in pending_transactions %}
+                        {% for t in pending_transactions %}
 
-                        {% if pending_transaction.transaction == 0 %}
+                        {% if t.transaction == 0 %}
                         <tr>
                             <td style="min-width: 15%">
                                 New account
                             </td>
                             <td style="min-width: 20%">
-                                {{pending_transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
-                                <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{pending_transaction.amount}}
+                                {{t.amount}}
                             </td>
                         </tr>
-                        {% elif pending_transaction.transaction == 1 %}
+                        {% elif t.transaction == 1 %}
                         <tr>
                             <td style="min-width: 15%">
                                 Payment
                             </td>
                             <td style="min-width: 20%">
-                                {{pending_transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 23%; text-align: right!important">
                                 {{pt_senders[ns.pt_index].name}}
-                                <span style="color:#aaa">({{(pending_transaction.sender[:8])}})</span>
+                                <span style="color:#aaa">({{(t.sender[:8])}})</span>
                             </td>
                             <td style="min-width: 4%; font-size: 24px">⟶</td>
                             <td style="min-width: 23%; text-align: left!important">
                                 {{pt_recipients[ns.pt_index].name}}
-                                <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{pending_transaction.amount}}
+                                {{t.amount}}
                             </td>
                         </tr>
-                        {% elif pending_transaction.transaction == 2 %}
+                        {% elif t.transaction == 2 %}
                         <tr>
                             <td style="min-width: 15%">
                                 Add funds
                             </td>
                             <td style="min-width: 20%">
-                                {{pending_transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
-                                <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{pending_transaction.amount}}
+                                {{t.amount}}
                             </td>
                         </tr>
-                        {% elif pending_transaction.transaction == 3 %}
+                        {% elif t.transaction == 3 %}
                         <tr>
                             <td style="min-width: 15%">
                                 Report lost id
                             </td>
                             <td style="min-width: 20%">
-                                {{pending_transaction.timestamp}}
+                                {{t.timestamp}}
                             </td>
                             <td style="min-width: 65%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
-                                <span style="color:#aaa">({{(pending_transaction.address[:8])}})</span>
+                                <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td></td>
                         </tr>
                         {% endif %}
 
                         {% set ns.pt_index = ns.pt_index + 1%}
+
+                        {% endfor %}
+                    </table>
+                </div>
+                <div class="box-auto">
+                    <div style="text-align: center">
+                        <span style="font-size: 16px">INVALID TRANSACTIONS</span>
+                    </div>
+                    <table>
+                        {% set ns = namespace(it_index=0) %}
+
+                        {% for t in invalid_transactions %}
+
+                        {% if t.transaction == 0 %}
+                        <tr>
+                            <td style="min-width: 20%">
+                                {{t[1]}}
+                            </td>
+                            <td style="min-width: 15%">
+                                New account
+                            </td>
+                            <td style="min-width: 15%">
+                                {{t[0].timestamp}}
+                            </td>
+                            <td style="min-width: 50%" colspan="3">
+                                ({{(t[0].address[:8])}})
+                            </td>
+                            <td style="min-width: 15%">
+                                {{t[0].amount}}
+                            </td>
+                        </tr>
+                        {% elif t[0].transaction == 1 %}
+                        <tr>
+                            <td style="min-width: 20%">
+                                {{t[1]}}
+                            </td>
+                            <td style="min-width: 15%">
+                                Payment
+                            </td>
+                            <td style="min-width: 15%">
+                                {{t[0].timestamp}}
+                            </td>
+                            <td style="min-width: 23%; text-align: right!important">
+                                ({{(t[0].sender[:8])}})
+                            </td>
+                            <td style="min-width: 4%; font-size: 24px">⟶</td>
+                            <td style="min-width: 23%; text-align: left!important">
+                                ({{(t[0].address[:8])}})
+                            </td>
+                            <td style="min-width: 15%">
+                                {{t[0].amount}}
+                            </td>
+                        </tr>
+                        {% elif t[0].transaction == 2 %}
+                        <tr>
+                            <td style="min-width: 20%">
+                                {{t[1]}}
+                            </td>
+                            <td style="min-width: 15%">
+                                Add funds
+                            </td>
+                            <td style="min-width: 15%">
+                                {{t[0].timestamp}}
+                            </td>
+                            <td style="min-width: 50%" colspan="3">
+                                ({{(t[0].address[:8])}})
+                            </td>
+                            <td style="min-width: 15%">
+                                {{t[0].amount}}
+                            </td>
+                        </tr>
+                        {% elif t[0].transaction == 3 %}
+                        <tr>
+                            <td style="min-width: 20%">
+                                {{t[1]}}
+                            </td>
+                            <td style="min-width: 15%">
+                                Report lost id
+                            </td>
+                            <td style="min-width: 15%">
+                                {{t[0].timestamp}}
+                            </td>
+                            <td style="min-width: 65%" colspan="3">
+                                ({{(t[0].address[:8])}})
+                            </td>
+                            <td></td>
+                        </tr>
+                        {% endif %}
+
+                        {% set ns.it_index = ns.it_index + 1%}
 
                         {% endfor %}
                     </table>
