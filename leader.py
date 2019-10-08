@@ -35,22 +35,46 @@ class Leader(Node):
         if (transaction.sender in self.blacklist or transaction.address in self.blacklist):
             logging.warning("ID is in blacklist, not proceeding")
             return False
-        if (transaction.sender != transaction.address and self.is_valid_signature(transaction, peer_identity)):
-            if (transaction.transaction == 0): # initial balance
-                pass
-            elif (transaction.transaction == 1 and transaction.address == peer_identity): # payment
-                sender = db.search_user(transaction.sender)
-                if (sender.pending_balance >= transaction.amount):
-                    db.update_pending(transaction.sender, transaction.address, transaction.amount)
-            elif (transaction.transaction == 2 and transaction.sender == self.client.identity): # add funds
-                db.update_pending(None, transaction.address, transaction.amount)
-            elif (transaction.transaction == 3): # disable wallet
-                self.blacklist.append(transaction.address)
-                pass
-            else:
+        if (transaction.sender == transaction.address):
+            logging.warning("Transaction attempts to send amount to same address")
+            return False
+        if (not self.is_valid_signature(transaction, peer_identity)):
+            logging.warning("Transaction signature is missing or invalid")
+            return False
+        if (transaction.transaction == 0): # initial balance
+            l = []
+            for block in self.chain.blocks:
+                l = l + list([t for t in block.transactions if t.transaction == 0 and t.address == transaction.address])
+            if (l):
+                logging.warning("Only one initial balance transaction is allowed per address")
                 return False
+            else:
+                self.pending_transactions.append(transaction)
+                return True
+        elif (transaction.transaction == 1): # payment
+            logging.info(self.get_balance(transaction.sender))
+            logging.info(transaction.amount)
+            sender = db.search_user(transaction.sender)
+            if (transaction.address == peer_identity and sender.pending_balance >= transaction.amount):
+                self.pending_transactions.append(transaction)
+                db.update_pending(transaction.sender, transaction.address, transaction.amount)
+                return True
+            else:
+                logging.warning("Payment transaction is invalid")
+                return False
+        elif (transaction.transaction == 2): # add funds
+            if (transaction.sender == peer_identity and peer_identity == self.leader.identity):
+                self.pending_transactions.append(transaction)
+                db.update_pending(None, transaction.address, transaction.amount)
+                return True
+            else:
+                logging.warning("Add funds transaction is invalid")
+                return False
+        elif (transaction.transaction == 3): # disable wallet
             self.pending_transactions.append(transaction)
+            self.blacklist.append(transaction.address)
             return True
+        logging.warning("Invalid transaction type")
         return False
 
     def advertise(self):
@@ -85,11 +109,11 @@ class Leader(Node):
             plen = len(self.pending_transactions)
             while (self.active and time.time() - start < 600 and len(self.pending_transactions) < self.block_size):
                 time.sleep(10)
-            if (plen == len(self.pending_transactions) and self.pending_transactions > self.block_size / 3):
+            if (plen == len(self.pending_transactions) and len(self.pending_transactions) > self.block_size / 3):
                 self.start_consensus()
 
     def get_balance(self, client):
-        return db.search(client).pending_balance
+        return db.search_user(client).pending_balance
 
     def create_account(self, identity, amount):
         if (self.pending_block is not None):

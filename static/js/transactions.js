@@ -8,6 +8,7 @@ function toggleNode(e) {
   let xhr = new XMLHttpRequest();
   xhr.open('GET', '/toggle', true);
   xhr.send();
+  checkIfNodeToggled();
 }
 
 function checkTransactionsChanged() {

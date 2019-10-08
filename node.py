@@ -103,9 +103,11 @@ class Node(threading.Thread):
                         self.peers.add(peer)
                         c.sendall(unhexlify(self.client.identity))
                         threading.Thread(target=self.handle_connection, args=(peer,)).start()
-                        if (self.leader is not None):
+                        if (self.leader):
                             if (self.leader.address == self.address):
-                                self.send(c, LEADER, self.client.identity)
+                                time.sleep(2)
+                                logging.info("sending lead node status")
+                                self.send(peer.socket, LEADER, self.client.identity)
                     else:
                         c.shutdown(socket.SHUT_RDWR)
                         c.close()
@@ -134,9 +136,11 @@ class Node(threading.Thread):
                     peer = Peer(sock, addr, id)
                     self.peers.add(peer)
                     threading.Thread(target=self.handle_connection, args=(peer,)).start()
-                    if (self.leader is not None):
+                    if (self.leader):
                         if (self.leader.address == self.address):
-                            self.send(sock, LEADER, self.client.identity)
+                            time.sleep(2)
+                            logging.info("sending lead node status")
+                            self.send(peer.socket, LEADER, self.client.identity)
                     return True
                 except socket.timeout:
                     pass
@@ -151,7 +155,7 @@ class Node(threading.Thread):
     # helper functions for sending and receiving messages
     def send(self, sock, msg_type, msg):
         payload = base64.b64encode(zlib.compress(msg.encode(), 9))
-        bmessage = hex(len(payload))[2:].zfill(8).encode() + str(msg_type).encode() + payload
+        bmessage = hex(len(payload))[2:].zfill(8).encode() + str(hex(msg_type))[2:].encode() + payload
         sock.sendall(bmessage)
         logging.debug(f"send {len(payload) + 10} bytes to {sock.getpeername()}")
 
@@ -172,9 +176,9 @@ class Node(threading.Thread):
     # listen for messages from a peer
     # each connected peer has its own thread for this
     def handle_connection(self, peer):
-        logging.info(f"connected to {peer.identity[:8]}")
+        logging.info(f"Connected to {peer.identity[:8]}")
         peer.socket.settimeout(4)
-        while (self.active and peer in self.peers):
+        while (self.active and peer in self.peers.copy()):
             try:
                 message_type, message = self.receive(peer.socket)
                 if (len(message) == 0):
@@ -212,6 +216,7 @@ class Node(threading.Thread):
             except socket.timeout:
                 continue
             except socket.error as e:
+                logging.info(e)
                 break
         peer.socket.close()
         self.peers.remove(peer)
@@ -299,23 +304,21 @@ class Node(threading.Thread):
             else:
                 self.pending_transactions.append(transaction)
                 return True
-        if (transaction.transaction == 1): # payment
+        elif (transaction.transaction == 1): # payment
             if (transaction.address == peer_identity and self.get_balance(transaction.sender) >= transaction.amount):
                 self.pending_transactions.append(transaction)
                 return True
             else:
-                print(f"sender: {transaction.sender}")
-                print(f"amount: {transaction.amount}")
                 logging.warning("Payment transaction is invalid")
                 return False
-        if (transaction.transaction == 2): # add funds
+        elif (transaction.transaction == 2): # add funds
             if (transaction.sender == peer_identity and peer_identity == self.leader.identity):
                 self.pending_transactions.append(transaction)
                 return True
             else:
                 logging.warning("Add funds transaction is invalid")
                 return False
-        if (transaction.transaction == 3): # disable wallet
+        elif (transaction.transaction == 3): # disable wallet
             self.pending_transactions.append(transaction)
             self.blacklist.append(transaction.address)
             return True
