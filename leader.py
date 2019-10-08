@@ -147,3 +147,16 @@ class Leader(Node):
         for peer in self.peers.copy():
             self.send(peer.socket, TRANSACTION, transaction.json)
 
+    def stop(self):
+        if (self.active):
+            self.active = False
+            for peer in self.peers.copy():
+                if (not peer.socket._closed):
+                    peer.socket.shutdown(socket.SHUT_RDWR)
+            logging.debug("Stopped")
+            self.chain.new_block(Block(self.chain.last_block.hash, pending_transactions))
+            self.chain.export()
+            self.pending_transactions = []
+            with open('invalid_transactions.json', 'w') as f:
+                f.write(helpers.jsonify(self.invalid_transactions))
+
