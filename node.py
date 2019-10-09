@@ -52,7 +52,6 @@ class Node(threading.Thread):
         self.peers = set()
         self.leader = None
         self.pending_block = None
-        self.pending_transactions = []
         self.invalid_transactions = []
         self.hashes = []
         self.chain = Blockchain()
@@ -81,7 +80,7 @@ class Node(threading.Thread):
                 if (not peer.socket._closed):
                     peer.socket.shutdown(socket.SHUT_RDWR)
             logging.debug("Stopped")
-            node.chain.export()
+            self.chain.export()
 
     # wait for a peer to connect and then keep an open connection
     def accept_connections(self):
@@ -188,7 +187,7 @@ class Node(threading.Thread):
                 elif (message_type == RESPONSE):
                     logging.info(f"Response from {peer.identity[:8]}: {message}")
                 elif (message_type == TRANSACTION):
-                    transaction = self.rebuild_transaction(json.loads(message))
+                    transaction = Transaction.rebuild(json.loads(message))
                     logging.info(f"Transaction type {transaction.transaction} from {peer.identity[:8]}")
                     if (not self.record_transaction(transaction, peer.identity)):
                         self.send(peer.socket, RESPONSE, "Invalid transaction")
@@ -197,7 +196,7 @@ class Node(threading.Thread):
                     pending = json.loads(message)
                     pending_transactions = []
                     for tr in pending:
-                        pending_transactions.append(self.rebuild_transaction(tr))
+                        pending_transactions.append(Transaction.rebuild(tr))
                     self.send_hash(pending_transactions)
                 elif (message_type == BFTVERIFY):
                     logging.info(f"Hash from {peer.identity[:8]}")
@@ -218,9 +217,12 @@ class Node(threading.Thread):
             except socket.timeout:
                 continue
             except socket.error as e:
-                logging.info(e)
+                logging.info(f"handle_connection(peer {peer.identity[:8]}): {e}")
                 break
-        peer.socket.close()
+        try:
+            peer.socket.close()
+        except socket.error:
+            pass
         self.peers.remove(peer)
         logging.info(f"Closed connection to {peer.identity[:8]}")
 
@@ -264,13 +266,6 @@ class Node(threading.Thread):
 
     ######## Validator functions #########
 
-    # rebuild a transaction object from given JSON data
-    def rebuild_transaction(self, transaction_json):
-        transaction = Transaction(transaction_json['transaction'], transaction_json['sender'], transaction_json['address'], transaction_json['amount'])
-        transaction.timestamp = transaction_json['timestamp']
-        transaction.signature = transaction_json['signature']
-        return transaction
-
     # verify the signature of a transaction
     def is_valid_signature(self, transaction, peer_identity):
         if (transaction.signature):
@@ -282,14 +277,14 @@ class Node(threading.Thread):
                 key.verify(sig, msg, ec.ECDSA(hashes.SHA256()))
                 return True
             except cryptography.exceptions.InvalidSignature:
-                logging.error("Invalid signature")
+                pass
         return False
 
     # add a transaction to own list of pending transactions if it passes several checks
     def record_transaction(self, transaction, peer_identity):
         reason = ""
         status = True
-        if (transaction in self.pending_transactions):
+        if (transaction in self.chain.pending_transactions):
             reason = "duplicate transaction"
             status = False
         elif (transaction.sender in self.blacklist or transaction.address in self.blacklist):
@@ -304,7 +299,6 @@ class Node(threading.Thread):
             logging.warning("Transaction signature is missing or invalid")
             reason = "invalid signature"
             status = False
-
         if (status):
             status = False
             if (transaction.transaction == 0): # initial balance
@@ -332,19 +326,14 @@ class Node(threading.Thread):
             else:
                 reason = "unknown type"
                 status = False
-
         if (status):
-            self.pending_transactions.append(transaction)
+            self.chain.pending_transactions.append(transaction)
         else:
-            self.invalid_transactions.append(transaction, reason)
-
+            self.invalid_transactions.append((transaction, reason))
         return status
 
     # send a transaction to connected peers
     def send_transaction(self, identity, amount):
-        if (identity in self.blacklist):
-            logging.warning("ID is in blacklist, not proceding")
-            return
         if (self.pending_block is not None):
             logging.debug("Waiting until consensus is over before sending transaction")
         while(self.active and self.pending_block is not None):
@@ -362,7 +351,7 @@ class Node(threading.Thread):
         for block in self.chain.blocks:
             for txn in block.transactions:
                 transactions.append(txn)
-        transactions = transactions + self.pending_transactions
+        transactions = transactions + self.chain.pending_transactions
         sending = list((t for t in transactions if t.sender == identity))
         receiving = list((t for t in transactions if t.address == identity and (t.transaction == 0 or t.transaction == 2)))
         if (not sending and not receiving):
@@ -381,7 +370,7 @@ class Node(threading.Thread):
     # send the hash of the pending block to other nodes for comparison
     def send_hash(self, pending_transactions):
         self.pending_block = Block(self.chain.last_block.hash, pending_transactions)
-        self.pending_transactions = []
+        self.chain.pending_transactions = []
         logging.info("Sending hash to peers")
         for peer in self.peers.copy():
             logging.debug(f"Sending hash to {peer.identity[:8]}")

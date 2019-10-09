@@ -14,12 +14,12 @@ class Leader(Node):
         self.block_size = block_size
 
     def start_consensus(self):
-        if self.pending_transactions:
-            pt = deepcopy(self.pending_transactions)
+        if self.chain.pending_transactions:
+            pt = deepcopy(self.chain.pending_transactions)
             for peer in self.peers:
-                self.send(peer.socket, BFTSTART, helpers.jsonify(self.pending_transactions))
+                self.send(peer.socket, BFTSTART, helpers.jsonify(self.chain.pending_transactions))
             logging.info("Waiting for network consensus")
-            self.send_hash(self.pending_transactions)
+            self.send_hash(self.chain.pending_transactions)
             while (self.pending_block):
                 time.sleep(1)
             logging.info("Updating client balances")
@@ -32,50 +32,59 @@ class Leader(Node):
                 db.update_balance(identity)
 
     def record_transaction(self, transaction, peer_identity):
-        if (transaction.sender in self.blacklist or transaction.address in self.blacklist):
+        reason = ""
+        status = True
+        if (transaction in self.chain.pending_transactions):
+            reason = "duplicate transaction"
+            status = False
+        elif (transaction.sender in self.blacklist or transaction.address in self.blacklist):
             logging.warning("ID is in blacklist, not proceeding")
-            return False
-        if (transaction.sender == transaction.address):
+            reason = "blacklisted"
+            status = False
+        elif (transaction.sender == transaction.address):
             logging.warning("Transaction attempts to send amount to same address")
-            return False
-        if (not self.is_valid_signature(transaction, peer_identity)):
+            reason = "same sender and address"
+            status = False
+        elif (not self.is_valid_signature(transaction, peer_identity)):
             logging.warning("Transaction signature is missing or invalid")
-            return False
-        if (transaction.transaction == 0): # initial balance
-            l = []
-            for block in self.chain.blocks:
-                l = l + list([t for t in block.transactions if t.transaction == 0 and t.address == transaction.address])
-            if (l):
-                logging.warning("Only one initial balance transaction is allowed per address")
-                return False
+            reason = "invalid signature"
+            status = False
+        if (status):
+            status = False
+            if (transaction.transaction == 0): # initial balance
+                l = []
+                for block in self.chain.blocks:
+                    l = l + list([t for t in block.transactions if t.transaction == 0 and t.address == transaction.address])
+                if (l):
+                    logging.warning("Only one initial balance transaction is allowed per address")
+                    reason = "duplicate initial balance transaction"
+                else:
+                    status = True
+            elif (transaction.transaction == 1): # payment
+                sender = db.search_user(transaction.sender)
+                if (transaction.address == peer_identity and sender.pending_balance >= transaction.amount):
+                    db.update_pending(transaction.sender, transaction.address, transaction.amount)
+                    status = True
+                else:
+                    logging.warning("Payment transaction is invalid")
+                    status = False
+            elif (transaction.transaction == 2): # add funds
+                if (transaction.sender == peer_identity and peer_identity == self.leader.identity):
+                    db.update_pending(None, transaction.address, transaction.amount)
+                    status = True
+                else:
+                    logging.warning("Add funds transaction is invalid")
+            elif (transaction.transaction == 3): # disable wallet
+                self.blacklist.append(transaction.address)
+                status = True
             else:
-                self.pending_transactions.append(transaction)
-                return True
-        elif (transaction.transaction == 1): # payment
-            logging.info(self.get_balance(transaction.sender))
-            logging.info(transaction.amount)
-            sender = db.search_user(transaction.sender)
-            if (transaction.address == peer_identity and sender.pending_balance >= transaction.amount):
-                self.pending_transactions.append(transaction)
-                db.update_pending(transaction.sender, transaction.address, transaction.amount)
-                return True
-            else:
-                logging.warning("Payment transaction is invalid")
-                return False
-        elif (transaction.transaction == 2): # add funds
-            if (transaction.sender == peer_identity and peer_identity == self.leader.identity):
-                self.pending_transactions.append(transaction)
-                db.update_pending(None, transaction.address, transaction.amount)
-                return True
-            else:
-                logging.warning("Add funds transaction is invalid")
-                return False
-        elif (transaction.transaction == 3): # disable wallet
-            self.pending_transactions.append(transaction)
-            self.blacklist.append(transaction.address)
-            return True
-        logging.warning("Invalid transaction type")
-        return False
+                reason = "unknown type"
+                status = False
+        if (status):
+            self.chain.pending_transactions.append(transaction)
+        else:
+            self.invalid_transactions.append((transaction, reason))
+        return status
 
     def advertise(self):
         while(self.active):
@@ -97,7 +106,8 @@ class Leader(Node):
                 while (self.address is None):
                     time.sleep(1)
                 self.leader = Peer(None, self.address, self.client.identity)
-                threading.Thread(target=self.advertise).start()
+                self.get_peers()
+                # threading.Thread(target=self.advertise).start()
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
@@ -106,10 +116,10 @@ class Leader(Node):
     def sleep(self):
         while (self.active):
             start = time.time()
-            plen = len(self.pending_transactions)
-            while (self.active and time.time() - start < 600 and len(self.pending_transactions) < self.block_size):
+            plen = len(self.chain.pending_transactions)
+            while (self.active and time.time() - start < 600 and len(self.chain.pending_transactions) < self.block_size):
                 time.sleep(10)
-            if (plen == len(self.pending_transactions) and len(self.pending_transactions) > self.block_size / 3):
+            if (plen == len(self.chain.pending_transactions) and len(self.chain.pending_transactions) > 0):
                 self.start_consensus()
 
     def get_balance(self, client):
@@ -154,9 +164,11 @@ class Leader(Node):
                 if (not peer.socket._closed):
                     peer.socket.shutdown(socket.SHUT_RDWR)
             logging.debug("Stopped")
-            self.chain.new_block(Block(self.chain.last_block.hash, pending_transactions))
-            self.chain.export()
-            self.pending_transactions = []
-            with open('invalid_transactions.json', 'w') as f:
-                f.write(helpers.jsonify(self.invalid_transactions))
+            if (self.chain.pending_transactions):
+                self.chain.new_block(Block(self.chain.last_block.hash, self.chain.pending_transactions))
+                self.chain.export()
+                self.chain.pending_transactions = []
+            if (self.invalid_transactions):
+                with open('invalid_transactions.json', 'w') as f:
+                    f.write(helpers.jsonify(self.invalid_transactions))
 

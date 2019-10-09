@@ -12,7 +12,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 
 class Client:
-    def __init__(self, name = None, filename=None):
+    def __init__(self, name = None, filename=None, vendor=False):
+        self.is_vendor = vendor
         if (name and not filename):
             self.name = name
             self._private_key = ec.generate_private_key(
@@ -80,7 +81,14 @@ class Client:
         filename = filename + ".key"
         if (not os.path.exists('clients')):
             os.makedirs('clients')
-        filename = "clients/"+filename
+        if (not os.path.exists('clients/vendors')):
+            os.makedirs('clients/vendors')
+        if (not os.path.exists('clients/users')):
+            os.makedirs('clients/users')
+        if (self.is_vendor):
+            filename="clients/vendors/"+filename
+        else:
+            filename = "clients/users/"+filename
         with open(filename, 'w') as f:
             f.write(f"{self.name}\n{''.join(private_key.splitlines())}\n{''.join(public_key.splitlines())}")
         # with open("private.pem", 'w') as f:

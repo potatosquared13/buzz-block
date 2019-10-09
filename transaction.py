@@ -13,6 +13,13 @@ class Transaction:
         self.timestamp = datetime.now().isoformat("T", "seconds")
         self.signature = None
 
+    @staticmethod
+    def rebuild(transaction_json):
+        transaction = Transaction(transaction_json['transaction'], transaction_json['sender'], transaction_json['address'], transaction_json['amount'])
+        transaction.timestamp = transaction_json['timestamp']
+        transaction.signature = transaction_json['signature']
+        return transaction
+
     @property
     def json(self):
         return helpers.jsonify(self)

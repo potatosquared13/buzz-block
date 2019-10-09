@@ -14,19 +14,23 @@ app = Flask(__name__)
 clients = []
 vendors = []
 pending_transactions_saved_state = []
+invalid_transactions_saved_state = []
 
 node = Leader(10)
 
 def get_transactions():
     global pending_transactions_saved_state
-    if len(pending_transactions_saved_state) == 0:
-        pending_transactions_saved_state = node.pending_transactions.copy()
+    global invalid_transactions_saved_state
+    if (not pending_transactions_saved_state):
+        pending_transactions_saved_state = node.chain.pending_transactions.copy()
+    if (not invalid_transactions_saved_state):
+        invalid_transactions_saved_state = node.invalid_transactions.copy()
+    pending_transactions_saved_state = node.chain.pending_transactions.copy()
+    invalid_transactions_saved_state = node.invalid_transactions.copy()
     t_senders = []
     t_recipients = []
     pt_senders = []
     pt_recipients = []
-    if pending_transactions_saved_state != node.pending_transactions.copy():
-        pending_transactions_saved_state = node.pending_transactions.copy()
     for block in node.chain.blocks:
         for t in block.transactions:
             if (t.transaction == 0):
@@ -61,7 +65,7 @@ def get_transactions():
                     t_recipients.append(t_recipient)
                 else:
                     t_recipients.append('unnamed')
-    for pt in node.pending_transactions:
+    for pt in node.chain.pending_transactions:
         if (pt.transaction == 0):
             pt_senders.append('Admin')
             pt_recipient = db.search_user(pt.address)
@@ -94,7 +98,7 @@ def get_transactions():
                 pt_recipients.append(pt_recipient)
             else:
                 pt_recipients.append('unnamed')
-    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients, invalid_transactions=node.invalid_transactions)
+    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients, invalid_transactions=invalid_transactions_saved_state)
 
 @app.route('/get_vendor_transactions')
 def get_vendor_transactions():
@@ -198,7 +202,8 @@ def check_toggle():
 @app.route('/check_transactions_changed', methods=['POST'])
 def check_transactions_changed():
     global pending_transactions_saved_state
-    if pending_transactions_saved_state != node.pending_transactions.copy():
+    global invalid_transactions_saved_state
+    if (pending_transactions_saved_state != node.chain.pending_transactions.copy() or invalid_transactions_saved_state != node.invalid_transactions.copy()):
         return 'good'
     else:
         return ''

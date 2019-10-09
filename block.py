@@ -22,6 +22,7 @@ class Block:
 class Blockchain:
     def __init__(self):
         self.blocks = []
+        self.pending_transactions = []
         self.timestamp = datetime.now().isoformat("T", "seconds")
 
     def genesis(self, transactions):
@@ -43,13 +44,16 @@ class Blockchain:
         for bl in tmp['blocks']:
             transactions = []
             for tr in bl['transactions']:
-                transaction = Transaction(tr['transaction'], tr['sender'], tr['address'], tr['amount'])
-                transaction.timestamp = tr['timestamp']
-                transaction.signature = tr['signature']
+                transaction = Transaction.rebuild(tr)
                 transactions.append(transaction)
             block = Block(bl['previous_hash'], transactions)
             self.new_block(block)
             self.timestamp = tmp['timestamp']
+        pending_transactions = []
+        for tr in tmp['pending_transactions']:
+            transaction = Transaction.rebuild(tr)
+            pending_transactions.append(transaction)
+        self.pending_transactions = pending_transactions
 
     @property
     def json(self):

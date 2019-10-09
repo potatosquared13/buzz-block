@@ -17,10 +17,10 @@ lc = [Client("Ushigome, Rimi"),
       Client("Hikawa, Hina")]
 
 # vendors
-lv = [Client("Dunkin' Donuts"),
-      Client("McDonald's"),
-      Client("Aoyama Coffee"),
-      Client("Leylam Shawarma")]
+lv = [Client("Dunkin' Donuts", vendor=True),
+      Client("McDonald's", vendor=True),
+      Client("Aoyama Coffee", vendor=True),
+      Client("Leylam Shawarma", vendor=True)]
 
 # create a node for signing transactions
 node = Leader(10)
