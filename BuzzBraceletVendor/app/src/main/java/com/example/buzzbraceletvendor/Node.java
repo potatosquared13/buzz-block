@@ -287,8 +287,11 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         case TRANSACTION:
                             System.out.println("Transaction from " + peer.identity.substring(0,8));
                             Transaction t = Transaction.fromJson(m.data);
-                            if (recordTransaction(t, peer.identity) == 0)
-                                send(peer.socket, RESPONSE, "Invalid transaction");
+                            int status = recordTransaction(t, peer.identity);
+                            if (status != 0) {
+                                String str = "Invalid transaction (" + status + ")";
+                                send(peer.socket, RESPONSE, str);
+                            }
                             break;
                         case BFTSTART:
                             System.out.println("Verifying new block");
@@ -619,7 +622,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         System.out.println("Requesting up to date chain");
         send(sock, CHAINREQUEST, control.chain.getHash());
     }
-    private void sendHash(ArrayList<Transaction> t) throws Exception {
+    private void sendHash(ArrayList<Transaction> t) {
         if (control.pending_block == null) {
             control.pending_block = new Block(control.chain.getLastBlock().getHash(), t);
             control.chain.pending_transactions = new ArrayList<>();
