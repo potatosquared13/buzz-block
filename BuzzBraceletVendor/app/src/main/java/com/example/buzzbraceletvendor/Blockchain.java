@@ -14,10 +14,12 @@ import java.util.Date;
 
 public class Blockchain extends HashableObject {
     public ArrayList<Block> blocks;
+    public ArrayList<Transaction> pending_transactions;
     public String timestamp;
 
     public Blockchain() {
         blocks = new ArrayList<Block>();
+        pending_transactions = new ArrayList<>();
         timestamp = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss").format(new Date());
     }
 
@@ -50,6 +52,7 @@ public class Blockchain extends HashableObject {
         Blockchain tmp = new Gson().fromJson(j, Blockchain.class);
         blocks = tmp.blocks;
         timestamp = tmp.timestamp;
+        pending_transactions = tmp.pending_transactions;
     }
 
     public Block getLastBlock(){

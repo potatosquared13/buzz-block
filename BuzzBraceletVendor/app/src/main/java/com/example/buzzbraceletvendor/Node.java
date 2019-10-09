@@ -63,6 +63,10 @@ public class Node extends AsyncTask<Void, Void, Void>{
         System.out.println("Starting node");
         start();
         try {
+            while (control.peers.size() == 0) {
+                getPeers();
+                Thread.sleep(4000);
+            }
             while (control.leader == null) {
                 Thread.sleep(4000);
             }
@@ -125,13 +129,17 @@ public class Node extends AsyncTask<Void, Void, Void>{
             try {
                 while (control.active && control.ip == null)
                     Thread.sleep(1000);
-                byte[] buf = new byte[256];
+                byte[] buf = new byte[1024];
+                WifiManager wm = (WifiManager) mContext.getSystemService(WIFI_SERVICE);
+                WifiManager.MulticastLock mcl = wm.createMulticastLock("buzz");
+                mcl.acquire();
                 MulticastSocket ms = new MulticastSocket(60000);
+                ms.setBroadcast(true);
                 InetAddress group = InetAddress.getByName("224.98.117.122");
                 ms.joinGroup(group);
                 isActive = true;
                 System.out.println("Listening for broadcasts");
-                while (control.active && isActive) {
+                while (isActive) {
                     DatagramPacket dp = new DatagramPacket(buf, buf.length);
                     ms.receive(dp);
                     String msg = new String(dp.getData());
@@ -145,6 +153,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         }
                     }
                 }
+                mcl.release();
             } catch (Exception e){
                 e.printStackTrace();
             }
@@ -184,7 +193,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 sock.setSoTimeout(4000);
                 isActive = true;
                 System.out.println("Listening for connections");
-                while (control.active && isActive) {
+                while (isActive) {
                     byte[] buf = new byte[96];
                     c = sock.accept();
                     InputStream is = c.getInputStream();
@@ -203,6 +212,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         os.flush();
                         control.peers.add(peer);
                         new Thread(new ManageConnection(peer)).start();
+                        getPeers();
                     } else {
                         c.shutdownOutput();
                         c.shutdownInput();
@@ -262,7 +272,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            while (control.active && tcp.isActive && !peer.socket.isClosed()){
+            while (tcp.isActive && !peer.socket.isClosed()){
                 try {
                     Message m = receive(peer);
                     if (m.data.isEmpty()) {
@@ -282,6 +292,11 @@ public class Node extends AsyncTask<Void, Void, Void>{
                             break;
                         case BFTSTART:
                             System.out.println("Verifying new block");
+                            try {
+                                Thread.sleep(1000);
+                            } catch (Exception e){
+                                e.printStackTrace();
+                            }
                             ArrayList<Transaction> ts = new Gson().fromJson(m.data, new TypeToken<ArrayList<Transaction>>() {
                             }.getType());
                             sendHash(ts);
@@ -387,7 +402,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
         control.peers = new HashSet<>();
         control.leader = null;
         control.pending_block = null;
-        control.pending_transactions = new ArrayList<Transaction>();
         control.hashes = new ArrayList<IdentityHashPair>();
         control.blacklist = new ArrayList<String>();
         control.chain = new Blockchain();
@@ -409,6 +423,13 @@ public class Node extends AsyncTask<Void, Void, Void>{
         if (!control.active){
             tcp.start();
             udp.start();
+            while (!tcp.isActive && !udp.isActive) {
+                try {
+                    Thread.sleep(1000);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
             control.active = true;
         }
     }
@@ -494,7 +515,9 @@ public class Node extends AsyncTask<Void, Void, Void>{
             Thread.sleep(1000);
         byte[] msg = ("62757a7aGP" + control.port).getBytes();
         MulticastSocket ms = new MulticastSocket();
+        ms.setBroadcast(true);
         InetAddress group = InetAddress.getByName("224.98.117.122");
+        ms.joinGroup(group);
         DatagramPacket dp = new DatagramPacket(msg, msg.length, group, 60000);
         System.out.println("Sending broadcast message ("+new String(msg)+")");
         ms.send(dp);
@@ -525,7 +548,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 }
             }
         }
-        for (Transaction t : control.pending_transactions){
+        for (Transaction t : control.chain.pending_transactions){
             if (t.address.startsWith(i) && (t.transaction == 0 || t.transaction == 2)){
                 balance += t.amount;
             } else if (t.transaction == 1 && t.sender.startsWith(i)){
@@ -535,6 +558,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
         return balance;
     }
     private boolean isValidSignature(Transaction t, String i)  {
+        System.out.println(t.toJson());
         try {
             if (!t.signature.isEmpty()) {
                 byte[] identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + i);
@@ -542,6 +566,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 PublicKey pk = KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(identity));
                 sig.initVerify(pk);
                 sig.update(Helper.hexToBytes(t.getHash()));
+                System.out.println("valid");
                 return sig.verify(Helper.hexToBytes(t.signature));
             }
         } catch (Exception e){
@@ -558,30 +583,33 @@ public class Node extends AsyncTask<Void, Void, Void>{
 //        5: invalid transaction type / general invalid transaction
         if (control.blacklist.contains(t.sender) || control.blacklist.contains(t.address))
             return 1;
+        if (!isValidSignature(t, i))
+            return 5;
         switch (t.transaction){
             case 0:
                 for (Block b : control.chain.blocks){
                     for (Transaction txn : b.transactions){
-                        if (txn.transaction == 0 && t.address.equals(txn.address))
+                        if (txn.transaction == 0 && t.address.equals(txn.address)) {
                             return 2;
+                        }
                     }
                 }
-                control.pending_transactions.add(t);
+                control.chain.pending_transactions.add(t);
                 return 0;
             case 1:
                 if (t.address.equals(i) && getBalance(t.sender) >= t.amount){
-                    control.pending_transactions.add(t);
+                    control.chain.pending_transactions.add(t);
                     return 0;
                 }
                 return 3;
             case 2:
                 if (t.sender.equals(i)&& control.leader.identity.equals(i)){
-                    control.pending_transactions.add(t);
+                    control.chain.pending_transactions.add(t);
                     return 0;
                 }
                 return 4;
             case 3:
-                control.pending_transactions.add(t);
+                control.chain.pending_transactions.add(t);
                 control.blacklist.add(t.address);
                 return 0;
         }
@@ -594,11 +622,21 @@ public class Node extends AsyncTask<Void, Void, Void>{
     private void sendHash(ArrayList<Transaction> t) throws Exception {
         if (control.pending_block == null) {
             control.pending_block = new Block(control.chain.getLastBlock().getHash(), t);
-            control.pending_transactions = new ArrayList<>();
+            control.chain.pending_transactions = new ArrayList<>();
             for (Peer p : control.peers)
                 send(p.socket, BFTVERIFY, control.pending_block.getHash());
             control.hashes.add(new IdentityHashPair(control.client.getIdentity(), control.pending_block.getHash()));
             new Thread(new ConsensusHandler()).start();
         }
+    }
+    public ArrayList<Transaction> getTransactions(){
+        ArrayList<Transaction> transactions = new ArrayList<>();
+        for (Block b : control.chain.blocks){
+            for (Transaction t : b.transactions){
+                if (t.transaction == 1 && t.address == control.client.getIdentity())
+                    transactions.add(t);
+            }
+        }
+        return transactions;
     }
 }

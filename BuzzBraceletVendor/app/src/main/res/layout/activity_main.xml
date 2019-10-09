@@ -8,7 +8,8 @@
 
     <include
         android:id="@+id/include"
-        layout="@layout/toolbar" />
+        layout="@layout/toolbar"
+        android:background="#BF6CD7" />
 
     <Button
         android:id="@+id/btnStartNode"
