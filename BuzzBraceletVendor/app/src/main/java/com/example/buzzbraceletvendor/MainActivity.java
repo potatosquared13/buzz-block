@@ -20,15 +20,20 @@ import android.os.Parcelable;
 import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends Activity {
 
@@ -45,10 +50,11 @@ public class MainActivity extends Activity {
     TextView tvNFCContent, tvBalance;
     Button btnGetBalance, btnStartNode, btnStopNode, btnSendTransaction;
     Node node;
-    Client client;
-
     int returnCode;
 
+//    String[] values = new String[] { node.getTransactions().toString()};
+//   ArrayList<String> list = new ArrayList<String>();
+    ListView lvList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -63,15 +69,29 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         context = this;
-
-        tvNFCContent        = findViewById(R.id.nfc_contents);
+        tvNFCContent        = findViewById(R.id.tvNFCContents);
         btnGetBalance       = findViewById(R.id.btnGetBalance);
-        btnStartNode        = findViewById(R.id.btnStartNode);
-        btnStopNode         = findViewById(R.id.btnStopNode);
         btnSendTransaction  = findViewById(R.id.btnSendTransaction);
         tvBalance           = findViewById(R.id.tvBalance);
-        btnStopNode.setEnabled(false);
+        lvList              = findViewById(R.id.lvList);
 
+//        ArrayList<Transaction> transactions = new ArrayList<>();
+//        for (Transaction t : node.control.chain.pending_transactions){
+//            if (t.transaction == 1 && t.address == node.control.client.getIdentity())
+//                transactions.add(t);
+//        }
+//        for (Block b : node.control.chain.blocks){
+//            for (Transaction t : b.transactions){
+//                if (t.transaction == 1 && t.address == node.control.client.getIdentity())
+//                    transactions.add(t);
+//            }
+//        }
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.adapter_view_layout, node.getTransactions());
+
+        System.out.println(node.getTransactions());
+
+        btnStopNode.setEnabled(false);
         btnStartNode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,6 +124,11 @@ public class MainActivity extends Activity {
             }
         });
 
+
+
+
+
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -131,7 +156,7 @@ public class MainActivity extends Activity {
                         } else if(returnCode == 1) {
                             Toast.makeText(context, "Failed. Account blacklisted!", Toast.LENGTH_LONG ).show();
                         } else if (returnCode == 3) {
-                            Toast.makeText(context, "Failed. Insufficient Funds.", Toast.LENGTH_LONG ).show();
+                            Toast.makeText(context, "Failed. Insufficient Funds!", Toast.LENGTH_LONG ).show();
                         } else {
                             Toast.makeText(context, "Unable to send transaction.", Toast.LENGTH_LONG ).show();
                         }
@@ -145,8 +170,6 @@ public class MainActivity extends Activity {
                     }
                 });
                 builder.show();
-
-
             }
         });
 
@@ -163,9 +186,6 @@ public class MainActivity extends Activity {
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
         writeTagFilters = new IntentFilter[] { tagDetected };
 
-
-
-//        testclient = new Client(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/client.key"));
         node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
         node.execute();
     }
@@ -188,7 +208,6 @@ public class MainActivity extends Activity {
                 }
             }
             buildTagViews(msgs);
-//            tvBalance.setText(String.valueOf(node.getBalance(testclient.getIdentity().substring(0, 96))));
         }
     }
     private void buildTagViews(NdefMessage[] msgs) {
@@ -228,18 +247,12 @@ public class MainActivity extends Activity {
         WriteModeOn();
     }
 
-
-
-    /******************************************************************************
-     **********************************Enable Write********************************
-     ******************************************************************************/
+    /**Enable Write*/
     private void WriteModeOn(){
         writeMode = true;
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, writeTagFilters, null);
     }
-    /******************************************************************************
-     **********************************Disable Write*******************************
-     ******************************************************************************/
+    /**Disable Write*/
     private void WriteModeOff(){
         writeMode = false;
         nfcAdapter.disableForegroundDispatch(this);

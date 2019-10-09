@@ -11,39 +11,17 @@
         layout="@layout/toolbar"
         android:background="#BF6CD7" />
 
-    <Button
-        android:id="@+id/btnStartNode"
-        android:layout_width="126dp"
-        android:layout_height="56dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="20dp"
-        android:text="Start Node"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include" />
-
-    <Button
-        android:id="@+id/btnStopNode"
-        android:layout_width="126dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="13dp"
-        android:text="Stop Node"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.056"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnStartNode" />
-
     <TextView
         android:id="@+id/tvBalance"
-        android:layout_width="247dp"
-        android:layout_height="125dp"
-        android:layout_marginTop="20dp"
+        android:layout_width="344dp"
+        android:layout_height="123dp"
+        android:layout_marginTop="16dp"
+        android:fontFamily="sans-serif-thin"
         android:text="0.0"
         android:textAlignment="center"
         android:textSize="80sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.902"
+        app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/include" />
 
@@ -51,8 +29,10 @@
         android:id="@+id/btnGetBalance"
         android:layout_width="271dp"
         android:layout_height="116dp"
-        android:layout_marginTop="92dp"
+        android:layout_marginTop="76dp"
+        android:fontFamily="sans-serif-medium"
         android:text="Get Balance"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvBalance" />
@@ -61,34 +41,35 @@
         android:id="@+id/btnSendTransaction"
         android:layout_width="271dp"
         android:layout_height="116dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
+        android:fontFamily="sans-serif-medium"
         android:text="Payment"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnGetBalance" />
 
     <TextView
-        android:id="@+id/nfc_contents"
-        android:layout_width="284dp"
-        android:layout_height="35dp"
-        android:layout_marginTop="35dp"
-        android:text="Name"
+        android:id="@+id/tvNFCContents"
+        android:layout_width="368dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="16dp"
+        android:fontFamily="monospace"
+        android:text="id"
         android:textAlignment="center"
-        android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.043"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvBalance" />
 
-    <TextView
-        android:id="@+id/tvNFCContent"
-        android:layout_width="367dp"
-        android:layout_height="21dp"
-        android:layout_marginTop="7dp"
-        android:layout_marginBottom="7dp"
-        android:text="id"
-        app:layout_constraintBottom_toTopOf="@+id/nfc_contents"
+    <ListView
+        android:layout_width="412dp"
+        android:layout_height="207dp"
+        android:id="@+id/lvList"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvBalance"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintStart_toStartOf="parent" />
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
