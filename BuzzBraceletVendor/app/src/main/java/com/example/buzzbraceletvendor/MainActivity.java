@@ -87,9 +87,9 @@ public class MainActivity extends Activity {
 //            }
 //        }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.adapter_view_layout, node.getTransactions());
-
-        System.out.println(node.getTransactions());
+//        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.adapter_view_layout, node.getTransactions());
+//
+//        System.out.println(node.getTransactions());
 
         btnStopNode.setEnabled(false);
         btnStartNode.setOnClickListener(new View.OnClickListener() {
