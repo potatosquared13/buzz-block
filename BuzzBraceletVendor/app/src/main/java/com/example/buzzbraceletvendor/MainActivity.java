@@ -48,7 +48,7 @@ public class MainActivity extends Activity {
     Context context;
 
     TextView tvNFCContent, tvBalance;
-    Button btnGetBalance, btnStartNode, btnStopNode, btnSendTransaction;
+    Button btnGetBalance, btnSendTransaction;
     Node node;
     int returnCode;
 
@@ -91,29 +91,29 @@ public class MainActivity extends Activity {
 //
 //        System.out.println(node.getTransactions());
 
-        btnStopNode.setEnabled(false);
-        btnStartNode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (node == null) {
-                    node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
-                    node.execute();
-                }
-                btnStopNode.setEnabled(true);
-                btnStartNode.setEnabled(false);
-            }
-        });
-
-        btnStopNode.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (node != null) {
-                    node.stop();
-                }
-                btnStopNode.setEnabled(false);
-                btnStartNode.setEnabled(true);
-            }
-        });
+//        btnStopNode.setEnabled(false);
+//        btnStartNode.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (node == null) {
+//                    node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
+//                    node.execute();
+//                }
+//                btnStopNode.setEnabled(true);
+//                btnStartNode.setEnabled(false);
+//            }
+//        });
+//
+//        btnStopNode.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (node != null) {
+//                    node.stop();
+//                }
+//                btnStopNode.setEnabled(false);
+//                btnStartNode.setEnabled(true);
+//            }
+//        });
 
         /**GET BALANCE**/
         btnGetBalance.setOnClickListener(new View.OnClickListener() {
@@ -123,11 +123,6 @@ public class MainActivity extends Activity {
                 tvBalance.setText(balance);
             }
         });
-
-
-
-
-
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
