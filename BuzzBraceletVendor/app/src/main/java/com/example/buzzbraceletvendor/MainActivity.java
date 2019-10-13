@@ -91,30 +91,6 @@ public class MainActivity extends Activity {
 //
 //        System.out.println(node.getTransactions());
 
-//        btnStopNode.setEnabled(false);
-//        btnStartNode.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (node == null) {
-//                    node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
-//                    node.execute();
-//                }
-//                btnStopNode.setEnabled(true);
-//                btnStartNode.setEnabled(false);
-//            }
-//        });
-//
-//        btnStopNode.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (node != null) {
-//                    node.stop();
-//                }
-//                btnStopNode.setEnabled(false);
-//                btnStartNode.setEnabled(true);
-//            }
-//        });
-
         /**GET BALANCE**/
         btnGetBalance.setOnClickListener(new View.OnClickListener() {
             @Override
