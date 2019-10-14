@@ -37,9 +37,11 @@ import java.util.Arrays;
 
 public class MainActivity extends Activity {
 
-    public static final String ERROR_DETECTED = "No NFC tag detected!";
-    public static final String WRITE_SUCCESS = "Text written to the NFC tag successfully!";
-    public static final String WRITE_ERROR = "Error during writing, is the NFC tag close enough to your device?";
+    public static final String WRITE_SUCCESS = "Transaction Successful!";
+    public static final String WRITE_BLACKLIST = "Failed. Account Blacklisted!";
+    public static final String WRITE_NOFUNDS = "Failed. Insufficient Funds!";
+    public static final String WRITE_FAILED = "Unable to send transation!";
+
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
     IntentFilter[] writeTagFilters;
@@ -48,7 +50,7 @@ public class MainActivity extends Activity {
     Context context;
 
     TextView tvNFCContent, tvBalance;
-    Button btnGetBalance, btnSendTransaction;
+    Button btnSendTransaction;
     Node node;
     int returnCode;
 
@@ -70,7 +72,6 @@ public class MainActivity extends Activity {
 
         context = this;
         tvNFCContent        = findViewById(R.id.tvNFCContents);
-        btnGetBalance       = findViewById(R.id.btnGetBalance);
         btnSendTransaction  = findViewById(R.id.btnSendTransaction);
         tvBalance           = findViewById(R.id.tvBalance);
         lvList              = findViewById(R.id.lvList);
@@ -91,14 +92,14 @@ public class MainActivity extends Activity {
 //
 //        System.out.println(node.getTransactions());
 
-        /**GET BALANCE**/
-        btnGetBalance.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String balance = "" + node.getBalance(tvNFCContent.getText().toString());
-                tvBalance.setText(balance);
-            }
-        });
+//        /**GET BALANCE**/
+//        btnGetBalance.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                String balance = "" + node.getBalance(tvNFCContent.getText().toString());
+//                tvBalance.setText(balance);
+//            }
+//        });
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
@@ -123,13 +124,13 @@ public class MainActivity extends Activity {
                         returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
                         tvNFCContent.setText("");
                         if(returnCode == 0) {
-                            Toast.makeText(context, "Transaction Successful!", Toast.LENGTH_LONG ).show();
+                            Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                         } else if(returnCode == 1) {
-                            Toast.makeText(context, "Failed. Account blacklisted!", Toast.LENGTH_LONG ).show();
+                            Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
                         } else if (returnCode == 3) {
-                            Toast.makeText(context, "Failed. Insufficient Funds!", Toast.LENGTH_LONG ).show();
+                            Toast.makeText(context, WRITE_NOFUNDS, Toast.LENGTH_LONG ).show();
                         } else {
-                            Toast.makeText(context, "Unable to send transaction.", Toast.LENGTH_LONG ).show();
+                            Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
                         }
                         dialog.cancel();
                     }
@@ -144,6 +145,7 @@ public class MainActivity extends Activity {
             }
         });
 
+        //Check if NFC Available
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
             // Stop here, we definitely need NFC
@@ -187,16 +189,20 @@ public class MainActivity extends Activity {
         if (msgs == null || msgs.length == 0) return;
         String text = "";
         byte[] payload = msgs[0].getRecords()[0].getPayload();
-        String textEncoding = ((payload[0] & 128) == 0) ? "UTF-8" : "UTF-16"; // Get the Text Encoding
         int languageCodeLength = payload[0] & 0063; // Get the Language Code, e.g. "en"
 
         // Get the Text
         text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
         System.out.println(text);
         tvNFCContent.setText(text);
+        String balance = "" + node.getBalance(tvNFCContent.getText().toString());
+        tvBalance.setText(balance);
     }
 
 
+    /*
+        NFC STUFF
+    */
     @Override
     protected void onNewIntent(Intent intent) {
         setIntent(intent);
