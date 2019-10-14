@@ -129,6 +129,7 @@ public class MainActivity extends Activity {
                             Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                         } else if(returnCode == 1) {
                             Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
+                            tvBalance.setText("BLACKLISTED!");
                         } else if (returnCode == 3) {
                             Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
                         } else {
