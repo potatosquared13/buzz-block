@@ -13,13 +13,13 @@
 
     <TextView
         android:id="@+id/tvBalance"
-        android:layout_width="344dp"
-        android:layout_height="123dp"
+        android:layout_width="361dp"
+        android:layout_height="163dp"
         android:layout_marginTop="16dp"
         android:fontFamily="sans-serif-thin"
         android:text="0.0"
         android:textAlignment="center"
-        android:textSize="80sp"
+        android:textSize="120sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.492"
         app:layout_constraintStart_toStartOf="parent"
@@ -37,7 +37,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvNFCContents"
-        app:layout_constraintVertical_bias="0.073" />
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/tvNFCContents"
@@ -48,6 +48,7 @@
         android:fontFamily="monospace"
         android:text="id"
         android:textAlignment="center"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.043"
         app:layout_constraintStart_toStartOf="parent"

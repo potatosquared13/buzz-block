@@ -39,8 +39,8 @@ public class MainActivity extends Activity {
 
     public static final String WRITE_SUCCESS = "Transaction Successful!";
     public static final String WRITE_BLACKLIST = "Failed. Account Blacklisted!";
-    public static final String WRITE_NOFUNDS = "Failed. Insufficient Funds!";
-    public static final String WRITE_FAILED = "Unable to send transation!";
+    public static final String WRITE_NO_FUNDS = "Failed. Insufficient Funds!";
+    public static final String WRITE_FAILED = "Unable to send transaction!";
 
     NfcAdapter nfcAdapter;
     PendingIntent pendingIntent;
@@ -103,7 +103,7 @@ public class MainActivity extends Activity {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         builder.setView(input);
 
         /**PAYMENT**/
@@ -123,12 +123,14 @@ public class MainActivity extends Activity {
                         double amount = Double.parseDouble(input.getText().toString());
                         returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
                         tvNFCContent.setText("");
+                        tvBalance.setText("0.0");
+
                         if(returnCode == 0) {
                             Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                         } else if(returnCode == 1) {
                             Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
                         } else if (returnCode == 3) {
-                            Toast.makeText(context, WRITE_NOFUNDS, Toast.LENGTH_LONG ).show();
+                            Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
                         } else {
                             Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
                         }
@@ -184,8 +186,6 @@ public class MainActivity extends Activity {
         }
     }
     private void buildTagViews(NdefMessage[] msgs) {
-
-
         if (msgs == null || msgs.length == 0) return;
         String text = "";
         byte[] payload = msgs[0].getRecords()[0].getPayload();
@@ -195,6 +195,8 @@ public class MainActivity extends Activity {
         text = new String(payload, languageCodeLength + 1, payload.length - languageCodeLength - 1, StandardCharsets.ISO_8859_1);
         System.out.println(text);
         tvNFCContent.setText(text);
+
+        //Display Balance
         String balance = "" + node.getBalance(tvNFCContent.getText().toString());
         tvBalance.setText(balance);
     }
