@@ -15,13 +15,13 @@
         android:id="@+id/tvBalance"
         android:layout_width="361dp"
         android:layout_height="163dp"
-        android:layout_marginTop="16dp"
-        android:fontFamily="sans-serif-thin"
+        android:layout_marginTop="56dp"
+        android:fontFamily="@font/amiko"
         android:text="0.0"
         android:textAlignment="center"
         android:textSize="120sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.492"
+        app:layout_constraintHorizontal_bias="0.507"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/include" />
 
@@ -30,11 +30,14 @@
         android:layout_width="271dp"
         android:layout_height="116dp"
         android:layout_marginTop="40dp"
+        android:background="@drawable/custom_button"
         android:fontFamily="sans-serif-medium"
         android:text="Payment"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
+
         app:layout_constraintBottom_toBottomOf="@+id/lvList"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvNFCContents"
         app:layout_constraintVertical_bias="0.0" />
@@ -44,13 +47,13 @@
         android:layout_width="369dp"
         android:layout_height="66dp"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="68dp"
         android:fontFamily="monospace"
         android:text="id"
         android:textAlignment="center"
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.043"
+        app:layout_constraintHorizontal_bias="0.085"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvBalance" />
 
