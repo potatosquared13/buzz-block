@@ -1,14 +1,14 @@
 # TO-DO FINAL REVIEW
 
 ## Web-app
-- [ ] Search button/field for ease of access
+- [ ] Search filter field for user/vendor lists
 - [ ] Cleaner presentation of data
 - [ ] Registration fee column
-    - [ ] Report of total earnings made from registration fee (e.g 500 deposit + 25 = 525)
-- [ ] Seperate lists into different pages/tabs
-- [ ] Format amounts/currency, with decimal points/commas
-- [ ] Header labels for tables
-- [ ] Printable report generation per vendor
+    - [ ] Report of total earnings made from registration fee (e.g., 500 deposit + 25 = 525)
+- [ ] Seperate user/vendor lists into different pages/tabs
+- [ ] Format currency in tables/entry, with decimal points/commas (e.g., 1,000.00)
+- [x] Header labels for tables
+- [ ] Printable vendor report (without vendor list and sidebar)
 
 ## Mobile App
 - [ ] Better UI
