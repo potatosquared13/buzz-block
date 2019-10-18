@@ -106,8 +106,7 @@ class Leader(Node):
                 while (self.address is None):
                     time.sleep(1)
                 self.leader = Peer(None, self.address, self.client.identity)
-                self.get_peers()
-                # threading.Thread(target=self.advertise).start()
+                threading.Thread(target=self.advertise).start()
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
@@ -163,9 +162,9 @@ class Leader(Node):
             for peer in self.peers.copy():
                 if (not peer.socket._closed):
                     peer.socket.shutdown(socket.SHUT_RDWR)
-            logging.debug("Stopped")
+            logging.info("Stopped")
             if (self.chain.pending_transactions):
-                self.chain.new_block(Block(self.chain.last_block.hash, self.chain.pending_transactions))
+                # self.chain.new_block(Block(self.chain.last_block.hash, self.chain.pending_transactions))
                 self.chain.export()
                 self.chain.pending_transactions = []
             if (self.invalid_transactions):

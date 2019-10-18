@@ -43,6 +43,12 @@
                         <span style="font-size: 16px">CONFIRMED TRANSACTIONS</span>
                     </div>
                     <table>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Time</th>
+                            <th scope="col" colspan="3">Details</th>
+                            <th scope="col">Amount</th>
+                        </tr>
                         {% set ns = namespace(t_index = 0) %}
 
                         {% for block in blocks %}
@@ -128,6 +134,12 @@
                         <span style="font-size: 16px">PENDING TRANSACTIONS</span>
                     </div>
                     <table>
+                        <tr>
+                            <th scope="col">Type</th>
+                            <th scope="col">Time</th>
+                            <th scope="col" colspan="3">Details</th>
+                            <th scope="col">Amount</th>
+                        </tr>
                         {% set ns = namespace(pt_index=0) %}
 
                         {% for t in pending_transactions %}
@@ -211,6 +223,13 @@
                         <span style="font-size: 16px">INVALID TRANSACTIONS</span>
                     </div>
                     <table>
+                        <tr>
+                            <th scope="col">Reason</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Time</th>
+                            <th scope="col" colspan="3">Details</th>
+                            <th scope="col">Amount</th>
+                        </tr>
                         {% set ns = namespace(it_index=0) %}
 
                         {% for t in invalid_transactions %}
