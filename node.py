@@ -90,11 +90,13 @@ class Node(threading.Thread):
             return
         self.accepting.clear()
         self.listening.clear()
-        for thread in self.threads:
-            thread.join()
         self.running.clear()
+        print("waiting for threads to stop")
+        for thread in self.threads.copy():
+            thread.join()
+            self.threads.remove(thread)
         self.chain.export()
-        print("stopped")
+        logging.info("Stopped")
 
     # wait for a peer to connect and then keep an open connection
     def accept_connections(self):
@@ -109,6 +111,7 @@ class Node(threading.Thread):
             sock.settimeout(4)
             self.accepting.set()
             while self.accepting.is_set():
+                print("accepting connections")
                 try:
                     sock.listen(8)
                     c, addr = sock.accept()
@@ -187,8 +190,9 @@ class Node(threading.Thread):
     # each connected peer has its own thread for this
     def handle_connection(self, peer):
         logging.info(f"Connected to {peer.identity[:8]}")
-        peer.socket.settimeout(0.2)
-        while self.running.is_set() and peer in self.peers.copy():
+        peer.socket.settimeout(0.4)
+        while self.accepting.is_set() and peer in self.peers.copy():
+            print("listening for messages on connection")
             try:
                 message_type, message = self.receive(peer.socket)
                 if (len(message) == 0):
@@ -254,6 +258,7 @@ class Node(threading.Thread):
             sock.settimeout(10)
             self.listening.set()
             while self.listening.is_set():
+                print("listening")
                 try:
                     data, addr = sock.recvfrom(256)
                     msg = data.decode()

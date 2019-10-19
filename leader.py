@@ -163,5 +163,5 @@ class Leader(Node):
             with open('invalid_transactions.json', 'w') as f:
                 f.write(helpers.jsonify(self.invalid_transactions))
         self.running.clear()
-        print("stopped")
+        logging.info("stopped")
 
