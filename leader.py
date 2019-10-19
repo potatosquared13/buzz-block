@@ -20,8 +20,7 @@ class Leader(Node):
                 self.send(peer.socket, BFTSTART, helpers.jsonify(self.chain.pending_transactions))
             logging.info("Waiting for network consensus")
             self.send_hash(self.chain.pending_transactions)
-            while (self.pending_block):
-                time.sleep(1)
+            self.not_in_consensus.wait()
             logging.info("Updating client balances")
             affected = set()
             for transaction in pt:
@@ -87,7 +86,8 @@ class Leader(Node):
         return status
 
     def advertise(self):
-        while(self.active):
+        while(self.running.is_set()):
+            print("advertising")
             peers = len(self.peers)
             self.get_peers()
             time.sleep(1)
@@ -98,12 +98,13 @@ class Leader(Node):
 
     def start(self):
         try:
-            if (not self.active):
-                self.active = True
+            if (not self.running.is_set()):
+                self.running.set()
                 threading.Thread(target=self.accept_connections).start()
                 threading.Thread(target=self.listen).start()
                 threading.Thread(target=self.sleep).start()
                 while (self.address is None):
+                    print("waiting for self.address")
                     time.sleep(1)
                 self.leader = Peer(None, self.address, self.client.identity)
                 threading.Thread(target=self.advertise).start()
@@ -113,10 +114,12 @@ class Leader(Node):
             self.chain.export()
 
     def sleep(self):
-        while (self.active):
+        self.running.wait()
+        while (self.running.is_set()):
             start = time.time()
             plen = len(self.chain.pending_transactions)
-            while (self.active and time.time() - start < 600 and len(self.chain.pending_transactions) < self.block_size):
+            while (self.running.is_set() and time.time() - start < 600 and len(self.chain.pending_transactions) < self.block_size):
+                print("waiting for conditions for new block")
                 time.sleep(10)
             if (plen == len(self.chain.pending_transactions) and len(self.chain.pending_transactions) > 0):
                 self.start_consensus()
@@ -125,10 +128,7 @@ class Leader(Node):
         return db.search_user(client).pending_balance
 
     def create_account(self, identity, amount):
-        if (self.pending_block is not None):
-            logging.debug("Waiting until consensus is over before sending transaction")
-        while (self.pending_block is not None):
-            time.sleep(1)
+        self.not_in_consensus.wait()
         transaction = Transaction(0, self.client.identity, identity, amount)
         self.client.sign(transaction)
         self.record_transaction(transaction, self.client.identity)
@@ -139,10 +139,7 @@ class Leader(Node):
         if (identity in self.blacklist):
             logging.warning("ID is in blacklist, not proceeding")
             return
-        if (self.pending_block is not None):
-            logging.debug("Waiting until consensus is over before sending transaction")
-        while (self.pending_block is not None):
-            time.sleep(1)
+        self.not_in_consensus.wait()
         transaction = Transaction(2, self.client.identity, identity, amount)
         self.client.sign(transaction)
         self.record_transaction(transaction, self.client.identity)
@@ -157,17 +154,17 @@ class Leader(Node):
             self.send(peer.socket, TRANSACTION, transaction.json)
 
     def stop(self):
-        if (self.active):
-            self.active = False
-            for peer in self.peers.copy():
-                if (not peer.socket._closed):
-                    peer.socket.shutdown(socket.SHUT_RDWR)
-            logging.info("Stopped")
-            if (self.chain.pending_transactions):
-                # self.chain.new_block(Block(self.chain.last_block.hash, self.chain.pending_transactions))
-                self.chain.export()
-                self.chain.pending_transactions = []
-            if (self.invalid_transactions):
-                with open('invalid_transactions.json', 'w') as f:
-                    f.write(helpers.jsonify(self.invalid_transactions))
+        if not self.running.wait(10):
+            return
+        self.accepting.clear()
+        self.listening.clear()
+        for thread in self.threads:
+            thread.join()
+        self.running.clear()
+        self.chain.export()
+        if (self.invalid_transactions):
+            with open('invalid_transactions.json', 'w') as f:
+                f.write(helpers.jsonify(self.invalid_transactions))
+        self.running.clear()
+        print("stopped")
 

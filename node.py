@@ -35,9 +35,9 @@ UNKNOWN = 10
 
 # object for organising connected peers
 class Peer():
-    def __init__(self, sock, identity):
+    def __init__(self, sock, address, identity):
         self.socket = sock
-        self.address = self.socket.getpeername()
+        self.address = address
         self.identity = identity
 
 # object for connecting to peers and listening for messages from them
@@ -60,10 +60,9 @@ class Node(threading.Thread):
         # validator variables
         self.hashes = []
         self.pending_block = None
-        self.pending_transactions = []
         self.invalid_transactions = []
         # statistic variables
-        self.messages_send = 0
+        self.messages_sent = 0
         self.messages_received = 0
         self.transactions_sent = 0
         if (debug):
@@ -95,6 +94,7 @@ class Node(threading.Thread):
             thread.join()
         self.running.clear()
         self.chain.export()
+        print("stopped")
 
     # wait for a peer to connect and then keep an open connection
     def accept_connections(self):
@@ -109,6 +109,7 @@ class Node(threading.Thread):
             sock.settimeout(4)
             self.accepting.set()
             while self.accepting.is_set():
+                print("waiting for connections")
                 try:
                     sock.listen(8)
                     c, addr = sock.accept()
@@ -116,7 +117,7 @@ class Node(threading.Thread):
                     c.sendall(unhexlify(self.client.identity))
                     if [p for p in self.peers if p.identity == identity]:
                         c.close()
-                    peer = Peer(c, identity)
+                    peer = Peer(c, c.getpeername(), identity)
                     self.peers.add(peer)
                     thread = threading.Thread(name=identity[:8], target=self.handle_connection, args=(peer,))
                     self.threads.append()
@@ -146,7 +147,7 @@ class Node(threading.Thread):
             if [p for p in self.peers if p.identity == identity]:
                 sock.close()
                 return False
-            peer = Peer(sock, identity)
+            peer = Peer(sock, sock.getpeername(), identity)
             self.peers.add(peer)
             thread = threading.Thread(name=identity[:8], target=self.handle_connection, args=(peer,)).start()
             self.threads.append(thread)
@@ -189,6 +190,7 @@ class Node(threading.Thread):
         logging.info(f"Connected to {peer.identity[:8]}")
         peer.socket.settimeout(0.2)
         while self.running.is_set() and peer in self.peers.copy():
+            print("waiting for message from peer")
             try:
                 message_type, message = self.receive(peer.socket)
                 if (len(message) == 0):
@@ -254,6 +256,7 @@ class Node(threading.Thread):
             sock.settimeout(10)
             self.listening.set()
             while self.listening.is_set():
+                print("listening")
                 try:
                     data, addr = sock.recvfrom(256)
                     msg = data.decode()
@@ -373,7 +376,7 @@ class Node(threading.Thread):
         for peer in self.peers.copy():
             self.send(peer.socket, BFTVERIFY, self.pending_block.hash)
         self.hashes.append((self.client.identity, self.pending_block.hash))
-        threading.Thread(target=self.pbft).start()
+        threading.Thread(target=self.wait_for_consensus).start()
 
     # practical byzantine fault tolerance algorithm
     # waits until it has all other nodes' hashes, or until a minute has passed
@@ -381,7 +384,7 @@ class Node(threading.Thread):
     # if at least 2/3rds of the received hashes are the same as its own computed one,
     # it accepts its generated block as the next official one.
     # the remaining 1/3rd could comprise of wrong hashes, or a lack of one
-    def pbft(self):
+    def wait_for_consensus(self):
         start = time.time()
         while (time.time() - start < 30 and len(self.hashes) <= len(self.peers)):
             time.sleep(2)
