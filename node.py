@@ -119,7 +119,7 @@ class Node(threading.Thread):
                     peer = Peer(c, c.getpeername(), identity)
                     self.peers.add(peer)
                     thread = threading.Thread(name=identity[:8], target=self.handle_connection, args=(peer,))
-                    self.threads.append()
+                    self.threads.append(thread)
                     thread.start()
                     if self.leader is not None:
                         if self.leader.address == self.address:
@@ -148,7 +148,7 @@ class Node(threading.Thread):
                 return False
             peer = Peer(sock, sock.getpeername(), identity)
             self.peers.add(peer)
-            thread = threading.Thread(name=identity[:8], target=self.handle_connection, args=(peer,)).start()
+            thread = threading.Thread(name=identity[:8], target=self.handle_connection, args=(peer,))
             self.threads.append(thread)
             thread.start()
             if self.leader is not None:
