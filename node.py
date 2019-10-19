@@ -75,8 +75,8 @@ class Node(threading.Thread):
     # tell node to start listening for messages
     def start(self):
         if not self.running.is_set():
-            self.threads.append(name="accept_connections", target=self.accept_connections)
-            self.threads.append(name="listen", target=self.listen)
+            self.threads.append(threading.Thread(name="accept_connections", target=self.accept_connections))
+            self.threads.append(threading.Thread(name="listen", target=self.listen))
             for thread in self.threads:
                 thread.start()
             self.accepting.wait()
@@ -109,7 +109,6 @@ class Node(threading.Thread):
             sock.settimeout(4)
             self.accepting.set()
             while self.accepting.is_set():
-                print("waiting for connections")
                 try:
                     sock.listen(8)
                     c, addr = sock.accept()
@@ -190,7 +189,6 @@ class Node(threading.Thread):
         logging.info(f"Connected to {peer.identity[:8]}")
         peer.socket.settimeout(0.2)
         while self.running.is_set() and peer in self.peers.copy():
-            print("waiting for message from peer")
             try:
                 message_type, message = self.receive(peer.socket)
                 if (len(message) == 0):
@@ -256,7 +254,6 @@ class Node(threading.Thread):
             sock.settimeout(10)
             self.listening.set()
             while self.listening.is_set():
-                print("listening")
                 try:
                     data, addr = sock.recvfrom(256)
                     msg = data.decode()

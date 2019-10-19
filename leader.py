@@ -87,7 +87,6 @@ class Leader(Node):
 
     def advertise(self):
         while(self.running.is_set()):
-            print("advertising")
             peers = len(self.peers)
             self.get_peers()
             time.sleep(1)
@@ -104,7 +103,6 @@ class Leader(Node):
                 threading.Thread(target=self.listen).start()
                 threading.Thread(target=self.sleep).start()
                 while (self.address is None):
-                    print("waiting for self.address")
                     time.sleep(1)
                 self.leader = Peer(None, self.address, self.client.identity)
                 threading.Thread(target=self.advertise).start()
@@ -119,7 +117,6 @@ class Leader(Node):
             start = time.time()
             plen = len(self.chain.pending_transactions)
             while (self.running.is_set() and time.time() - start < 600 and len(self.chain.pending_transactions) < self.block_size):
-                print("waiting for conditions for new block")
                 time.sleep(10)
             if (plen == len(self.chain.pending_transactions) and len(self.chain.pending_transactions) > 0):
                 self.start_consensus()
