@@ -91,7 +91,7 @@ class Node(threading.Thread):
         self.accepting.clear()
         self.listening.clear()
         self.running.clear()
-        print("waiting for threads to stop")
+        logging.debug("waiting for threads to stop")
         for thread in self.threads.copy():
             thread.join()
             self.threads.remove(thread)
@@ -111,7 +111,6 @@ class Node(threading.Thread):
             sock.settimeout(4)
             self.accepting.set()
             while self.accepting.is_set():
-                print("accepting connections")
                 try:
                     sock.listen(8)
                     c, addr = sock.accept()
@@ -132,6 +131,7 @@ class Node(threading.Thread):
                     continue
                 except socket.error as e:
                     logging.error(f"Node.accept_connections(): {e}")
+            logging.debug("stopped listening for connections")
 
     # connect to a peer
     def connect(self, addr):
@@ -189,10 +189,9 @@ class Node(threading.Thread):
     # listen for messages from a peer
     # each connected peer has its own thread for this
     def handle_connection(self, peer):
-        logging.info(f"Connected to {peer.identity[:8]}")
+        logging.info(f"connected to {peer.identity[:8]}")
         peer.socket.settimeout(0.4)
         while self.accepting.is_set() and peer in self.peers.copy():
-            print("listening for messages on connection")
             try:
                 message_type, message = self.receive(peer.socket)
                 if (len(message) == 0):
@@ -233,7 +232,7 @@ class Node(threading.Thread):
                 break
         peer.socket.close()
         self.peers.remove(peer)
-        logging.info(f"Closed connection to {peer.identity[:8]}")
+        logging.info(f"closed connection to {peer.identity[:8]}")
 
     # broadcast connect message to network to discover peers
     # nodes receiving this broadcast that aren't already connected will try to connect
@@ -250,7 +249,7 @@ class Node(threading.Thread):
     # will try to connect to an address on a connect message
     def listen(self):
         self.accepting.wait()
-        logging.debug("Listening for broadcasts")
+        logging.debug("started listening for broadcasts")
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -258,7 +257,6 @@ class Node(threading.Thread):
             sock.settimeout(10)
             self.listening.set()
             while self.listening.is_set():
-                print("listening")
                 try:
                     data, addr = sock.recvfrom(256)
                     msg = data.decode()
@@ -271,6 +269,7 @@ class Node(threading.Thread):
                 except socket.error as e:
                     logging.error(e)
                     break
+        logging.debug("stopped listening")
 
     # verify the signature of a transaction
     def is_valid_signature(self, transaction, peer_identity):
