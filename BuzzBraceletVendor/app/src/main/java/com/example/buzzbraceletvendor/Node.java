@@ -1,6 +1,7 @@
 package com.example.buzzbraceletvendor;
 
 import android.content.Context;
+import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -70,12 +72,11 @@ public class Node extends AsyncTask<Void, Void, Void>{
             while (control.leader == null) {
                 Thread.sleep(4000);
             }
-            if (control.chain.blocks.size() == 0) {
-                System.out.println(control.leader.ip + ":" + control.leader.port);
-                updateChain(control.leader.socket);
+            updateChain(control.leader.socket);
+            while (control.active) {
+                Thread.sleep(10000);
+                getPeers();
             }
-            while (control.active)
-                Thread.sleep(1000);
             stop();
         } catch (Exception e){
             e.printStackTrace();
@@ -111,7 +112,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
         volatile String ip;
         volatile int port;
         volatile Set<Peer> peers;
-        volatile ArrayList<Transaction> pending_transactions;
         volatile Block pending_block;
         volatile Blockchain chain;
         volatile ArrayList<IdentityHashPair> hashes;
@@ -129,21 +129,15 @@ public class Node extends AsyncTask<Void, Void, Void>{
             try {
                 while (control.active && control.ip == null)
                     Thread.sleep(1000);
-                byte[] buf = new byte[1024];
-                WifiManager wm = (WifiManager) mContext.getSystemService(WIFI_SERVICE);
-                WifiManager.MulticastLock mcl = wm.createMulticastLock("buzz");
-                mcl.acquire();
-                MulticastSocket ms = new MulticastSocket(60000);
-                ms.setBroadcast(true);
-                InetAddress group = InetAddress.getByName("224.98.117.122");
-                ms.joinGroup(group);
-                isActive = true;
-                System.out.println("Listening for broadcasts");
+                DatagramSocket ds = new DatagramSocket(62757, InetAddress.getByName("0.0.0.0"));
+                ds.setBroadcast(true);
                 while (isActive) {
-                    DatagramPacket dp = new DatagramPacket(buf, buf.length);
-                    ms.receive(dp);
-                    String msg = new String(dp.getData());
-                    String ip = ((InetSocketAddress)dp.getSocketAddress()).getAddress().getHostAddress();
+                    byte[] buf = new byte[4096];
+                    DatagramPacket p = new DatagramPacket(buf, buf.length);
+                    ds.receive(p);
+                    String msg = new String(p.getData());
+                    System.out.println("Received broadcast " + msg);
+                    String ip = ((InetSocketAddress)p.getSocketAddress()).getAddress().getHostAddress();
                     if (msg.startsWith("62757a7aGP")){
                         int port = Integer.parseInt(msg.substring(10).replaceAll("[^\\d]", ""));
                         if (!ip.equals(control.ip) || port != control.port) {
@@ -153,7 +147,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
                         }
                     }
                 }
-                mcl.release();
             } catch (Exception e){
                 e.printStackTrace();
             }
@@ -341,6 +334,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
                 System.out.println("Peer "+peer.identity.substring(0,8)+" disconnected");
                 peer.socket.close();
                 control.peers.remove(peer);
+                System.out.println(control.peers.size());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -517,14 +511,21 @@ public class Node extends AsyncTask<Void, Void, Void>{
         while (control.ip == null || control.port == 0)
             Thread.sleep(1000);
         byte[] msg = ("62757a7aGP" + control.port).getBytes();
-        MulticastSocket ms = new MulticastSocket();
-        ms.setBroadcast(true);
-        InetAddress group = InetAddress.getByName("224.98.117.122");
-        ms.joinGroup(group);
-        DatagramPacket dp = new DatagramPacket(msg, msg.length, group, 60000);
+        DatagramSocket ds = new DatagramSocket();
+        ds.setBroadcast(true);
+        DatagramPacket dp = new DatagramPacket(msg, msg.length, getBroadcastAddress(), 62757);
         System.out.println("Sending broadcast message ("+new String(msg)+")");
-        ms.send(dp);
-        ms.close();
+        ds.send(dp);
+        ds.close();
+    }
+    InetAddress getBroadcastAddress() throws IOException{
+        WifiManager wifi = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        DhcpInfo dhcp = wifi.getDhcpInfo();
+        int b = (dhcp.ipAddress & dhcp.netmask) | ~dhcp.netmask;
+        byte[] q = new byte[4];
+        for (int k=0; k<4; k++)
+            q[k] = (byte) ((b >> k * 8) & 0xFF);
+        return InetAddress.getByAddress(q);
     }
     public int sendPayment(String i, double a) {
         while (control.active && control.pending_block != null)
@@ -561,7 +562,6 @@ public class Node extends AsyncTask<Void, Void, Void>{
         return balance;
     }
     private boolean isValidSignature(Transaction t, String i)  {
-        System.out.println(t.toJson());
         try {
             if (!t.signature.isEmpty()) {
                 byte[] identity = Helper.hexToBytes("3076301006072a8648ce3d020106052b8104002203620004" + i);

@@ -19,7 +19,7 @@ public class Blockchain extends HashableObject {
 
     public Blockchain() {
         blocks = new ArrayList<Block>();
-        pending_transactions = new ArrayList<>();
+        pending_transactions = new ArrayList<Transaction>();
         timestamp = new SimpleDateFormat("yyy-MM-dd'T'HH:mm:ss").format(new Date());
     }
 
