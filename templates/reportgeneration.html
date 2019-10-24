@@ -42,26 +42,11 @@
                         {% for vendor in vendors %}
 
                         <li>
-                                <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
-                                    <div class="vendor-name">{{vendor[1]}}</div>
-                                    <div class="vendor-identity">{{vendor[0][:8]}}</div>
-                                </button>
-                            </li><li>
-                                    <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
-                                        <div class="vendor-name">{{vendor[1]}}</div>
-                                        <div class="vendor-identity">{{vendor[0][:8]}}</div>
-                                    </button>
-                                </li><li>
-                                        <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
-                                            <div class="vendor-name">{{vendor[1]}}</div>
-                                            <div class="vendor-identity">{{vendor[0][:8]}}</div>
-                                        </button>
-                                    </li><li>
-                                            <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
-                                                <div class="vendor-name">{{vendor[1]}}</div>
-                                                <div class="vendor-identity">{{vendor[0][:8]}}</div>
-                                            </button>
-                                        </li>
+                            <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
+                                <div class="vendor-name">{{vendor[1]}}</div>
+                                <div class="vendor-identity">{{vendor[0][:8]}}</div>
+                            </button>
+                        </li>
 
                         {% endfor %}
                     </ul>
@@ -69,7 +54,7 @@
                 <div class="box-auto">
                     {% if t_length != 0 %}
                     <div style="font-size: 18px">{{vendor_requested.name}}</div>
-                    Transaction Detail Report<br/>
+                    Transaction Detail Report<br />
                     Generated on <span id="time"></span>
                     {% endif %}
                     <table>
