@@ -7,12 +7,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
-import android.nfc.tech.Ndef;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -20,11 +17,9 @@ import android.os.Parcelable;
 import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -76,8 +71,6 @@ public class MainActivity extends Activity {
         tvBalance           = findViewById(R.id.tvBalance);
         lvList              = findViewById(R.id.lvList);
         tvToolBar           = findViewById(R.id.tvToolBar);
-
-
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
@@ -134,8 +127,8 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "This device doesn't support NFC.", Toast.LENGTH_LONG).show();
             finish();
         }
-        readFromIntent(getIntent());
 
+        readFromIntent(getIntent());
         pendingIntent = PendingIntent.getActivity(this, 0, new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP), 0);
         IntentFilter tagDetected = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
@@ -149,9 +142,9 @@ public class MainActivity extends Activity {
     }
 
 
-    /******************************************************************************
-     **********************************Read From NFC Tag*/
+    /**Read From NFC Tag*/
     private void readFromIntent(Intent intent) {
+
         String action = intent.getAction();
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
                 || NfcAdapter.ACTION_TECH_DISCOVERED.equals(action)
@@ -167,9 +160,12 @@ public class MainActivity extends Activity {
             buildTagViews(msgs);
 
             btnSendTransaction.setEnabled(true);
+
         }
     }
+
     private void buildTagViews(NdefMessage[] msgs) {
+
         if (msgs == null || msgs.length == 0) return;
         String text = "";
         byte[] payload = msgs[0].getRecords()[0].getPayload();
@@ -183,6 +179,7 @@ public class MainActivity extends Activity {
         //Display Balance
         String balance = "" + node.getBalance(tvNFCContent.getText().toString());
         tvBalance.setText(balance);
+
     }
 
 
