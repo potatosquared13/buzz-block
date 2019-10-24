@@ -632,7 +632,7 @@ public class Node extends AsyncTask<Void, Void, Void>{
             new Thread(new ConsensusHandler()).start();
         }
     }
-    public ArrayList<Transaction> getTransactions(){
+    public ArrayList<Transaction> getTransactions() {
         ArrayList<Transaction> transactions = new ArrayList<>();
         for (Transaction t : control.chain.pending_transactions){
             if (t.transaction == 1 && t.address == control.client.getIdentity())

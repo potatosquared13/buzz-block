@@ -20,6 +20,7 @@
         android:text="0.0"
         android:textAlignment="center"
         android:textSize="120sp"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.507"
         app:layout_constraintStart_toStartOf="parent"
@@ -33,10 +34,10 @@
         android:background="@drawable/custom_button"
         android:fontFamily="sans-serif-medium"
         android:text="Payment"
-        android:textSize="30sp"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
-
         android:textColor="@android:color/white"
+
+        android:textSize="30sp"
         app:layout_constraintBottom_toBottomOf="@+id/lvList"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"

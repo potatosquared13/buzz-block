@@ -50,12 +50,11 @@ public class MainActivity extends Activity {
     int returnCode;
 
 //    String[] values = new String[] { node.getTransactions().toString()};
-//   ArrayList<String> list = new ArrayList<String>();
+//    ArrayList<String> list = new ArrayList<String>();
     ListView lvList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-
         //Permissions
         if (Build.VERSION.SDK_INT > 22)
             requestPermissions(new String[] {"android.permission.INTERNET",
@@ -76,7 +75,9 @@ public class MainActivity extends Activity {
         final EditText input = new EditText(MainActivity.this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         builder.setView(input);
-        btnSendTransaction.setEnabled(false);
+        btnSendTransaction.setVisibility(View.INVISIBLE);
+        tvBalance.setVisibility(View.INVISIBLE);
+        tvNFCContent.setVisibility(View.INVISIBLE);
 
         /**PAYMENT**/
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
@@ -96,6 +97,7 @@ public class MainActivity extends Activity {
                     returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
                     tvNFCContent.setText("");
                     tvBalance.setText("");
+                    btnSendTransaction.setVisibility(View.INVISIBLE);
 
                     if(returnCode == 0) {
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
@@ -136,7 +138,9 @@ public class MainActivity extends Activity {
 
         node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
         node.execute();
-
+        System.out.print("XXX");
+        System.out.print(node.getTransactions().toString());
+        System.out.print("XXX");
         tvToolBar.setText(node.control.client.name);
 
     }
@@ -159,7 +163,7 @@ public class MainActivity extends Activity {
             }
             buildTagViews(msgs);
 
-            btnSendTransaction.setEnabled(true);
+            btnSendTransaction.setVisibility(View.VISIBLE);
 
         }
     }
@@ -179,6 +183,7 @@ public class MainActivity extends Activity {
         //Display Balance
         String balance = "" + node.getBalance(tvNFCContent.getText().toString());
         tvBalance.setText(balance);
+        tvBalance.setVisibility(View.VISIBLE);
 
     }
 
