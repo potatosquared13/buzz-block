@@ -67,7 +67,7 @@
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{t.amount}}
+                                {{"{:,.2f}".format(t.amount)}}
                             </td>
                         </tr>
                         {% elif t.transaction == 1 %}
@@ -88,7 +88,7 @@
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{t.amount}}
+                                {{"{:,.2f}".format(t.amount)}}
                             </td>
                         </tr>
                         {% elif t.transaction == 2 %}
@@ -104,7 +104,7 @@
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{t.amount}}
+                                {{"{:,.2f}".format(t.amount)}}
                             </td>
                         </tr>
                         {% elif t.transaction == 3 %}
@@ -157,7 +157,7 @@
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{t.amount}}
+                                {{"{:,.2f}".format(t.amount)}}
                             </td>
                         </tr>
                         {% elif t.transaction == 1 %}
@@ -178,7 +178,7 @@
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{t.amount}}
+                                {{"{:,.2f}".format(t.amount)}}
                             </td>
                         </tr>
                         {% elif t.transaction == 2 %}
@@ -194,7 +194,7 @@
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
                             <td style="min-width: 15%">
-                                {{t.amount}}
+                                {{"{:,.2f}".format(t.amount)}}
                             </td>
                         </tr>
                         {% elif t.transaction == 3 %}
@@ -249,7 +249,7 @@
                                 ({{(t[0].address[:8])}})
                             </td>
                             <td style="min-width: 15%">
-                                {{t[0].amount}}
+                                {{"{:,.2f}".format(t[0].amount)}}
                             </td>
                         </tr>
                         {% elif t[0].transaction == 1 %}
@@ -271,7 +271,7 @@
                                 ({{(t[0].address[:8])}})
                             </td>
                             <td style="min-width: 15%">
-                                {{t[0].amount}}
+                                {{"{:,.2f}".format(t[0].amount)}}
                             </td>
                         </tr>
                         {% elif t[0].transaction == 2 %}
@@ -289,7 +289,7 @@
                                 ({{(t[0].address[:8])}})
                             </td>
                             <td style="min-width: 15%">
-                                {{t[0].amount}}
+                                {{"{:,.2f}".format(t[0].amount)}}
                             </td>
                         </tr>
                         {% elif t[0].transaction == 3 %}
