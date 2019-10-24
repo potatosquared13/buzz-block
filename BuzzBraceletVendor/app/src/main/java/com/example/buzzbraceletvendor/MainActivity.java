@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
     Tag myTag;
     Context context;
 
-    TextView tvNFCContent, tvBalance, tvToolBar;
+    TextView tvNFCContent, tvBalance, tvToolBar, tvStatus;
     Button btnSendTransaction;
     Node node;
     int returnCode;
@@ -70,6 +70,7 @@ public class MainActivity extends Activity {
         tvBalance           = findViewById(R.id.tvBalance);
         lvList              = findViewById(R.id.lvList);
         tvToolBar           = findViewById(R.id.tvToolBar);
+        tvStatus            = findViewById(R.id.tvStatus);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
@@ -78,6 +79,9 @@ public class MainActivity extends Activity {
         btnSendTransaction.setVisibility(View.INVISIBLE);
         tvBalance.setVisibility(View.INVISIBLE);
         tvNFCContent.setVisibility(View.INVISIBLE);
+
+        tvStatus.setText("Scan Tag...");
+        tvStatus.setVisibility(View.VISIBLE);
 
         /**PAYMENT**/
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
@@ -95,20 +99,25 @@ public class MainActivity extends Activity {
                 public void onClick(DialogInterface dialog, int which) {
                     double amount = Double.parseDouble(input.getText().toString());
                     returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
-                    tvNFCContent.setText("");
-                    tvBalance.setText("");
-                    btnSendTransaction.setVisibility(View.INVISIBLE);
+
 
                     if(returnCode == 0) {
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                     } else if(returnCode == 1) {
                         Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
-                        tvBalance.setText("BLACKLISTED!");
+//                        tvStatus.setText("BLACKLISTED");
                     } else if (returnCode == 3) {
                         Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
                     } else {
                         Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
+//                        tvStatus.setText("Write Failed");
                     }
+
+                    tvNFCContent.setText("");
+                    tvBalance.setText("");
+                    btnSendTransaction.setVisibility(View.INVISIBLE);
+                    tvStatus.setVisibility(View.VISIBLE);
+                    tvStatus.setText("Scan Bracelet..");
                     dialog.cancel();
                 }
             });
@@ -184,6 +193,7 @@ public class MainActivity extends Activity {
         String balance = "" + node.getBalance(tvNFCContent.getText().toString());
         tvBalance.setText(balance);
         tvBalance.setVisibility(View.VISIBLE);
+        tvStatus.setVisibility(View.INVISIBLE);
 
     }
 
