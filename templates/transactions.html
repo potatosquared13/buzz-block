@@ -20,6 +20,12 @@
             <a href="/">
                 <div class="link">ACCOUNTS</div>
             </a>
+            <a class="sub" href="/users">
+                <div class="link">users</div>
+            </a>
+            <a class="sub" href="/vendors">
+                <div class="link">vendors</div>
+            </a>
             <a href="/report">
                 <div class="link">REPORTS</div>
             </a>
@@ -27,7 +33,7 @@
         <div id="main">
             <div class="header">
                 <div class="left-align">
-                    TRANSACTIONS OVERVIEW
+                    <h2>OVERVIEW</h2>
                 </div>
                 <div class="right-align">
                     STATUS
@@ -37,10 +43,24 @@
                     </label>
                 </div>
             </div>
+            <div class="content-flex">
+                <div class="box-30 card">
+                    <h4>BLOCK SIZE</h4>
+                    <span style="font-size:32px">{{len(blocks)}}</span>
+                </div>
+                <div class="box-30 card">
+                    <h4>TRANSACTIONS</h4>
+                    <span style="font-size:32px">{{transaction_count}}</span>
+                </div>
+                <div class="box-30 card">
+                    <h4>CIRCULATION</h4>
+                    <span style="font-size:32px">{{amount_count}}</span>
+                </div>
+            </div>
             <div class="content">
                 <div class="box-auto">
                     <div style="text-align: center">
-                        <span style="font-size: 16px">CONFIRMED TRANSACTIONS</span>
+                        <h4>CONFIRMED TRANSACTIONS</h4>
                     </div>
                     <table>
                         <tr>
@@ -131,7 +151,7 @@
                 </div>
                 <div class="box-auto">
                     <div style="text-align: center">
-                        <span style="font-size: 16px">PENDING TRANSACTIONS</span>
+                        <h4>PENDING TRANSACTIONS</h4>
                     </div>
                     <table>
                         <tr>
@@ -220,7 +240,7 @@
                 </div>
                 <div class="box-auto">
                     <div style="text-align: center">
-                        <span style="font-size: 16px">INVALID TRANSACTIONS</span>
+                        <h4>INVALID TRANSACTIONS</h4>
                     </div>
                     <table>
                         <tr>

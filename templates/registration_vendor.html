@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Management</title>
+    <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
+    <script src="../static/js/register.js"></script>
+</head>
+
+<body>
+    <div id="container">
+        <div id="sidebar">
+            <div class="header"></div>
+            <a href="/transactions">
+                <div class="link">TRANSACTIONS</div>
+            </a>
+            <a href="/">
+                <div class="link">ACCOUNTS</div>
+            </a>
+            <a class="sub" href="/users">
+                <div class="link">users</div>
+            </a>
+            <a class="sub active" href="#">
+                <div class="link">vendors</div>
+            </a>
+            <a href="/report">
+                <div class="link">REPORTS</div>
+            </a>
+        </div>
+        <div id="main">
+            <div class="header">
+                <div class="left-align">
+                    <h2>VENDORS</h2>
+                </div>
+                <div class="right-align">
+                </div>
+            </div>
+            <div class="content">
+                <div id="client-container" class="box-auto">
+                    <form id="vendor-form">
+                        {% if blockchain == 0 %}
+                        <fieldset>
+                        {% else %}
+                        <fieldset disabled>
+                        {% endif %}
+                            <h4 style="text-align: center">REGISTER NEW VENDOR </h4>
+                            <div class="label-input">
+                                Name
+                                <input placeholder="Business name" id="vendor-name" type="text" class="text-input" name="vendor-name" onkeyup="checkVendor(event)" />
+                            </div>
+                            <div class="label-input">
+                                Contact
+                                <input placeholder="Contact number (for stall operator)" id="vendor-contact" type="text" class="text-input" name="vendor-contact" onkeyup="checkVendor(event)" />
+                            </div>
+                            <div class="label-input">
+                                Type
+                                <input placeholder="Business Type" id="vendor-type" type="text" class="text-input" name="vendor-type" onkeyup="checkVendor(event)" />
+                            </div>
+                            {% if blockchain == 0 %}
+                            <div class="button-container">
+                                <button id="vendor-add" type="button" onclick="registerVendor()" disabled>add</button>
+                            </div>
+                            {% else %}
+                            <div class="button-container">
+                                <button id="vendor-add" type="button" disabled>add</button>
+                            </div>
+                            {% endif %}
+                        </fieldset>
+                    </form>
+                </div>
+                <div class="box-auto">
+                    <input type="text" id="search-field" onkeyup="filter()" placeholder="Search by name...">
+                    <br />
+                    <table>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Contact</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Balance</th>
+                        </tr>
+
+                        {% for vendor in vendors %}
+
+                        <tr>
+                            <td style="width: 40%">{{vendor[1]}} <span style="color:#aaa">({{vendor[0][:8]}})</span></td>
+                            <td style="width: 20%">{{vendor[2]}}</td>
+                            <td style="width: 20%">{{vendor[3]}}</td>
+                            <td style="width: 20%">{{vendor[4]}} ({{vendor[5]}})</td>
+                        </tr>
+
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

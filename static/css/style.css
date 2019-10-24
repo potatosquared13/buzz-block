@@ -17,18 +17,26 @@
     height: 100vh;
 }
 
+a {
+    text-decoration: none;
+    color: #f7f7f8;
+}
+
 #sidebar a {
     background: transparent;
     display: block;
     min-height: 64px;
     line-height: 64px;
-    width: 90%;
+    width: 100%;
     margin: auto;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    transition: 0.2s ease-in-out background-color;
-    color: #f7f7f8;
-    text-decoration: none;
+    transition: 0.1s ease-in-out background-color;
+    background: rgba(198, 140, 219, 0.2);
+}
+
+#sidebar a.sub {
+    min-height: 42px;
+    line-height: 42px;
+    background: rgba(183, 130, 202, 0.1);
 }
 
 #sidebar a .link {
@@ -36,19 +44,39 @@
     padding-left: 1.5vw;
 }
 
+#sidebar a.active .link {
+    padding-left: 3vw;
+}
+
 #sidebar a.active {
     background: rgba(198, 140, 219, 0.8);
-
 }
 
 #sidebar a:hover {
     background: rgba(198, 140, 219, 0.5);
 }
 
+#sidebar a.sub:hover {
+    background: rgba(198, 140, 219, 0.3);
+}
+
 #main {
-    background: #eee;
+    background: #f3f3f9;
     margin-left: 192px;
     min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+    color: #737373;
+    font-weight: 500;
+}
+
+h1 {
+    font-size: 24px;
+}
+
+h2 {
+    font-size: 20px;
 }
 
 #sidebar .header {
@@ -69,32 +97,25 @@
     line-height: 56px;
     flex: 1 0 auto;
     margin-left: 2vw;
-    font-size: 18px;
 }
 .right-align {
     line-height: 56px;
     margin-right: 2vw;
 }
 
-.tab {
-    height: 100%;
-    margin: 0;
-    border-radius: 0;
-    background: transparent;
-    border-bottom: 4px solid transparent;
-    border-top: 4px solid transparent;
-    box-sizing: border-box;
-    color: #888;
+.card {
+    text-align: center;
+    padding: 32px 0;
 }
 
 button {
-    border: 1px solid #ccc;
+    border: none;
     border-radius: 8px;
     margin: 1vh 0;
     padding: 8px 16px;
-    background: rgba(198, 140, 219, 0.1);
-    color: #555;
-    transition: 0.2s ease-in-out background-color, 0.2s ease-in-out color;
+    background: #d9dbdc;
+    color: grey;
+    transition: 0.1s ease-in-out background-color, 0.1s ease-in-out color;
 }
 
 button:disabled {
@@ -129,30 +150,48 @@ button.blacklist:hover, button.cancel-edit:hover {
 
 .content-flex {
     display: flex;
+    justify-content: center;
 }
 
-.box-50, .box-auto, .box-20, .box-30 {
+.box-50, .box-auto, .box-30 {
     background: #fff;
     border-radius: 4px;
-    margin: 8px;
-    padding: 12px;
+    margin: 8px 8px 32px 8px;
     height: 0%;
 }
 
 .box-auto {
     width: calc(100% - 42px);
+    padding: 12px;
 }
 
 .box-50 {
     width: 50%;
 }
 
-.box-20 {
-    width: 20%;
-}
-
 .box-30 {
     width: 30%;
+}
+
+.button {
+    color: #f7f7f8;
+    transition: 0.1s ease-in-out background-color;
+}
+
+.button.user {
+    background: rgba(251, 131, 150, 0.9);
+}
+
+.button.vendor {
+    background: rgba(255, 150, 87, 0.9);
+}
+
+.button.user:hover {
+    background: rgba(251, 131, 150, 1.0);
+}
+
+.button.vendor:hover {
+    background: rgba(255, 150, 87, 1.0);
 }
 
 form {
@@ -175,24 +214,28 @@ fieldset {
     color: #555;
 }
 
+input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    line-height: 24px;
+    padding: 8px;
+}
+
 .label-input input {
     width: 80%;
     margin-left: 12px;
-    border: 1px solid #ddd;
-    height: 24px;
-    border-radius: 4px;
-    padding: 8px;
 }
 
 table {
     width : 100%;
     border-collapse: collapse;
-    border: 1px solid #eee;
+    border: 1px solid #f3f3f9;
 }
 
 table th {
     color: #aaa;
-    background-color: #e8e8e8;
 }
 
 table td {
@@ -201,8 +244,8 @@ table td {
 }
 
 table tr {
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
+    border-top: 1px solid #f3f3f9;
+    border-bottom: 1px solid #f3f3f9;
     background: rgba(198, 198, 219, 0.1);
 }
 
@@ -220,7 +263,7 @@ table tr:last-child {
 
 #vendor-list {
     list-style: none;
-    padding-left: 0;
+    padding: 12px;
 }
 
 .vendor-list-item {
@@ -244,7 +287,7 @@ table tr:last-child {
 
 hr {
     border: none;
-    background-color: #eee;
+    background-color: #f3f3f9;
     min-height: 2px;
     margin: 8px 0;
 }

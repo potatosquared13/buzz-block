@@ -8,7 +8,7 @@ function registerClient() {
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState == 4 && xhr.status == 200) {
-        window.location.href = '/'
+      window.location.href = '/'
     }
   }
   xhr.open('POST', url, true);
@@ -28,7 +28,7 @@ function registerVendor() {
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState == 4 && xhr.status == 200) {
-        window.location.href = '/'
+      window.location.href = '/'
     }
   }
   xhr.open('POST', url, true);
@@ -44,11 +44,11 @@ function finalize() {
 }
 
 function addFunds(identity) {
-  while(isNaN(amount = window.prompt("Enter an amount", "")));
+  while (isNaN(amount = window.prompt("Enter an amount", "")));
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState == 4 && xhr.status == 200) {
-        window.location.href = '/'
+      window.location.href = '/'
     }
   }
   xhr.open('POST', `/add_funds?identity=${identity}&amount=${amount}`, true);
@@ -56,19 +56,19 @@ function addFunds(identity) {
 }
 
 function blacklist(name, current_id, amount) {
-    if (window.confirm("Blacklist user's current id?\nA new id will be generated for this user.\nWARNING: THIS CANNOT BE UNDONE.")) {
-      let xhr = new XMLHttpRequest();
-      xhr.onreadystatechange = () => {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            window.location.href = '/'
-        }
+  if (window.confirm("Blacklist user's current id?\nA new id will be generated for this user.\nWARNING: THIS CANNOT BE UNDONE.")) {
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState == 4 && xhr.status == 200) {
+        window.location.href = '/'
       }
-      xhr.open('POST', `/register_client?replace=true&identity=${current_id}&name=${name}&amount=${amount}`, true);
-      xhr.send()
     }
+    xhr.open('POST', `/register_client?replace=true&identity=${current_id}&name=${name}&amount=${amount}`, true);
+    xhr.send()
+  }
 }
 
-function isEmpty(str){
+function isEmpty(str) {
   return !str.replace(/\s+/, '').length;
 }
 
@@ -98,6 +98,24 @@ function checkVendor(event) {
   } else {
     if (document.getElementById("vendor-add").disabled) {
       document.getElementById("vendor-add").disabled = false;
+    }
+  }
+}
+
+function filter() {
+  var td, i, txtValue;
+  var filter = document.getElementById("search-field").value;
+  var tr = document.getElementById("clients").getElementsByTagName("tr");
+
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
     }
   }
 }

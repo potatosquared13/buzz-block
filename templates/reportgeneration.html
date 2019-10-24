@@ -20,6 +20,12 @@
             <a href="/">
                 <div class="link">ACCOUNTS</div>
             </a>
+            <a class="sub" href="/users">
+                <div class="link">users</div>
+            </a>
+            <a class="sub" href="/vendors">
+                <div class="link">vendors</div>
+            </a>
             <a class="active" href="/report">
                 <div class="link">REPORTS</div>
             </a>
@@ -27,7 +33,7 @@
         <div id="main">
             <div class="header">
                 <div class="left-align">
-                    REPORT GENERATION
+                    <h2>REPORT GENERATION</h2>
                 </div>
             </div>
             <div class="content-flex">
@@ -36,11 +42,26 @@
                         {% for vendor in vendors %}
 
                         <li>
-                            <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
-                                <div class="vendor-name">{{vendor[1]}}</div>
-                                <div class="vendor-identity">{{vendor[0][:8]}}</div>
-                            </button>
-                        </li>
+                                <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
+                                    <div class="vendor-name">{{vendor[1]}}</div>
+                                    <div class="vendor-identity">{{vendor[0][:8]}}</div>
+                                </button>
+                            </li><li>
+                                    <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
+                                        <div class="vendor-name">{{vendor[1]}}</div>
+                                        <div class="vendor-identity">{{vendor[0][:8]}}</div>
+                                    </button>
+                                </li><li>
+                                        <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
+                                            <div class="vendor-name">{{vendor[1]}}</div>
+                                            <div class="vendor-identity">{{vendor[0][:8]}}</div>
+                                        </button>
+                                    </li><li>
+                                            <button onclick="getVendorTransactions('{{vendor[0]}}')" class="vendor-list-item">
+                                                <div class="vendor-name">{{vendor[1]}}</div>
+                                                <div class="vendor-identity">{{vendor[0][:8]}}</div>
+                                            </button>
+                                        </li>
 
                         {% endfor %}
                     </ul>
