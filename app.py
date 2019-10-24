@@ -148,7 +148,7 @@ def register_client():
         contact = request.args.get('contact')
         db.insert_user(client, contact, amount)
         if (node.chain.blocks):
-            if (not node.active):
+            if (not node.running.is_set()):
                 node.start()
             node.create_account(client.identity[:96], amount)
         else:
@@ -187,7 +187,7 @@ def finalize():
 # for toggling the node
 @app.route('/toggle')
 def toggle():
-    if node.active:
+    if node.running.is_set():
         node.stop()
     else:
         node.start()
@@ -195,7 +195,7 @@ def toggle():
 
 @app.route('/check_toggle')
 def check_toggle():
-    if node.active:
+    if node.running.is_set():
         return '1'
     return '0'
 
