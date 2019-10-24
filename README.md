@@ -11,12 +11,13 @@
 - [ ] Printable vendor report (without vendor list and sidebar)
 
 ## Mobile App
-- [ ] Better UI
+- [x] Better UI
 - [x] Remove Start/Stop Nodes
 - [x] Remove Get Balance
     - [x] Let Balance change right after scanning
 - [x] If blacklisted, Inform user upon scanning.
 - [ ] Phones should be able to communicate with one another
+- [ ] Report Generation in mobile app
 
 ## Docu
 - [ ] Rephrase statement of the problem
