@@ -33,8 +33,10 @@
         android:background="@drawable/custom_button"
         android:fontFamily="sans-serif-medium"
         android:text="Payment"
+        android:textSize="30sp"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
 
+        android:textColor="@android:color/white"
         app:layout_constraintBottom_toBottomOf="@+id/lvList"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"

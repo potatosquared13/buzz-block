@@ -49,7 +49,7 @@ public class MainActivity extends Activity {
     Tag myTag;
     Context context;
 
-    TextView tvNFCContent, tvBalance;
+    TextView tvNFCContent, tvBalance, tvToolBar;
     Button btnSendTransaction;
     Node node;
     int returnCode;
@@ -75,76 +75,55 @@ public class MainActivity extends Activity {
         btnSendTransaction  = findViewById(R.id.btnSendTransaction);
         tvBalance           = findViewById(R.id.tvBalance);
         lvList              = findViewById(R.id.lvList);
+        tvToolBar           = findViewById(R.id.tvToolBar);
 
-//        ArrayList<Transaction> transactions = new ArrayList<>();
-//        for (Transaction t : node.control.chain.pending_transactions){
-//            if (t.transaction == 1 && t.address == node.control.client.getIdentity())
-//                transactions.add(t);
-//        }
-//        for (Block b : node.control.chain.blocks){
-//            for (Transaction t : b.transactions){
-//                if (t.transaction == 1 && t.address == node.control.client.getIdentity())
-//                    transactions.add(t);
-//            }
-//        }
 
-//        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.adapter_view_layout, node.getTransactions());
-//
-//        System.out.println(node.getTransactions());
-
-//        /**GET BALANCE**/
-//        btnGetBalance.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                String balance = "" + node.getBalance(tvNFCContent.getText().toString());
-//                tvBalance.setText(balance);
-//            }
-//        });
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         builder.setView(input);
+        btnSendTransaction.setEnabled(false);
 
         /**PAYMENT**/
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (input.getParent() != null) {
-                    ((ViewGroup) input.getParent()).removeView(input);
-                    input.setText("");
+            if (input.getParent() != null) {
+                ((ViewGroup) input.getParent()).removeView(input);
+                input.setText("");
+            }
+            builder.setTitle("Payment");
+
+            // Set up the buttons
+            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    double amount = Double.parseDouble(input.getText().toString());
+                    returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
+                    tvNFCContent.setText("");
+                    tvBalance.setText("");
+
+                    if(returnCode == 0) {
+                        Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
+                    } else if(returnCode == 1) {
+                        Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
+                        tvBalance.setText("BLACKLISTED!");
+                    } else if (returnCode == 3) {
+                        Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
+                    } else {
+                        Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
+                    }
+                    dialog.cancel();
                 }
-                builder.setTitle("Payment");
-
-                // Set up the buttons
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        double amount = Double.parseDouble(input.getText().toString());
-                        returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
-                        tvNFCContent.setText("");
-                        tvBalance.setText("0.0");
-
-                        if(returnCode == 0) {
-                            Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
-                        } else if(returnCode == 1) {
-                            Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
-                            tvBalance.setText("BLACKLISTED!");
-                        } else if (returnCode == 3) {
-                            Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
-                        } else {
-                            Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
-                        }
-                        dialog.cancel();
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-                builder.show();
+            });
+            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            builder.show();
             }
         });
 
@@ -164,12 +143,14 @@ public class MainActivity extends Activity {
 
         node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
         node.execute();
+
+        tvToolBar.setText(node.control.client.name);
+
     }
 
 
     /******************************************************************************
-     **********************************Read From NFC Tag***************************
-     ******************************************************************************/
+     **********************************Read From NFC Tag*/
     private void readFromIntent(Intent intent) {
         String action = intent.getAction();
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(action)
@@ -184,6 +165,8 @@ public class MainActivity extends Activity {
                 }
             }
             buildTagViews(msgs);
+
+            btnSendTransaction.setEnabled(true);
         }
     }
     private void buildTagViews(NdefMessage[] msgs) {
