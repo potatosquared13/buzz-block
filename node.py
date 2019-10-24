@@ -65,6 +65,8 @@ class Node(threading.Thread):
         self.messages_sent = 0
         self.messages_received = 0
         self.transactions_sent = 0
+        if (os.path.isfile('blockchain.json')):
+            self.chain.rebuild(open('blockchain.json', 'r').read())
         if (debug):
             logging.basicConfig(level=logging.DEBUG)
         else:
