@@ -27,10 +27,11 @@ node = Leader(10)
 
 ts = []
 for c in lc:
+    amount = randint(7,11)*100
     # add client to database
-    db.insert_user(c, str(randint(100000000, 999999999)), 500)
+    db.insert_user(c, str(randint(100000000, 999999999)), amount)
     # create transaction and add to transaction list
-    t = Transaction(0, node.client.identity, c.identity[:96], 500)
+    t = Transaction(0, node.client.identity, c.identity[:96], amount)
     node.client.sign(t)
     ts.append(t)
     # export client keys for reuse later
