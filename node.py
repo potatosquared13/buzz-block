@@ -64,7 +64,6 @@ class Node(threading.Thread):
         # statistic variables
         self.messages_sent = 0
         self.messages_received = 0
-        self.transactions_sent = 0
         if (os.path.isfile('blockchain.json')):
             self.chain.rebuild(open('blockchain.json', 'r').read())
         if (debug):
@@ -164,7 +163,7 @@ class Node(threading.Thread):
         except socket.timeout:
             pass
         except socket.error as e:
-            logging.error(e)
+            logging.error(f"Node.connect({addr}): {e}")
             return False
 
     # helper functions for sending and receiving messages
@@ -173,6 +172,7 @@ class Node(threading.Thread):
         bmessage = hex(len(payload))[2:].zfill(8).encode() + str(hex(msg_type))[2:].encode() + payload
         sock.sendall(bmessage)
         logging.debug(f"send {len(payload) + 10} bytes to {sock.getpeername()}")
+        self.messages_sent = self.messages_sent + 1
 
     def receive(self, sock):
         try:
@@ -186,6 +186,7 @@ class Node(threading.Thread):
             bmessage = bmessage + m
         message = zlib.decompress(base64.b64decode(bmessage)).decode()
         logging.debug(f"receive {len(bmessage) + 10} bytes from {sock.getpeername()}")
+        self.messages_received = self.messages_received + 1
         return message_type, message
 
     # listen for messages from a peer
@@ -230,7 +231,7 @@ class Node(threading.Thread):
             except socket.timeout:
                 continue
             except socket.error as e:
-                logging.error(e)
+                logging.error(f"Node.handle_connection(): (Peer {peer.identity[:8]} {peer.address}) {e}")
                 break
         peer.socket.close()
         self.peers.remove(peer)
@@ -269,7 +270,7 @@ class Node(threading.Thread):
                 except socket.timeout:
                     continue
                 except socket.error as e:
-                    logging.error(e)
+                    logging.error(f"Node.listen(): {e}")
                     break
         logging.debug("stopped listening")
 
