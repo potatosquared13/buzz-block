@@ -1,56 +1,30 @@
-# buzz-block
+# TO-DO FINAL REVIEW
 
-Central Philippine University BSCS Thesis - Villanueva Group
+## Web-app
+- [ ] Search filter field for user/vendor lists
+- [ ] Cleaner presentation of data
+- [ ] Registration fee column
+    - [ ] Report of total earnings made from registration fee (e.g., 500 deposit + 25 = 525)
+- [x] Seperate user/vendor lists into different pages/tabs
+- [ ] Format currency (e.g., 1,000.00)
+    - [x] tables
+    - [ ] input fields
+- [x] Header labels for tables
+- [ ] report generation
+    - [ ] export single report to pdf
+    - [ ] export all reports to individual pdfs
 
-An NFC-based transaction system for local events using blockchain.
+## Mobile App
+- [x] Better UI
+- [x] Remove Start/Stop Nodes
+- [x] Remove Get Balance
+    - [x] Let Balance change right after scanning
+- [x] If blacklisted, Inform user upon scanning.
+- [ ] Phones should be able to communicate with one another
+- [ ] Report Generation in mobile app
 
-### Requirements
-
-###### a. [`python3`](https://www.python.org/downloads/)
-
-###### b. python library [`pyca/cryptography`](https://cryptography.io/en/latest/)
-
-```
-python -m pip install --user cryptography
-```
-
-###### c. sqlite3 - for the client database
-
-### TO DO
-
-- [X] move chain.pending_transactions to tracker
-- [X] block creation is left to the tracker
-- [ ] peer to peer networking
-- [ ] consensus algorithm
-- [X] switch to cryptography instead of pycrypto
-- [X] query the tracker's user database for account balance
-- [X] disallow negative balances
-
-### Examples
-
-- Creating a tracker:
-
-```
->>> from nodetracker import Tracker
->>> tracker = Tracker()
->>> tracker.listen()
-```
-
-This creates a tracker and tells it to start listening on the network for connections. It ultimately maintains and records the blockchain. It keeps a local database that contains all user identities and their balances. Connections come from peers, which mainly send transactions to be verified and added to the blockchain.
-
-- Creating a peer:
-
-```
->>> from nodepeer import Peer
->>> peer = Peer([password=None], [filename="client.json"])
-```
-
-This creates a peer that can create transactions and send these to the tracker. A peer is usually a smartphone that can read NFC tags. Client information stored in `filename` is decrypted with `password`, and a client object is created with this. Requires a client object in order to create and sign transactions.
-
-- Create a transaction:
-
-```
->>> peer.send_transaction(sender, amount)
-```
-
-This creates a transaction object with the peer's client object as the recipient. `sender`(of the amount, not the transaction) is the hexadecimal identifier found on an NFC chip that will be scanned by the peer. The peer then sends this to the tracker for verification before being added to a list of pending transactions to be added.
+## Docu
+- [ ] Rephrase statement of the problem
+- [ ] Diagrams
+- [ ] Pre-registration on google forms (if possible)
+    - [ ] Export to csv

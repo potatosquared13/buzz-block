@@ -1,3 +1,0 @@
-title=Buzz Bracelet1
-author=Daniel
-orientation=portrait
