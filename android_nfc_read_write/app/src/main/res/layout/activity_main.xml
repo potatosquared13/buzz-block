@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:id="@+id/linearLayout1" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20sp" >
+
+        <Button
+            android:id="@+id/btnWrite"
+            android:layout_width="216dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Write" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/nfc_contents"
+        android:layout_width="424dp"
+        android:layout_height="28dp"
+        android:text="ID"
+        android:textAlignment="center"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/tvBalance"
+        android:layout_width="match_parent"
+        android:layout_height="78dp"
+        android:textAlignment="center"
+        android:textAllCaps="true"
+        android:textSize="30sp" />
+
+    <Button style="@style/Widget.AppCompat.Button"
+        android:id="@+id/btnStartNode"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Start Node" />
+
+    <Button
+        android:id="@+id/btnStopNode"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="Stop Node" />
+
+    <Button
+        android:id="@+id/btnGetBalance"
+        android:layout_width="match_parent"
+        android:layout_height="87dp"
+        android:onClick="getBalance"
+        android:text="Get Balance" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="23dp"
+        android:background="?android:attr/listDivider" />
+
+    <Button
+        android:id="@+id/btnSendTransaction"
+        android:layout_width="match_parent"
+        android:layout_height="86dp"
+        android:text="Pay" />
+
+    <Button
+        android:id="@+id/btnAddFunds"
+        android:layout_width="match_parent"
+        android:layout_height="87dp"
+        android:onClick="getBalance"
+        android:text="Add Funds" />
+
+</LinearLayout>
