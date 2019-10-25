@@ -29,7 +29,7 @@ ts = []
 for c in lc:
     amount = randint(7,11)*100
     # add client to database
-    db.insert_user(c, str(randint(100000000, 999999999)), amount)
+    db.insert_user(c, str(randint(9100000000, 9299999999)), amount)
     # create transaction and add to transaction list
     t = Transaction(0, node.client.identity, c.identity[:96], amount)
     node.client.sign(t)
@@ -37,7 +37,7 @@ for c in lc:
     # export client keys for reuse later
     c.export('clients/users')
 for v in lv:
-    db.insert_vendor(v, str(randint(100000000, 999999999)), "Food Service")
+    db.insert_vendor(v, str(randint(9100000000, 9299999999)), "Food Service")
     v.export('clients/vendors')
 
 # create genesis block and export initialised blockchain to file
