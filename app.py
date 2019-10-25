@@ -124,7 +124,7 @@ def home():
     #v = db.get_vendors()
 
     #return render_template('registration.html', blockchain=blockchain, users=c, vendors=v)
-
+    print('transactions')
     return get_transactions()
 
 @app.route('/users')
