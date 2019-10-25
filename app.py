@@ -113,18 +113,19 @@ def get_vendor_transactions():
 
 @app.route('/')
 def home():
-    blockchain = 0
+    #blockchain = 0
 
     url_for('static', filename='js/register.js')
     url_for('static', filename='css/style.css')
 
-    if (node.chain.blocks):
-        blockchain = 1
+    #if (node.chain.blocks):
 
-    c = db.get_users()
-    v = db.get_vendors()
+    #c = db.get_users()
+    #v = db.get_vendors()
 
-    return render_template('registration.html', blockchain=blockchain, users=c, vendors=v)
+    #return render_template('registration.html', blockchain=blockchain, users=c, vendors=v)
+
+    return get_transactions()
 
 @app.route('/users')
 def user_registration():

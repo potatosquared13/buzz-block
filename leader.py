@@ -7,10 +7,10 @@ from copy import deepcopy
 
 class Leader(Node):
     def __init__(self, block_size=100, debug=False):
-        if (not os.path.isfile('clients/users.admin.key')):
+        if (not os.path.isfile('clients/admin.key')):
             self.client = Client("admin")
             self.client.export()
-        super().__init__("clients/users/admin.key", debug)
+        super().__init__("clients/admin.key", debug)
         self.block_size = block_size
 
     def start_consensus(self):
