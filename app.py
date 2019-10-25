@@ -127,6 +127,10 @@ def home():
     print('transactions')
     return get_transactions()
 
+@app.route('/accounts')
+def accounts():
+    return render_template('registration.html')
+
 @app.route('/users')
 def user_registration():
     return render_template('registration_user.html')
