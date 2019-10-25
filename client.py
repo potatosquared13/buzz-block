@@ -12,8 +12,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 
 class Client:
-    def __init__(self, name = None, filename=None, vendor=False):
-        self.is_vendor = vendor
+    def __init__(self, name = None, filename=None):
         if (name and not filename):
             self.name = name
             self._private_key = ec.generate_private_key(
@@ -59,7 +58,7 @@ class Client:
         )
         transaction.signature = hexlify(signature).decode()
 
-    def export(self):
+    def export(self, path):
         private_key = self._private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
@@ -79,16 +78,9 @@ class Client:
         filename = re.sub('[^\w\s-]', '', filename).strip().lower()
         filename = re.sub('[-\s]+', '-', filename)
         filename = filename + ".key"
-        if (not os.path.exists('clients')):
-            os.makedirs('clients')
-        if (not os.path.exists('clients/vendors')):
-            os.makedirs('clients/vendors')
-        if (not os.path.exists('clients/users')):
-            os.makedirs('clients/users')
-        if (self.is_vendor):
-            filename="clients/vendors/"+filename
-        else:
-            filename = "clients/users/"+filename
+        if (not os.path.exists(path)):
+            os.makedirs(path)
+        filename=path+'/'+filename
         with open(filename, 'w') as f:
             f.write(f"{self.name}\n{''.join(private_key.splitlines())}\n{''.join(public_key.splitlines())}")
         # with open("private.pem", 'w') as f:
