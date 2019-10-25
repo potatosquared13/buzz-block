@@ -17,10 +17,10 @@ lc = [Client("Ushigome, Rimi"),
       Client("Hikawa, Hina")]
 
 # vendors
-lv = [Client("Dunkin' Donuts", vendor=True),
-      Client("McDonald's", vendor=True),
-      Client("Aoyama Coffee", vendor=True),
-      Client("Leylam Shawarma", vendor=True)]
+lv = [Client("Dunkin' Donuts"),
+      Client("McDonald's"),
+      Client("Aoyama Coffee"),
+      Client("Leylam Shawarma")]
 
 # create a node for signing transactions
 node = Leader(10)
@@ -35,10 +35,10 @@ for c in lc:
     node.client.sign(t)
     ts.append(t)
     # export client keys for reuse later
-    c.export()
+    c.export('clients/users')
 for v in lv:
     db.insert_vendor(v, str(randint(100000000, 999999999)), "Food Service")
-    v.export()
+    v.export('clients/vendors')
 
 # create genesis block and export initialised blockchain to file
 node.chain.genesis(ts)

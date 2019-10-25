@@ -9,7 +9,7 @@ class Leader(Node):
     def __init__(self, block_size=100, debug=False):
         if (not os.path.isfile('clients/admin.key')):
             self.client = Client("admin")
-            self.client.export()
+            self.client.export('clients')
         super().__init__("clients/admin.key", debug)
         self.block_size = block_size
 
