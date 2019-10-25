@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vendor Management</title>
     <link href="../static/css/style.css" rel="stylesheet" type="text/css" />
-    <script src="../static/js/register.js"></script>
 </head>
 
 <body>
@@ -19,10 +18,10 @@
             <a href="/accounts">
                 <div class="link">ACCOUNTS</div>
             </a>
-            <a class="sub" href="/users">
+            <a class="sub" href="/accounts/users">
                 <div class="link">users</div>
             </a>
-            <a class="sub active" href="#">
+            <a class="sub active" href="/accounts/vendors">
                 <div class="link">vendors</div>
             </a>
             <a href="/report">
@@ -38,13 +37,10 @@
                 </div>
             </div>
             <div class="content">
-                <div id="client-container" class="box-auto">
-                    <form id="vendor-form">
-                        {% if blockchain == 0 %}
+                <div id="vendor-container" class="box-auto" style="position: relative">
+                    {% if blockchain == 0 %}
+                    <form id="vendor-form" style="position: relative"></form>
                         <fieldset>
-                        {% else %}
-                        <fieldset disabled>
-                        {% endif %}
                             <h4 style="text-align: center">REGISTER NEW VENDOR </h4>
                             <div class="label-input">
                                 Name
@@ -69,6 +65,9 @@
                             {% endif %}
                         </fieldset>
                     </form>
+                    {% else %}
+                    <h4 style="text-align: center">REGISTRATION IS CLOSED</h4>
+                    {% endif %}
                 </div>
                 <div class="box-auto">
                     <input type="text" id="search-field" onkeyup="filter()" placeholder="Search by name...">
@@ -85,9 +84,9 @@
 
                         <tr>
                             <td style="width: 40%">{{vendor[1]}} <span style="color:#aaa">({{vendor[0][:8]}})</span></td>
-                            <td style="width: 20%">{{vendor[2]}}</td>
+                            <td style="width: 20%">{{vendor[2][0:3]}} {{vendor[2][3:6]}} {{vendor[2][6:]}}</td>
                             <td style="width: 20%">{{vendor[3]}}</td>
-                            <td style="width: 20%">{{vendor[5]}}</td>
+                            <td style="width: 20%">{{"{:,.2f}".format(vendor[5])}}</td>
                         </tr>
 
                         {% endfor %}
@@ -96,6 +95,8 @@
             </div>
         </div>
     </div>
+
+    <script src="../static/js/register.js"></script>
 </body>
 
 </html>

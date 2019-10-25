@@ -20,10 +20,10 @@
             <a href="/accounts">
                 <div class="link">ACCOUNTS</div>
             </a>
-            <a class="sub" href="/users">
+            <a class="sub" href="/accounts/users">
                 <div class="link">users</div>
             </a>
-            <a class="sub" href="/vendors">
+            <a class="sub" href="/accounts/vendors">
                 <div class="link">vendors</div>
             </a>
             <a class="active" href="/report">
@@ -34,6 +34,16 @@
             <div class="header">
                 <div class="left-align">
                     <h2>REPORT GENERATION</h2>
+                </div>
+            </div>
+            <div class="content-flex">
+                <div class="box-50 card">
+                    <h4>TOTAL AMOUNT FROM TRANSACTIONS</h4>
+                    <span style="font-size:32px">{{amount}}</span>
+                </div>
+                <div class="box-50 card">
+                    <h4>TOTAL AMOUNT FROM REGISTRATION FEES</h4>
+                    <span style="font-size:32px">{{reg_amount}}</span>
                 </div>
             </div>
             <div class="content-flex">

@@ -18,6 +18,13 @@ invalid_transactions_saved_state = []
 
 node = Leader(10)
 
+def get_total_amount():
+    amount = 0
+    for block in node.chain.blocks:
+        for transaction in (t for t in block.transactions if t.transaction == 0 or t.transaction == 2):
+            amount = amount + transaction.amount
+    return amount
+
 def get_transactions():
     global pending_transactions_saved_state
     global invalid_transactions_saved_state
@@ -98,7 +105,10 @@ def get_transactions():
                 pt_recipients.append(pt_recipient)
             else:
                 pt_recipients.append('unnamed')
-    return render_template('transactions.html', blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients, invalid_transactions=invalid_transactions_saved_state)
+    tcount = 0
+    for block in node.chain.blocks:
+        tcount = tcount + len(block.transactions)
+    return render_template('transactions.html', tcount=tcount, acount=get_total_amount(), blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients, invalid_transactions=invalid_transactions_saved_state)
 
 @app.route('/get_vendor_transactions')
 def get_vendor_transactions():
@@ -113,31 +123,21 @@ def get_vendor_transactions():
 
 @app.route('/')
 def home():
-    #blockchain = 0
-
     url_for('static', filename='js/register.js')
     url_for('static', filename='css/style.css')
-
-    #if (node.chain.blocks):
-
-    #c = db.get_users()
-    #v = db.get_vendors()
-
-    #return render_template('registration.html', blockchain=blockchain, users=c, vendors=v)
-    print('transactions')
     return get_transactions()
 
 @app.route('/accounts')
 def accounts():
-    return render_template('registration.html')
+    return render_template('registration.html', ccount=len(db.get_users()), vcount=len(db.get_vendors()))
 
-@app.route('/users')
+@app.route('/accounts/users')
 def user_registration():
-    return render_template('registration_user.html')
+    return render_template('registration_user.html', users=db.get_users())
 
-@app.route('/vendors')
+@app.route('/accounts/vendors')
 def vendor_registration():
-    return render_template('registration_vendor.html')
+    return render_template('registration_vendor.html', vendors=db.get_vendors())
 
 @app.route('/transactions')
 def overview():
@@ -147,9 +147,12 @@ def overview():
 
 @app.route('/report')
 def report():
-    
     vendors = db.get_vendors()
-    return render_template('reportgeneration.html', vendor_requested=None, vendors=vendors, transactions=[], t_length=0, t_total=0)
+    reg_amount = 0
+    for block in node.chain.blocks:
+        for transaction in (t for t in block.transactions if t.transaction == 0):
+            reg_amount = reg_amount + 25
+    return render_template('reportgeneration.html', vendor_requested=None, vendors=vendors, transactions=[], t_length=0, t_total=0, amount=get_total_amount(), reg_amount=reg_amount)
 
 @app.route('/register_client', methods=['POST'])
 def register_client():
@@ -184,7 +187,6 @@ def register_vendor():
     vendors.append((name, contact, btype))
     return ''
 
-# TODO change href to / so reloading won't call finalize() again
 @app.route('/finalize')
 def finalize():
     if (not node.chain.blocks):

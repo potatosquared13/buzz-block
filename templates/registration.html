@@ -15,13 +15,13 @@
             <a href="/transactions">
                 <div class="link">TRANSACTIONS</div>
             </a>
-            <a class="active" href="/account">
+            <a class="active" href="/accounts">
                 <div class="link">ACCOUNTS</div>
             </a>
-            <a class="sub" href="/users">
+            <a class="sub" href="/accounts/users">
                 <div class="link">users</div>
             </a>
-            <a class="sub" href="/vendors">
+            <a class="sub" href="/accounts/vendors">
                 <div class="link">vendors</div>
             </a>
             <a href="/report">
@@ -35,28 +35,28 @@
                 </div>
                 <div class="right-align">
                     {% if blockchain == 0 %}
-                    <button id="finalize" type="button" onclick="finalize()">FINALIZE</button>
+                    <button id="finalize" type="button" onclick="finalize()">CLOSE REGISTRATION</button>
                     {% else %}
-                    <button id="finalize" type="button" onclick="finalize()" disabled>FINALIZE</button>
+                    <button id="finalize" type="button" onclick="finalize()" disabled>REGISTRATION IS CLOSED</button>
                     {% endif %}
                 </div>
             </div>
             <div class="content-flex">
                 <div class="box-30 button user">
-                    <a href="/users">
+                    <a href="/accounts/users">
                         <div class="card">
                             <span style="font-size: 16px">CLIENTS</span>
                             <br />
-                            <span style="font-size: 32px">{{client_number}}</span>
+                            <span style="font-size: 32px">{{ccount}}</span>
                         </div>
                     </a>
                 </div>
                 <div class="box-30 button vendor">
-                    <a href="/vendors">
+                    <a href="/accounts/vendors">
                         <div class="card">
                             <span style="font-size: 16px">VENDORS</span>
                             <br />
-                            <span style="font-size: 32px">{{vendor_number}}</span>
+                            <span style="font-size: 32px">{{vcount}}</span>
                         </div>
                     </a>
                 </div>

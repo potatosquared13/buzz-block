@@ -18,10 +18,10 @@
             <a href="/accounts">
                 <div class="link">ACCOUNTS</div>
             </a>
-            <a class="sub active" href="#">
+            <a class="sub active" href="/accounts/users">
                 <div class="link">users</div>
             </a>
-            <a class="sub" href="/vendors">
+            <a class="sub" href="/accounts/vendors">
                 <div class="link">vendors</div>
             </a>
             <a href="/report">
@@ -75,8 +75,8 @@
 
                         <tr>
                             <td style="width: 40%">{{user[1]}} <span style="color:#aaa">({{user[0][:8]}})</span></td>
-                            <td style="width: 20%">{{user[2]}}</td>
-                            <td style="width: 20%">{{user[5]}}</td>
+                            <td style="width: 20%">{{user[2][0:3]}} {{user[2][3:6]}} {{user[2][6:]}}</td>
+                            <td style="width: 20%">{{"{:,.2f}".format(user[5])}}</td>
                             <td style="width: 10%">
                                 <button title="Add funds to this user's address" class="add"
                                     onclick="addFunds('{{user[0]}}')">+</button>

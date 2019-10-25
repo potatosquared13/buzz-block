@@ -75,7 +75,7 @@ function isEmpty(str) {
 function checkClient(event) {
   name = document.getElementById("client-name").value;
   contact = document.getElementById("client-contact").value;
-  amount = document.getElementById("client-amount").value;
+  amount = document.getElementById("client-amount").value.replace(",","");
   if (isEmpty(name) || isEmpty(contact) || isEmpty(amount) || isNaN(amount) || parseFloat(amount) == 0) {
     if (!document.getElementById("client-add").disabled) {
       document.getElementById("client-add").disabled = true;
@@ -104,14 +104,14 @@ function checkVendor(event) {
 
 function filter() {
   var td, i, txtValue;
-  var filter = document.getElementById("search-field").value;
+  var filter = document.getElementById("search-field").value.toLowerCase();
   var tr = document.getElementById("clients").getElementsByTagName("tr");
 
   for (i = 0; i < tr.length; i++) {
     td = tr[i].getElementsByTagName("td")[0];
     if (td) {
       txtValue = td.textContent || td.innerText;
-      if (txtValue.indexOf(filter) > -1) {
+      if (txtValue.toLowerCase().indexOf(filter) > -1) {
         tr[i].style.display = "";
       } else {
         tr[i].style.display = "none";
