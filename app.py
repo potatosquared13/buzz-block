@@ -126,6 +126,14 @@ def home():
 
     return render_template('registration.html', blockchain=blockchain, users=c, vendors=v)
 
+@app.route('/users')
+def user_registration():
+    return render_template('registration_user.html')
+
+@app.route('/vendors')
+def vendor_registration():
+    return render_template('registration_vendor.html')
+
 @app.route('/transactions')
 def overview():
     url_for('static', filename='js/transactions.js')
