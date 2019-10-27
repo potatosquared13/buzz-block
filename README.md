@@ -1,10 +1,10 @@
 # TO-DO FINAL REVIEW
 
 ## Web-app
-- [ ] Search filter field for user/vendor lists
-- [ ] Cleaner presentation of data
-- [ ] Registration fee column
-    - [ ] Report of total earnings made from registration fee (e.g., 500 deposit + 25 = 525)
+- [x] Search filter field for user/vendor lists
+- [x] Cleaner presentation of data
+- [x] Registration fee column
+    - [x] Report of total earnings made from registration fee (e.g., 500 deposit + 25 = 525)
 - [x] Seperate user/vendor lists into different pages/tabs
 - [ ] Format currency (e.g., 1,000.00)
     - [x] tables
