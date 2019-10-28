@@ -9,6 +9,7 @@
 - [ ] Format currency (e.g., 1,000.00)
     - [x] tables
     - [ ] input fields
+    - [ ] Currency symbol before amount.
 - [x] Header labels for tables
 - [ ] report generation
     - [ ] export single report to pdf
@@ -20,9 +21,9 @@
 - [x] Remove Get Balance
     - [x] Let Balance change right after scanning
 - [x] If blacklisted, Inform user upon scanning.
-- [ ] Phones should be able to communicate with one another
+- [x] Phones should be able to communicate with one another
 - [ ] Report Generation in mobile app
-- [ ] Scan Tag prompt
+- [x] Scan Tag prompt
 
 ## Docu
 - [ ] Rephrase statement of the problem
