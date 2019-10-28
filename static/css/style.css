@@ -358,3 +358,15 @@ input:checked + .slider:before {
 .hidden {
     display: none;
 }
+
+@media print {
+    body * { visibility: hidden; }
+    #report, #report * {
+        visibility: visible;
+    }
+    #report {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
