@@ -635,12 +635,12 @@ public class Node extends AsyncTask<Void, Void, Void>{
     public ArrayList<Transaction> getTransactions() {
         ArrayList<Transaction> transactions = new ArrayList<>();
         for (Transaction t : control.chain.pending_transactions){
-            if (t.transaction == 1 && t.address == control.client.getIdentity())
+            if (t.transaction == 1 && t.address.equals(control.client.getIdentity()))
                 transactions.add(t);
         }
         for (Block b : control.chain.blocks){
             for (Transaction t : b.transactions){
-                if (t.transaction == 1 && t.address == control.client.getIdentity())
+                if (t.transaction == 1 && t.address.equals(control.client.getIdentity()))
                     transactions.add(t);
             }
         }

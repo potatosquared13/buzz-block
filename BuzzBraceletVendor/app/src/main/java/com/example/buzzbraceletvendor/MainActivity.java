@@ -162,6 +162,7 @@ public class MainActivity extends Activity {
             node.execute();
             System.out.print("XXX");
             System.out.print(node.getTransactions().toString());
+            System.out.print(" " + node.getTransactions().size() + " " + node.control.chain.pending_transactions.size() + " " + node.control.chain.blocks.size());
             System.out.print("XXX");
             tvToolBar.setText(node.control.client.name);
         }
