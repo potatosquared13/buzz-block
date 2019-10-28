@@ -22,6 +22,7 @@
 - [x] If blacklisted, Inform user upon scanning.
 - [ ] Phones should be able to communicate with one another
 - [ ] Report Generation in mobile app
+- [ ] Scan Tag prompt
 
 ## Docu
 - [ ] Rephrase statement of the problem
