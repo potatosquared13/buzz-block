@@ -34,6 +34,8 @@ def get_total_amount():
     for block in node.chain.blocks:
         for transaction in (t for t in block.transactions if t.transaction == 0 or t.transaction == 2):
             amount = amount + transaction.amount
+    for transaction in (t for t in node.chain.pending_transactions if t.transaction == 0 or t.transaction == 2):
+        amount = amount + transaction.amount
     return amount
 
 def get_reg_amount():
@@ -41,6 +43,8 @@ def get_reg_amount():
     for block in node.chain.blocks:
         for transaction in (t for t in block.transactions if t.transaction == 0):
             reg_amount = reg_amount + 25
+    for transaction in (t for t in node.chain.pending_transactions if t.transaction == 0):
+        reg_amount = reg_amount + 25
     return reg_amount
 
 def get_transactions():
@@ -184,7 +188,7 @@ def register_client():
         old_id = request.args.get('identity')
         node.blacklist_account(old_id)
         db.replace_id(old_id, client.identity[:96])
-        node.create_account(client.identity[:96], amount)
+        # node.create_account(client.identity[:96], amount)
     return ''
 
 @app.route('/register_vendor', methods=['POST'])
@@ -217,6 +221,8 @@ def toggle():
         node.stop()
     else:
         node.start()
+        node.running.wait()
+        return redirect('/check_toggle')
     return ''
 
 @app.route('/check_toggle')
