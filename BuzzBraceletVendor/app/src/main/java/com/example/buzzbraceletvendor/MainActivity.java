@@ -56,12 +56,14 @@ public class MainActivity extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         //Permissions
         if (Build.VERSION.SDK_INT > 22)
-            requestPermissions(new String[] {"android.permission.INTERNET",
+            requestPermissions(new String[] { "android.permission.INTERNET",
                     "android.permission.ACCESS_WIFI_STATE",
                     "android.permission.READ_EXTERNAL_STORAGE",
-                    "android.permission.WRITE_EXTERNAL_STORAGE"}, 1);
+                    "android.permission.WRITE_EXTERNAL_STORAGE" }, 1);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -75,68 +77,75 @@ public class MainActivity extends Activity {
         tvAmount            = findViewById(R.id.tvAmount);
         ivTag               = findViewById(R.id.ivTag);
 
+        btnSendTransaction.setVisibility(View.INVISIBLE);
+        tvBalance.setVisibility(View.INVISIBLE);
+        tvNFCContent.setVisibility(View.INVISIBLE);
+        ivTag.setVisibility(View.VISIBLE);
+        tvStatus.setVisibility(View.VISIBLE);
+
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
         builder.setView(input);
-        btnSendTransaction.setVisibility(View.INVISIBLE);
-        tvBalance.setVisibility(View.INVISIBLE);
-        tvNFCContent.setVisibility(View.INVISIBLE);
 
-        ivTag.setVisibility(View.VISIBLE);
-        tvStatus.setVisibility(View.VISIBLE);
 
         /**PAYMENT**/
         btnSendTransaction.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            if (input.getParent() != null) {
-                ((ViewGroup) input.getParent()).removeView(input);
-                input.setText("");
-            }
-            builder.setTitle("Payment");
+                if (input.getParent() != null) {
 
-            // Set up the buttons
-            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    double amount = Double.parseDouble(input.getText().toString());
-                    returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
+                    ((ViewGroup) input.getParent()).removeView(input);
+                    input.setText("");
+                }
 
-                    DecimalFormat df = new DecimalFormat("#####.##");
-                    tvAmount.setText("P " + df.format(node.getAmountEarned()));
+                builder.setTitle("Payment");
 
-                    if(returnCode == 0) {
-                        Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
-                    } else if(returnCode == 1) {
-                        Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
-                    } else if (returnCode == 3) {
-                        Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
-                    } else {
-                        Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
+                // Set up the buttons
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        double amount = Double.parseDouble(input.getText().toString());
+                        returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
+
+                        DecimalFormat df = new DecimalFormat("#####.##");
+                        tvAmount.setText("P " + df.format(node.getAmountEarned()));
+
+                        if(returnCode == 0) {
+                            Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
+                        } else if(returnCode == 1) {
+                            Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
+                        } else if (returnCode == 3) {
+                            Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
+                        } else {
+                            Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
+                        }
+
+                        tvNFCContent.setText("");
+                        tvBalance.setText("");
+                        btnSendTransaction.setVisibility(View.INVISIBLE);
+                        ivTag.setVisibility(View.VISIBLE);
+                        tvStatus.setVisibility(View.VISIBLE);
+                        dialog.cancel();
                     }
+                });
 
-                    tvNFCContent.setText("");
-                    tvBalance.setText("");
-                    btnSendTransaction.setVisibility(View.INVISIBLE);
-                    ivTag.setVisibility(View.VISIBLE);
-                    tvStatus.setVisibility(View.VISIBLE);
-                    dialog.cancel();
-                }
-            });
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-            builder.show();
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
             }
         });
 
         //Check if NFC Available
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
+
             // Stop here, we definitely need NFC
             Toast.makeText(this, "This device doesn't support NFC.", Toast.LENGTH_LONG).show();
             finish();
@@ -151,7 +160,9 @@ public class MainActivity extends Activity {
         String path = Environment.getExternalStorageDirectory().toString() + "/buzz";
         File directory = new File(path);
         File[] files = directory.listFiles();
-        for (File f : files){
+
+        for (File f : files) {
+
             System.out.println(f.getName());
             if (f.getName().contains(".key"))
                 node = new Node(f, context);
@@ -187,6 +198,7 @@ public class MainActivity extends Activity {
         }
     }
 
+
     private void buildTagViews(NdefMessage[] msgs) {
 
         if (msgs == null || msgs.length == 0) return;
@@ -211,6 +223,7 @@ public class MainActivity extends Activity {
     /*NFC STUFF*/
     @Override
     protected void onNewIntent(Intent intent) {
+
         setIntent(intent);
         readFromIntent(intent);
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction())){
@@ -219,24 +232,26 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    public void onPause(){
+    public void onPause() {
         super.onPause();
         WriteModeOff();
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
         WriteModeOn();
     }
 
     /**Enable Write**/
-    private void WriteModeOn(){
+    private void WriteModeOn() {
+
         writeMode = true;
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, writeTagFilters, null);
     }
     /**Disable Write*/
     private void WriteModeOff(){
+
         writeMode = false;
         nfcAdapter.disableForegroundDispatch(this);
     }
