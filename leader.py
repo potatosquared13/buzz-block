@@ -152,7 +152,7 @@ class Leader(Node):
             self.send(peer.socket, TRANSACTION, transaction.json)
 
     def blacklist_account(self, identity):
-        transaction = Transaction(3, self.client.identity, identity, db.search_user(identity).amount)
+        transaction = Transaction(3, self.client.identity, identity, db.search_user(identity).current_balance)
         self.client.sign(transaction)
         self.record_transaction(transaction, self.client.identity)
         for peer in self.peers.copy():

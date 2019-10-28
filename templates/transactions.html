@@ -139,11 +139,13 @@
                             <td style="min-width: 20%">
                                 {{t.timestamp[:16]}}
                             </td>
-                            <td style="min-width: 65%" colspan="3">
+                            <td style="min-width: 50%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
-                            <td></td>
+                            <td style="min-width: 15%">
+                                {{"{:,.2f}".format(t.amount)}}
+                            </td>
                         </tr>
                         {% endif %}
                         {% set ns.t_index = ns.t_index + 1%}
@@ -229,11 +231,13 @@
                             <td style="min-width: 20%">
                                 {{t.timestamp[:16]}}
                             </td>
-                            <td style="min-width: 65%" colspan="3">
+                            <td style="min-width: 50%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
                                 <span style="color:#aaa">({{(t.address[:8])}})</span>
                             </td>
-                            <td></td>
+                            <td style="min-width: 15%">
+                                {{"{:,.2f}".format(t.amount)}}
+                            </td>
                         </tr>
                         {% endif %}
 
