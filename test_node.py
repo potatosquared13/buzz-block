@@ -20,18 +20,21 @@ v1 = Node("clients/vendors/dunkin-donuts.key")
 v2 = Node("clients/vendors/mcdonalds.key")
 v3 = Node("clients/vendors/aoyama-coffee.key", debug=True)
 v4 = Node("clients/vendors/leylam-shawarma.key")
+v5 = Node("clients/vendors/tawawa-gifts-souvenirs.key")
 
 def stop(): # hammer time
     v1.stop()
     v2.stop()
     v3.stop()
     v4.stop()
+    v5.stop()
 
 print("start vendors")
 v1.start()
 v2.start()
 v3.start()
 v4.start()
+v5.start()
 
 time.sleep(2)
 
@@ -39,6 +42,7 @@ v1.get_peers()
 v2.get_peers()
 v3.get_peers()
 v4.get_peers()
+v5.get_peers()
 
 time.sleep(2)
 
@@ -78,7 +82,7 @@ v3.send_transaction(c8, 49)
 time.sleep(1)
 v3.send_transaction(c0, 49)
 time.sleep(1)
-v2.send_transaction(c6, v2.get_balance(c6))
+v2.send_transaction(c6, 198)
 
 if (input("Press enter to send transactions ") == 'q'):
     stop()
@@ -92,5 +96,23 @@ time.sleep(1)
 v1.send_transaction(c3, 79)
 time.sleep(1)
 v1.send_transaction(c4, 59)
+time.sleep(1)
+v5.send_transaction(c7, 100)
+time.sleep(1)
+v5.send_transaction(c1, 100)
+
+if (input("Press enter to send transactions ") == 'q'):
+    stop()
+
+v3.send_transaction(c1, 59)
+v3.send_transaction(c2, 59)
+v3.send_transaction(c3, 69)
+v3.send_transaction(c4, 59)
+v3.send_transaction(c5, 59)
+v3.send_transaction(c6, 69)
+v3.send_transaction(c7, 59)
+v3.send_transaction(c8, 59)
+v3.send_transaction(c9, 59)
+v3.send_transaction(c0, 69)
 
 print("done")

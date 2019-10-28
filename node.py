@@ -414,4 +414,5 @@ class Node(threading.Thread):
                     pass
         self.hashes = []
         self.pending_block = None
+        self.not_in_consensus.set()
 

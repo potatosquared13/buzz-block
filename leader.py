@@ -12,6 +12,11 @@ class Leader(Node):
             self.client.export('clients')
         super().__init__("clients/admin.key", debug)
         self.block_size = block_size
+        if os.path.isfile('invalid_transactions.json'):
+            transactions = json.loads(open('invalid_transactions.json', 'r').read())
+            for transaction in transactions:
+                self.invalid_transactions.append((Transaction.rebuild(transaction[0]), transaction[1]))
+
 
     def start_consensus(self):
         if self.chain.pending_transactions:
@@ -66,19 +71,19 @@ class Leader(Node):
                     status = True
                 else:
                     logging.warning("Payment transaction is invalid")
-                    status = False
+                    reason = "insufficient funds"
             elif (transaction.transaction == 2): # add funds
                 if (transaction.sender == peer_identity and peer_identity == self.leader.identity):
                     db.update_pending(None, transaction.address, transaction.amount)
                     status = True
                 else:
                     logging.warning("Add funds transaction is invalid")
-            elif (transaction.transaction == 3): # disable wallet
+                    reason = "invalid transaction"
+            elif (transaction.transaction == 3 and transaction.sender == self.client.identity): # disable wallet
                 self.blacklist.append(transaction.address)
                 status = True
             else:
                 reason = "unknown type"
-                status = False
         if (status):
             self.chain.pending_transactions.append(transaction)
         else:

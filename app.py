@@ -17,6 +17,17 @@ pending_transactions_saved_state = []
 invalid_transactions_saved_state = []
 
 node = Leader(10)
+if os.path.isfile('blockchain.json') and os.path.isfile('database.db'):
+    node.start()
+
+def get_transaction_count():
+    tcount = 0
+    for block in node.chain.blocks:
+        tcount = tcount + len(block.transactions)
+    return tcount
+
+def get_pending_count():
+    return len(node.chain.pending_transactions)
 
 def get_total_amount():
     amount = 0
@@ -24,6 +35,13 @@ def get_total_amount():
         for transaction in (t for t in block.transactions if t.transaction == 0 or t.transaction == 2):
             amount = amount + transaction.amount
     return amount
+
+def get_reg_amount():
+    reg_amount = 0
+    for block in node.chain.blocks:
+        for transaction in (t for t in block.transactions if t.transaction == 0):
+            reg_amount = reg_amount + 25
+    return reg_amount
 
 def get_transactions():
     global pending_transactions_saved_state
@@ -105,10 +123,7 @@ def get_transactions():
                 pt_recipients.append(pt_recipient)
             else:
                 pt_recipients.append('unnamed')
-    tcount = 0
-    for block in node.chain.blocks:
-        tcount = tcount + len(block.transactions)
-    return render_template('transactions.html', tcount=tcount, acount=get_total_amount(), blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients, invalid_transactions=invalid_transactions_saved_state)
+    return render_template('transactions.html', pcount=get_pending_count(), tcount=get_transaction_count(), acount=get_total_amount(), blocks=node.chain.blocks, t_senders=t_senders, t_recipients=t_recipients, pending_transactions=pending_transactions_saved_state, pt_senders=pt_senders, pt_recipients=pt_recipients, invalid_transactions=invalid_transactions_saved_state)
 
 @app.route('/get_vendor_transactions')
 def get_vendor_transactions():
@@ -119,7 +134,7 @@ def get_vendor_transactions():
     total = 0
     for t in transactions:
         total += t.amount
-    return render_template('reportgeneration.html', vendor_requested=vendor_requested, vendors=vendors, transactions=transactions, t_length=len(transactions), t_total=total)
+    return render_template('reportgeneration.html', vendor_requested=vendor_requested, vendors=vendors, transactions=transactions, t_length=len(transactions), t_total=total, amount=get_total_amount(), reg_amount=get_reg_amount())
 
 @app.route('/')
 def home():
@@ -137,7 +152,7 @@ def user_registration():
 
 @app.route('/accounts/vendors')
 def vendor_registration():
-    return render_template('registration_vendor.html', vendors=db.get_vendors())
+    return render_template('registration_vendor.html', vendors=db.get_vendors(), blockchain=1 if node.chain.blocks else 0)
 
 @app.route('/transactions')
 def overview():
@@ -148,18 +163,14 @@ def overview():
 @app.route('/report')
 def report():
     vendors = db.get_vendors()
-    reg_amount = 0
-    for block in node.chain.blocks:
-        for transaction in (t for t in block.transactions if t.transaction == 0):
-            reg_amount = reg_amount + 25
-    return render_template('reportgeneration.html', vendor_requested=None, vendors=vendors, transactions=[], t_length=0, t_total=0, amount=get_total_amount(), reg_amount=reg_amount)
+    return render_template('reportgeneration.html', vendor_requested=None, vendors=vendors, transactions=[], t_length=0, t_total=0, amount=get_total_amount(), reg_amount=get_reg_amount())
 
 @app.route('/register_client', methods=['POST'])
 def register_client():
     name = request.args.get('name')
     amount = request.args.get('amount')
     client = Client(name)
-    client.export()
+    client.export('clients/users')
     if (not bool(request.args.get('replace'))):
         contact = request.args.get('contact')
         db.insert_user(client, contact, amount)
@@ -182,7 +193,7 @@ def register_vendor():
     contact = request.args.get('contact')
     btype = request.args.get('type')
     client = Client(name)
-    client.export()
+    client.export('clients/vendors')
     db.insert_vendor(client, contact, btype)
     vendors.append((name, contact, btype))
     return ''

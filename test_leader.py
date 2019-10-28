@@ -4,14 +4,7 @@ from leader import Leader
 from client import Client
 
 print("load clients")
-c1 = Client(filename="clients/users/ushigome-rimi.key").identity[:96]
-c2 = Client(filename="clients/users/yamabuki-saaya.key").identity[:96]
-c3 = Client(filename="clients/users/toyama-kasumi.key").identity[:96]
-c4 = Client(filename="clients/users/ichigaya-arisa.key").identity[:96]
-c5 = Client(filename="clients/users/hanazono-otae.key").identity[:96]
 c6 = Client(filename="clients/users/matsubara-kanon.key").identity[:96]
-c7 = Client(filename="clients/users/imai-lisa.key").identity[:96]
-c8 = Client(filename="clients/users/minato-yukina.key").identity[:96]
 c9 = Client(filename="clients/users/hikawa-sayo.key").identity[:96]
 c0 = Client(filename="clients/users/hikawa-hina.key").identity[:96]
 

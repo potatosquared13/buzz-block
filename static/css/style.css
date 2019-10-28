@@ -116,7 +116,7 @@ button {
     margin: 1vh 0;
     padding: 8px 16px;
     background: #d9dbdc;
-    color: grey;
+    color: #414559;
     transition: 0.1s ease-in-out background-color, 0.1s ease-in-out color;
 }
 
@@ -280,6 +280,10 @@ table tr:last-child {
     word-wrap: break-word;
 }
 
+.vendor-name, .vendor-identity {
+    color: #414559;
+}
+
 .vendor-name {
     width: 100%;
     padding-right: 2px;
@@ -361,12 +365,11 @@ input:checked + .slider:before {
 
 @media print {
     body * { visibility: hidden; }
-    #report, #report * {
-        visibility: visible;
-    }
+    #report, #report * { visibility: visible; }
     #report {
         position: absolute;
         top: 0;
         left: 0;
     }
+    button#print-button { visibility: hidden !important; }
 }

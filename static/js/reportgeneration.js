@@ -1,5 +1,5 @@
 window.onload = () => {
-  document.getElementById("time").innerHTML = (new Date()).toLocaleString();
+  document.getElementById("time").innerHTML = (new Date()).toISOString().replace("T", " ").substring(0, 16);
 }
 
 function getVendorTransactions(vendor_id) {

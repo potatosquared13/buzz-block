@@ -40,6 +40,10 @@ for v in lv:
     db.insert_vendor(v, str(randint(9100000000, 9299999999)), "Food Service")
     v.export('clients/vendors')
 
+v = Client("Tawawa Gifts & Souvenirs")
+db.insert_vendor(v, str(randint(9100000000, 9299999999)), "Gifts/Souvenirs")
+v.export('clients/vendors')
+
 # create genesis block and export initialised blockchain to file
 node.chain.genesis(ts)
 node.chain.export()

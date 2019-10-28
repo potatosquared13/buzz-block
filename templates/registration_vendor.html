@@ -34,6 +34,11 @@
                     <h2>VENDORS</h2>
                 </div>
                 <div class="right-align">
+                    {% if blockchain == 0 %}
+                    <button id="finalize" type="button" onclick="finalize()">CLOSE REGISTRATION</button>
+                    {% else %}
+                    <button id="finalize" type="button" onclick="finalize()" disabled>REGISTRATION IS CLOSED</button>
+                    {% endif %}
                 </div>
             </div>
             <div class="content">
@@ -77,7 +82,7 @@
                             <th scope="col">Name</th>
                             <th scope="col">Contact</th>
                             <th scope="col">Type</th>
-                            <th scope="col">Balance</th>
+                            <th scope="col">Balance (₱)</th>
                         </tr>
 
                         {% for vendor in vendors %}

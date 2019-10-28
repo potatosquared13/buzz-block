@@ -8,7 +8,7 @@ function registerClient() {
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState == 4 && xhr.status == 200) {
-      window.location.href = '/'
+      window.location.href = '/accounts/users'
     }
   }
   xhr.open('POST', url, true);
@@ -28,7 +28,7 @@ function registerVendor() {
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState == 4 && xhr.status == 200) {
-      window.location.href = '/'
+      window.location.href = '/accounts/vendors'
     }
   }
   xhr.open('POST', url, true);
@@ -48,7 +48,7 @@ function addFunds(identity) {
   let xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
     if (xhr.readyState == 4 && xhr.status == 200) {
-      window.location.href = '/'
+      window.location.href = '/accounts/users'
     }
   }
   xhr.open('POST', `/add_funds?identity=${identity}&amount=${amount}`, true);
@@ -60,7 +60,7 @@ function blacklist(name, current_id, amount) {
     let xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
       if (xhr.readyState == 4 && xhr.status == 200) {
-        window.location.href = '/'
+        window.location.href = '/accounts/users'
       }
     }
     xhr.open('POST', `/register_client?replace=true&identity=${current_id}&name=${name}&amount=${amount}`, true);

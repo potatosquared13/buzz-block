@@ -83,7 +83,7 @@
                         {% else %}
 
                         <tr>
-                            <th scope="col">Transaction ID</th>
+                            <th scope="col">ID</th>
                             <th scope="col">Date</th>
                             <th scope="col">Customer ID</th>
                             <th scope="col">Total Amount</th>
@@ -96,10 +96,9 @@
                         {% for transaction in transactions %}
                         <tr>
                             <td style="width: 15%">{{transaction.address[:4]}}-{{transaction.hash[:3]}}</td>
-                            <td style="width: 15%">{{transaction.timestamp[:10]}}</td>
-                            <td style="width: 20%">{{(transaction.sender[:8])}}</td>
-                            <td style="width: 35%"></td>
-                            <td style="width: 15%">{{"{:,.2f}".format(transaction.amount)}}</td>
+                            <td style="width: 35%">{{transaction.timestamp[:16]}}</td>
+                            <td style="width: 25%">{{(transaction.sender[:8])}}</td>
+                            <td style="width: 25%">{{"{:,.2f}".format(transaction.amount)}}</td>
                         </tr>
                         {% set ns.t_index = ns.t_index + 1 %}
 
@@ -109,12 +108,13 @@
                     <div class="total">
                         <table>
                             <tr>
-                                <td style="width: 85%; text-align: left; padding-left: 8px" colspan="4">TOTAL:</td>
-                                <td style="width: 15%">{{t_total}}</td>
+                                <td style="width: 75%; text-align: right; padding-left: 8px" colspan="3"><b>TOTAL:</b></td>
+                                <td style="width: 25%"><b>{{t_total}}</b></td>
                             </tr>
                         </table>
                     </div>
                     {% endif %}
+                    <button id="print-button" onClick="print()" style="width: 100%">print report</button>
                 </div>
             </div>
         </div>

@@ -10,7 +10,7 @@ class Transaction:
         self.sender = sender
         self.address = recipient
         self.amount = float(amount)
-        self.timestamp = datetime.now().isoformat("T", "seconds")
+        self.timestamp = datetime.now().isoformat(" ", "seconds")
         self.signature = None
 
     @staticmethod

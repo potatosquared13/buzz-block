@@ -49,12 +49,16 @@
                     <span style="font-size:32px">{{blocks|length}}</span>
                 </div>
                 <div class="box-30 card">
-                    <h4>TRANSACTIONS</h4>
+                    <h4>CONFIRMED TRANSACTIONS</h4>
                     <span style="font-size:32px">{{tcount}}</span>
                 </div>
                 <div class="box-30 card">
+                    <h4>PENDING TRANSACTIONS</h4>
+                    <span style="font-size:32px">{{pcount}}</span>
+                </div>
+                <div class="box-30 card">
                     <h4>CIRCULATION</h4>
-                    <span style="font-size:32px">{{"{:,.2f}".format(acount)}}</span>
+                    <span style="font-size:32px">₱{{"{:,.2f}".format(acount)}}</span>
                 </div>
             </div>
             <div class="content">
@@ -67,7 +71,7 @@
                             <th scope="col">Type</th>
                             <th scope="col">Time</th>
                             <th scope="col" colspan="3">Details</th>
-                            <th scope="col">Amount</th>
+                            <th scope="col">Amount (₱)</th>
                         </tr>
                         {% set ns = namespace(t_index = 0) %}
 
@@ -80,7 +84,7 @@
                                 New account
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
@@ -96,7 +100,7 @@
                                 Payment
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 23%; text-align: right!important">
                                 {{t_senders[ns.t_index].name}}
@@ -117,7 +121,7 @@
                                 Add funds
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
@@ -133,7 +137,7 @@
                                 Report lost id
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 65%" colspan="3">
                                 {{t_recipients[ns.t_index].name}}
@@ -158,7 +162,7 @@
                             <th scope="col">Type</th>
                             <th scope="col">Time</th>
                             <th scope="col" colspan="3">Details</th>
-                            <th scope="col">Amount</th>
+                            <th scope="col">Amount (₱)</th>
                         </tr>
                         {% set ns = namespace(pt_index=0) %}
 
@@ -170,7 +174,7 @@
                                 New account
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
@@ -186,7 +190,7 @@
                                 Payment
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 23%; text-align: right!important">
                                 {{pt_senders[ns.pt_index].name}}
@@ -207,7 +211,7 @@
                                 Add funds
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
@@ -223,7 +227,7 @@
                                 Report lost id
                             </td>
                             <td style="min-width: 20%">
-                                {{t.timestamp}}
+                                {{t.timestamp[:16]}}
                             </td>
                             <td style="min-width: 65%" colspan="3">
                                 {{pt_recipients[ns.pt_index].name}}
@@ -248,7 +252,7 @@
                             <th scope="col">Type</th>
                             <th scope="col">Time</th>
                             <th scope="col" colspan="3">Details</th>
-                            <th scope="col">Amount</th>
+                            <th scope="col">Amount (₱)</th>
                         </tr>
                         {% set ns = namespace(it_index=0) %}
 
@@ -263,7 +267,7 @@
                                 New account
                             </td>
                             <td style="min-width: 15%">
-                                {{t[0].timestamp}}
+                                {{t[0].timestamp[:16]}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 ({{(t[0].address[:8])}})
@@ -281,7 +285,7 @@
                                 Payment
                             </td>
                             <td style="min-width: 15%">
-                                {{t[0].timestamp}}
+                                {{t[0].timestamp[:16]}}
                             </td>
                             <td style="min-width: 23%; text-align: right!important">
                                 ({{(t[0].sender[:8])}})
@@ -303,7 +307,7 @@
                                 Add funds
                             </td>
                             <td style="min-width: 15%">
-                                {{t[0].timestamp}}
+                                {{t[0].timestamp[:16]}}
                             </td>
                             <td style="min-width: 50%" colspan="3">
                                 ({{(t[0].address[:8])}})
@@ -321,7 +325,7 @@
                                 Report lost id
                             </td>
                             <td style="min-width: 15%">
-                                {{t[0].timestamp}}
+                                {{t[0].timestamp[:16]}}
                             </td>
                             <td style="min-width: 65%" colspan="3">
                                 ({{(t[0].address[:8])}})
