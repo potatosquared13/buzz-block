@@ -147,12 +147,24 @@ public class MainActivity extends Activity {
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT);
         writeTagFilters = new IntentFilter[] { tagDetected };
 
-        node = new Node(new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/buzz/vendor.key"), context);
-        node.execute();
-        System.out.print("XXX");
-        System.out.print(node.getTransactions().toString());
-        System.out.print("XXX");
-        tvToolBar.setText(node.control.client.name);
+        String path = Environment.getExternalStorageDirectory().toString() + "/buzz";
+        File directory =new File(path);
+        File[] files = directory.listFiles();
+        for (File f : files){
+            System.out.println(f.getName());
+            if (f.getName().contains(".key"))
+                node = new Node(f, context);
+        }
+
+        if (node == null)
+            Toast.makeText(this, "No vendor key file found.", Toast.LENGTH_LONG).show();
+        else {
+            node.execute();
+            System.out.print("XXX");
+            System.out.print(node.getTransactions().toString());
+            System.out.print("XXX");
+            tvToolBar.setText(node.control.client.name);
+        }
 
     }
 
