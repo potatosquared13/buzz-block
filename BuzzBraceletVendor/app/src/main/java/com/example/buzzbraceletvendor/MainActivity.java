@@ -17,6 +17,7 @@ import android.os.Parcelable;
 import android.text.InputType;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -45,7 +46,7 @@ public class MainActivity extends Activity {
     Tag myTag;
     Context context;
 
-    TextView tvNFCContent, tvBalance, tvToolBar, tvStatus;
+    TextView tvNFCContent, tvBalance, tvToolBar, tvStatus, tvAmount;
     ImageView ivTag;
     Button btnSendTransaction;
     Node node;
@@ -53,7 +54,7 @@ public class MainActivity extends Activity {
 
 //    String[] values = new String[] { node.getTransactions().toString()};
 //    ArrayList<String> list = new ArrayList<String>();
-    ListView lvList;
+//    ListView lvList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -70,10 +71,11 @@ public class MainActivity extends Activity {
         tvNFCContent        = findViewById(R.id.tvNFCContents);
         btnSendTransaction  = findViewById(R.id.btnSendTransaction);
         tvBalance           = findViewById(R.id.tvBalance);
-        lvList              = findViewById(R.id.lvList);
+//        lvList              = findViewById(R.id.lvList);
         tvToolBar           = findViewById(R.id.tvToolBar);
         tvStatus            = findViewById(R.id.tvStatus);
         ivTag               = findViewById(R.id.ivTag);
+        tvAmount            = findViewById(R.id.tvAmount);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
@@ -102,7 +104,7 @@ public class MainActivity extends Activity {
                 public void onClick(DialogInterface dialog, int which) {
                     double amount = Double.parseDouble(input.getText().toString());
                     returnCode = node.sendPayment(tvNFCContent.getText().toString(), amount);
-
+                    tvAmount.setText("P " + node.getAmountEarned());
 
                     if(returnCode == 0) {
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
@@ -160,12 +162,14 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "No vendor key file found.", Toast.LENGTH_LONG).show();
         else {
             node.execute();
-            System.out.print("XXX");
-            System.out.print(node.getTransactions().toString());
-            System.out.print(" " + node.getTransactions().size() + " " + node.control.chain.pending_transactions.size() + " " + node.control.chain.blocks.size());
-            System.out.print("XXX");
+//            System.out.print("XXX");
+//            System.out.print(node.getTransactions().toString());
+//            System.out.print(" " + node.getTransactions().size() + " " + node.control.chain.pending_transactions.size() + " " + node.control.chain.blocks.size());
+//            System.out.print("XXX");
             tvToolBar.setText(node.control.client.name);
         }
+
+
 
     }
 

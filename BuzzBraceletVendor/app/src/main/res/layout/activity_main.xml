@@ -38,12 +38,10 @@
         android:textColor="@android:color/white"
 
         android:textSize="30sp"
-        app:layout_constraintBottom_toBottomOf="@+id/lvList"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.503"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvNFCContents"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/tvNFCContents" />
 
     <TextView
         android:id="@+id/tvNFCContents"
@@ -59,14 +57,6 @@
         app:layout_constraintHorizontal_bias="0.085"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvBalance" />
-
-    <ListView
-        android:layout_width="412dp"
-        android:layout_height="207dp"
-        android:id="@+id/lvList"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/tvStatus"
@@ -86,14 +76,41 @@
         android:id="@+id/ivTag"
         android:layout_width="130dp"
         android:layout_height="135dp"
+        android:layout_marginTop="244dp"
         android:src="@drawable/reader_icon_25"
         android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="@+id/lvList"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.458" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="120dp"
+        android:layout_height="28dp"
+        android:layout_marginTop="104dp"
+        android:layout_marginEnd="8dp"
+        android:text="Amount Earned:"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/tvAmount"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSendTransaction"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/tvAmount"
+        android:layout_width="85dp"
+        android:layout_height="28dp"
+        android:layout_marginTop="100dp"
+        android:layout_marginEnd="56dp"
+        android:fontFamily="monospace"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSendTransaction"
+        app:layout_constraintVertical_bias="0.078" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
