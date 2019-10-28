@@ -65,15 +65,15 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         context = this;
-        tvNFCContent        = findViewById(R.id.tvNFCContents);
+
         btnSendTransaction  = findViewById(R.id.btnSendTransaction);
+        tvNFCContent        = findViewById(R.id.tvNFCContents);
         tvBalance           = findViewById(R.id.tvBalance);
         tvToolBar           = findViewById(R.id.tvToolBar);
         tvStatus            = findViewById(R.id.tvStatus);
-        ivTag               = findViewById(R.id.ivTag);
         tvAmount            = findViewById(R.id.tvAmount);
+        ivTag               = findViewById(R.id.ivTag);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
@@ -149,7 +149,7 @@ public class MainActivity extends Activity {
         writeTagFilters = new IntentFilter[] { tagDetected };
 
         String path = Environment.getExternalStorageDirectory().toString() + "/buzz";
-        File directory =new File(path);
+        File directory = new File(path);
         File[] files = directory.listFiles();
         for (File f : files){
             System.out.println(f.getName());
@@ -164,6 +164,7 @@ public class MainActivity extends Activity {
             tvToolBar.setText(node.control.client.name);
         }
     }
+
 
     /**Read From NFC Tag*/
     private void readFromIntent(Intent intent) {
