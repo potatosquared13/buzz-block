@@ -19,18 +19,18 @@ print("load leader node")
 node = Leader(10)
 node.start()
 
-# if (input("Press enter to add funds to accounts ") == 'q'):
-#     node.stop()
+if (input("Press enter to add funds to accounts ") == 'q'):
+    node.stop()
 
-# node.add_funds(c0, 200)
-# node.add_funds(c9, 200)
+node.add_funds(c0, 200)
+node.add_funds(c9, 200)
 
-# if (input("Press enter to blacklist account ") == 'q'):
-#     node.stop()
+if (input("Press enter to blacklist account ") == 'q'):
+    node.stop()
 
-# node.blacklist_account(c6)
-# r = Client("Matsubara, Kanon")
-# db.replace_id(c6, r.identity[:96])
-# node.create_account(r.identity[:96], db.search_user(c6).pending_balance)
+node.blacklist_account(c6)
+r = Client("Matsubara, Kanon")
+db.replace_id(c6, r.identity[:96])
+node.create_account(r.identity[:96], db.search_user(c6).pending_balance)
 
-# print("done")
+print("done")

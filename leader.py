@@ -98,14 +98,17 @@ class Leader(Node):
     def start(self):
         try:
             if (not self.running.is_set()):
+                self.threads.append(threading.Thread(name="connection_accept", target=self.accept_connections))
+                self.threads.append(threading.Thread(name="broadcast_listen", target=self.listen))
+                self.threads.append(threading.Thread(name="broadcast_advertise", target=self.advertise))
+                self.threads.append(threading.Thread(name="consensus_condition_wait", target=self.sleep))
+                for thread in self.threads:
+                    thread.start()
+                self.accepting.wait()
+                self.listening.wait()
                 self.running.set()
-                threading.Thread(target=self.accept_connections).start()
-                threading.Thread(target=self.listen).start()
-                threading.Thread(target=self.sleep).start()
-                while (self.address is None):
-                    time.sleep(1)
+                self.not_in_consensus.set()
                 self.leader = Peer(None, self.address, self.client.identity)
-                threading.Thread(target=self.advertise).start()
         except (KeyboardInterrupt, SystemExit):
             logging.error("Interrupt received. Stopping threads")
             self.stop()
@@ -155,13 +158,15 @@ class Leader(Node):
             return
         self.accepting.clear()
         self.listening.clear()
-        for thread in self.threads:
-            thread.join()
         self.running.clear()
+        logging.debug("waiting for threads to stop")
+        for thread in self.threads.copy():
+            thread.join()
+            self.threads.remove(thread)
         self.chain.export()
         if (self.invalid_transactions):
             with open('invalid_transactions.json', 'w') as f:
                 f.write(helpers.jsonify(self.invalid_transactions))
         self.running.clear()
-        logging.info("stopped")
+        logging.info("Stopped")
 

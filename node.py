@@ -119,15 +119,16 @@ class Node(threading.Thread):
                     c.sendall(unhexlify(self.client.identity))
                     if [p for p in self.peers if p.identity == identity]:
                         c.close()
-                    peer = Peer(c, c.getpeername(), identity)
-                    self.peers.add(peer)
-                    thread = threading.Thread(name=identity[:8], target=self.handle_connection, args=(peer,))
-                    self.threads.append(thread)
-                    thread.start()
-                    if self.leader is not None:
-                        if self.leader.address == self.address:
-                            logging.debug("sending lead node status")
-                            self.send(peer.socket, LEADER, self.client.identity)
+                    else:
+                        peer = Peer(c, c.getpeername(), identity)
+                        self.peers.add(peer)
+                        thread = threading.Thread(name=identity[:8], target=self.handle_connection, args=(peer,))
+                        self.threads.append(thread)
+                        thread.start()
+                        if self.leader is not None:
+                            if self.leader.address == self.address:
+                                logging.debug("sending lead node status")
+                                self.send(peer.socket, LEADER, self.client.identity)
                 except socket.timeout:
                     continue
                 except socket.error as e:
