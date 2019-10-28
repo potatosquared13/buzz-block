@@ -70,18 +70,30 @@
 
     <TextView
         android:id="@+id/tvStatus"
-        android:layout_width="374dp"
-        android:layout_height="163dp"
-        android:fontFamily="sans-serif-black"
-        android:text="Scan Tag.."
+        android:layout_width="183dp"
+        android:layout_height="62dp"
+        android:layout_marginTop="10dp"
+        android:text="Scan Tag"
         android:textAlignment="center"
-        android:textSize="60sp"
+        android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.594"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/include"
-        app:layout_constraintVertical_bias="0.343" />
+        app:layout_constraintTop_toBottomOf="@+id/ivTag"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <ImageView
+        android:id="@+id/ivTag"
+        android:layout_width="130dp"
+        android:layout_height="135dp"
+        android:src="@drawable/reader_icon_25"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@+id/lvList"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.458" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

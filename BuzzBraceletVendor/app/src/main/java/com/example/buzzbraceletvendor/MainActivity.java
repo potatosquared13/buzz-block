@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +46,7 @@ public class MainActivity extends Activity {
     Context context;
 
     TextView tvNFCContent, tvBalance, tvToolBar, tvStatus;
+    ImageView ivTag;
     Button btnSendTransaction;
     Node node;
     int returnCode;
@@ -71,6 +73,7 @@ public class MainActivity extends Activity {
         lvList              = findViewById(R.id.lvList);
         tvToolBar           = findViewById(R.id.tvToolBar);
         tvStatus            = findViewById(R.id.tvStatus);
+        ivTag               = findViewById(R.id.ivTag);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         final EditText input = new EditText(MainActivity.this);
@@ -80,7 +83,7 @@ public class MainActivity extends Activity {
         tvBalance.setVisibility(View.INVISIBLE);
         tvNFCContent.setVisibility(View.INVISIBLE);
 
-        tvStatus.setText("Scan Tag...");
+        ivTag.setVisibility(View.VISIBLE);
         tvStatus.setVisibility(View.VISIBLE);
 
         /**PAYMENT**/
@@ -116,8 +119,7 @@ public class MainActivity extends Activity {
                     tvNFCContent.setText("");
                     tvBalance.setText("");
                     btnSendTransaction.setVisibility(View.INVISIBLE);
-                    tvStatus.setVisibility(View.VISIBLE);
-                    tvStatus.setText("Scan Bracelet..");
+                    ivTag.setVisibility(View.VISIBLE);
                     dialog.cancel();
                 }
             });
@@ -193,6 +195,7 @@ public class MainActivity extends Activity {
         String balance = "" + node.getBalance(tvNFCContent.getText().toString());
         tvBalance.setText(balance);
         tvBalance.setVisibility(View.VISIBLE);
+        ivTag.setVisibility(View.INVISIBLE);
         tvStatus.setVisibility(View.INVISIBLE);
 
     }
