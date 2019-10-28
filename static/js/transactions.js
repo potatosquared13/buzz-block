@@ -6,9 +6,17 @@ window.onload = () => {
 
 function toggleNode(e) {
   let xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = () => {
+
+    if (xhr.readyState == 4 && xhr.status == 200) {
+
+      checkIfNodeToggled();
+
+    }
+
+  }
   xhr.open('GET', '/toggle', true);
   xhr.send();
-  checkIfNodeToggled();
 }
 
 function checkTransactionsChanged() {
