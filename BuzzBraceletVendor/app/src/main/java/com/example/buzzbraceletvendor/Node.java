@@ -632,18 +632,18 @@ public class Node extends AsyncTask<Void, Void, Void>{
             new Thread(new ConsensusHandler()).start();
         }
     }
-    public ArrayList<Transaction> getTransactions() {
-        ArrayList<Transaction> transactions = new ArrayList<>();
+    public double getAmountEarned() {
+        double amount = 0;
         for (Transaction t : control.chain.pending_transactions){
-            if (t.transaction == 1 && t.address == control.client.getIdentity())
-                transactions.add(t);
+            if (t.transaction == 1 && t.address.equals(control.client.getIdentity()))
+                amount += t.amount;
         }
         for (Block b : control.chain.blocks){
             for (Transaction t : b.transactions){
-                if (t.transaction == 1 && t.address == control.client.getIdentity())
-                    transactions.add(t);
+                if (t.transaction == 1 && t.address.equals(control.client.getIdentity()))
+                    amount += t.amount;
             }
         }
-        return transactions;
+        return amount;
     }
 }
