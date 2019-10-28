@@ -52,9 +52,6 @@ public class MainActivity extends Activity {
     Node node;
     int returnCode;
 
-//    String[] values = new String[] { node.getTransactions().toString()};
-//    ArrayList<String> list = new ArrayList<String>();
-//    ListView lvList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,11 +64,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         context = this;
         tvNFCContent        = findViewById(R.id.tvNFCContents);
         btnSendTransaction  = findViewById(R.id.btnSendTransaction);
         tvBalance           = findViewById(R.id.tvBalance);
-//        lvList              = findViewById(R.id.lvList);
         tvToolBar           = findViewById(R.id.tvToolBar);
         tvStatus            = findViewById(R.id.tvStatus);
         ivTag               = findViewById(R.id.ivTag);
@@ -110,18 +107,17 @@ public class MainActivity extends Activity {
                         Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG ).show();
                     } else if(returnCode == 1) {
                         Toast.makeText(context, WRITE_BLACKLIST, Toast.LENGTH_LONG ).show();
-//                        tvStatus.setText("BLACKLISTED");
                     } else if (returnCode == 3) {
                         Toast.makeText(context, WRITE_NO_FUNDS, Toast.LENGTH_LONG ).show();
                     } else {
                         Toast.makeText(context, WRITE_FAILED, Toast.LENGTH_LONG ).show();
-//                        tvStatus.setText("Write Failed");
                     }
 
                     tvNFCContent.setText("");
                     tvBalance.setText("");
                     btnSendTransaction.setVisibility(View.INVISIBLE);
                     ivTag.setVisibility(View.VISIBLE);
+                    tvStatus.setVisibility(View.VISIBLE);
                     dialog.cancel();
                 }
             });
@@ -162,17 +158,9 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "No vendor key file found.", Toast.LENGTH_LONG).show();
         else {
             node.execute();
-//            System.out.print("XXX");
-//            System.out.print(node.getTransactions().toString());
-//            System.out.print(" " + node.getTransactions().size() + " " + node.control.chain.pending_transactions.size() + " " + node.control.chain.blocks.size());
-//            System.out.print("XXX");
             tvToolBar.setText(node.control.client.name);
         }
-
-
-
     }
-
 
     /**Read From NFC Tag*/
     private void readFromIntent(Intent intent) {
@@ -192,7 +180,6 @@ public class MainActivity extends Activity {
             buildTagViews(msgs);
 
             btnSendTransaction.setVisibility(View.VISIBLE);
-
         }
     }
 
@@ -214,13 +201,10 @@ public class MainActivity extends Activity {
         tvBalance.setVisibility(View.VISIBLE);
         ivTag.setVisibility(View.INVISIBLE);
         tvStatus.setVisibility(View.INVISIBLE);
-
     }
 
 
-    /*
-        NFC STUFF
-    */
+    /*NFC STUFF*/
     @Override
     protected void onNewIntent(Intent intent) {
         setIntent(intent);
@@ -242,7 +226,7 @@ public class MainActivity extends Activity {
         WriteModeOn();
     }
 
-    /**Enable Write*/
+    /**Enable Write**/
     private void WriteModeOn(){
         writeMode = true;
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, writeTagFilters, null);
